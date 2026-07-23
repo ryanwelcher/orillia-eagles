@@ -124,58 +124,6 @@ rosterPlayers.forEach(player => {
   player.style.transition = 'opacity 0.3s ease, background-color 0.3s ease';
 });
 
-// :::SECTION:Form Interaction:::
-const contactForm = document.querySelector('.contact-form');
-
-if (contactForm) {
-  contactForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const submitBtn = this.querySelector('.form-submit');
-    const originalText = submitBtn.textContent;
-
-    submitBtn.textContent = 'Sending...';
-    submitBtn.style.opacity = '0.7';
-    submitBtn.disabled = true;
-
-    setTimeout(() => {
-      submitBtn.textContent = 'Message Sent!';
-      submitBtn.style.opacity = '1';
-      submitBtn.style.backgroundColor = '#2d8a4e';
-
-      setTimeout(() => {
-        submitBtn.textContent = originalText;
-        submitBtn.style.backgroundColor = '';
-        submitBtn.disabled = false;
-        contactForm.reset();
-      }, 2500);
-    }, 1200);
-  });
-}
-
-// :::SECTION:Diagonal Accent Parallax:::
-const diagonalAccent = document.querySelector('.hero-diagonal-accent');
-
-if (diagonalAccent) {
-  let ticking = false;
-
-  window.addEventListener('scroll', () => {
-    if (!ticking) {
-      window.requestAnimationFrame(() => {
-        const scrolled = window.scrollY;
-        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = Math.min(scrolled / maxScroll, 1);
-
-        // Slowly fade out the diagonal accent as user scrolls
-        diagonalAccent.style.opacity = Math.max(1 - progress * 3, 0);
-
-        ticking = false;
-      });
-      ticking = true;
-    }
-  }, { passive: true });
-}
-
 // :::SECTION:Counter Animation:::
 const valueNumbers = document.querySelectorAll('.about-value-number');
 

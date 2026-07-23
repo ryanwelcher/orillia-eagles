@@ -40,10 +40,7 @@
 
 /* Disable scroll animations in editor — no IntersectionObserver runs here */
 /* Without this, .js .animate-on-scroll:not(.is-visible) keeps elements at opacity: 0 */
-.editor-styles-wrapper .animate-on-scroll,
-.editor-styles-wrapper .animate-from-left,
-.editor-styles-wrapper .animate-from-right,
-.editor-styles-wrapper .animate-scale {
+.editor-styles-wrapper .animate-on-scroll {
   opacity: 1 !important;
   transform: none !important;
   transition: none !important;

@@ -108,27 +108,6 @@ function handmade_jewelry_website_hide_front_page_title_iframe( $settings, $cont
 add_filter( 'block_editor_settings_all', 'handmade_jewelry_website_hide_front_page_title_iframe', 10, 2 );
 
 /**
- * Enqueue editor scroll handler for sticky overlay headers.
- * The editor iframe doesn't run the frontend scroll JS, so this script
- * accesses the iframe and adds a scroll listener to toggle .is-scrolled.
- */
-function handmade_jewelry_website_editor_scroll_script() {
-    $script_path = get_template_directory() . '/assets/js/editor-scroll.js';
-    if ( ! file_exists( $script_path ) ) {
-        return;
-    }
-    $version = filemtime( $script_path );
-    wp_enqueue_script(
-        'handmade-jewelry-website-editor-scroll',
-        get_template_directory_uri() . '/assets/js/editor-scroll.js',
-        array(),
-        $version,
-        true
-    );
-}
-add_action( 'enqueue_block_editor_assets', 'handmade_jewelry_website_editor_scroll_script' );
-
-/**
  * Add JS class to html element for animation system.
  * Enqueued as external script to comply with Content Security Policy.
  */

@@ -460,11 +460,6 @@ a {
       );
   
 }
-.hero-diagonal-accent {
-
-    display: none;
-  
-}
 .hero-nav {
 
     padding: var(--wp--preset--spacing--30);
@@ -822,29 +817,6 @@ a {
   margin-top: var(--wp--preset--spacing--30);
 }
 
-.roster-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1px;
-  background-color: var(--wp--preset--color--white-faint);
-  border: 1px solid var(--wp--preset--color--white-faint);
-}
-
-.roster-player {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: var(--wp--preset--spacing--30);
-  padding: var(--wp--preset--spacing--40) var(--wp--preset--spacing--40);
-  background-color: var(--wp--preset--color--contrast);
-  transition: background-color 0.3s ease;
-  min-height: 150px;
-}
-
-.roster-player:hover {
-  background-color: var(--wp--preset--color--gold-faint);
-}
-
 .roster-number {
   font-family: var(--wp--preset--font-family--archivo-black);
   font-size: var(--wp--preset--font-size--xx-large);
@@ -892,16 +864,6 @@ a {
 .roster {
 
     padding: var(--wp--preset--spacing--60) var(--wp--preset--spacing--30);
-  
-}
-.roster-grid {
-
-    grid-template-columns: 1fr;
-  
-}
-.roster-player {
-
-    padding: var(--wp--preset--spacing--30) var(--wp--preset--spacing--40);
   
 }
 }
@@ -1800,14 +1762,6 @@ a.contact-detail-value:hover {
 }
 
 
-:root :where(.hero-diagonal-accent) {
-  position: fixed;
-  pointer-events: none;
-  inset: 0;
-  z-index: 1;
-}
-
-
 :root :where(.news-card-image-wrap .wp-block-image) {
   overflow: hidden;
 }
@@ -1997,35 +1951,6 @@ a.contact-detail-value:hover {
   background: linear-gradient(90deg, var(--wp--preset--color--accent-1), var(--wp--preset--color--accent-2), var(--wp--preset--color--accent-1));
 }
 
-:root :where(.roster-grid) {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1px;
-  background-color: var(--wp--preset--color--white-faint);
-  border: 1px solid var(--wp--preset--color--white-faint);
-}
-
-:root :where(.roster-player) {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: var(--wp--preset--spacing--30);
-  padding: var(--wp--preset--spacing--40);
-  background-color: var(--wp--preset--color--contrast);
-  transition: background-color 0.3s ease;
-}
-
-:root :where(.roster-player:hover) {
-  background-color: var(--wp--preset--color--gold-faint);
-}
-
-@media (max-width: 768px) {
-:root :where(.roster-grid) {
-
-    grid-template-columns: 1fr;
-  
-}
-}
 
 
 
@@ -2603,14 +2528,12 @@ a.contact-detail-value:hover {
 }
 
 
-.admin-bar .nav,
 .admin-bar [class*="nav"][style*="position: fixed"],
 .admin-bar [class*="header"][style*="position: fixed"] {
   top: 32px;
 }
 
 @media screen and (max-width: 782px) {
-.admin-bar .nav,
   .admin-bar [class*="nav"][style*="position: fixed"],
   .admin-bar [class*="header"][style*="position: fixed"] {
 
@@ -2835,205 +2758,8 @@ footer.wp-block-template-part > .wp-block-group {
 
 
 
-.wp-block-post-content:has(> .overlay-header),
-.wp-site-blocks:has(> .overlay-header) {
-  position: relative;
-}
-
-
-.wp-block-post-content > .overlay-header,
-.wp-site-blocks > .overlay-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  
-  padding-left: var(--wp--style--root--padding-left, 2rem);
-  padding-right: var(--wp--style--root--padding-right, 2rem);
-}
-
-
-.wp-block-post-content > .overlay-header:not(.is-scrolled),
-.wp-site-blocks > .overlay-header:not(.is-scrolled) {
-  background-color: transparent !important;
-}
-.wp-block-post-content > .overlay-header:not(.is-scrolled) > *,
-.wp-site-blocks > .overlay-header:not(.is-scrolled) > * {
-  background-color: transparent !important;
-}
-
-
-.wp-block-post-content > .overlay-header.miles-sticky-top,
-.wp-site-blocks > .overlay-header.miles-sticky-top {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding-left: var(--wp--style--root--padding-left, 2rem);
-  padding-right: var(--wp--style--root--padding-right, 2rem);
-  transition: background-color 0.3s ease;
-}
-
-.admin-bar .overlay-header.miles-sticky-top {
-  top: 32px;
-}
-@media screen and (max-width: 782px) {
-.admin-bar .overlay-header.miles-sticky-top {
-
-    top: 46px;
-  
-}
-}
-
-
-
-.wp-block-post-content > .overlay-header + *,
-.wp-site-blocks > .overlay-header + * {
-  margin-block-start: 0 !important;
-}
-
-.wp-block-post-content > .overlay-header + * > :first-child,
-.wp-site-blocks > .overlay-header + * > :first-child {
-  padding-top: clamp(4rem, 8vw, 6rem);
-}
-
-
-.is-root-container:has(> .overlay-header) {
-  display: grid !important;
-  grid-template-columns: 1fr;
-}
-.is-root-container > .overlay-header {
-  grid-column: 1;
-  grid-row: 1;
-  align-self: start;
-  z-index: 100;
-  position: relative;
-  left: auto !important;
-  right: auto !important;
-  width: auto !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-.is-root-container > .overlay-header.miles-sticky-top {
-  position: sticky !important;
-  top: 0;
-}
-.is-root-container > .overlay-header:not(.is-scrolled) {
-  background-color: transparent !important;
-}
-.is-root-container > .overlay-header:not(.is-scrolled) > * {
-  background-color: transparent !important;
-}
-.is-root-container > .overlay-header + * {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-
-
 .wp-block-navigation__container.block-editor-block-list__layout {
   gap: 0 !important;
-}
-
-
-
-
-.admin-bar .hero-diagonal-accent {
-  top: 32px !important;
-}
-
-@media screen and (max-width: 782px) {
-.admin-bar .hero-diagonal-accent {
-
-    top: 46px !important;
-  
-}
-}
-
-
-
-
-.miles-row-stack {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--wp--preset--spacing--40, 1.5rem);
-}
-
-@media (max-width: 781px) {
-.miles-row-stack {
-
-    flex-direction: column;
-    align-items: stretch;
-  
-}
-}
-
-
-@media (max-width: 781px) {
-.miles-swap-order {
-
-    flex-direction: column-reverse;
-  
-}
-}
-
-
-.miles-sticky-top {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-
-.is-root-container > .miles-sticky-top {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 100 !important;
-}
-
-.admin-bar .miles-sticky-top {
-  top: 32px;
-}
-
-@media screen and (max-width: 782px) {
-.admin-bar .miles-sticky-top {
-
-    top: 46px;
-  
-}
-}
-
-
-.miles-no-shrink {
-  flex-shrink: 0;
-}
-
-
-.miles-flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.miles-flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-
-.miles-sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 

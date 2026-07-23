@@ -13,12 +13,6 @@
 
 }
 
-.editor-styles-wrapper .hero-diagonal-accent {
-
-  position: fixed !important;
-
-}
-
 .editor-styles-wrapper .about-image-accent {
 
   position: absolute !important;
@@ -358,13 +352,6 @@
 }
 
 .editor-styles-wrapper .form-group > .block-editor-block-list__block {
-
-  margin-block-start: 0 !important;
-  margin-block-end: 0 !important;
-
-}
-
-.editor-styles-wrapper .miles-row-stack > .block-editor-block-list__block {
 
   margin-block-start: 0 !important;
   margin-block-end: 0 !important;
