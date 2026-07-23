@@ -20,6 +20,6 @@ final class Plugin {
 			return;
 		}
 		$this->booted = true;
-		// Hook registration for later tasks is added here (order status, admin menu).
+		\OrillaEagles\Ledger\Status\OrderStatus::register();
 	}
 }
