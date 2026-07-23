@@ -46,7 +46,9 @@ $roster_team_slugs = wp_list_pluck( $roster_teams, 'slug' );
 <!-- wp:query {"query":{"perPage":50,"pages":0,"offset":0,"postType":"player","order":"asc","orderBy":"meta_value_num","author":"","search":"","exclude":[],"sticky":"","inherit":false,"taxQuery":null,"parents":[],"format":[]},"namespace":"advanced-query-loop","className":"roster-query","layout":{"type":"default"}} -->
 <div class="wp-block-query roster-query"><!-- wp:post-template {"className":"roster-grid"} -->
 <!-- wp:group {"className":"roster-player animate-on-scroll","style":{"spacing":{"blockGap":"0"}},"layout":{"type":"default"}} -->
-<div class="wp-block-group roster-player animate-on-scroll"><!-- wp:paragraph {"textColor":"accent-1","className":"roster-number has-text-color has-archivo-black-font-family","fontSize":"xx-large","metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"player_number"}}}}} -->
+<div class="wp-block-group roster-player animate-on-scroll"><!-- wp:post-featured-image {"sizeSlug":"large","className":"roster-player-photo"} /-->
+
+<!-- wp:paragraph {"textColor":"accent-1","className":"roster-number has-text-color has-archivo-black-font-family","fontSize":"xx-large","metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"player_number"}}}}} -->
 <p class="roster-number has-text-color has-archivo-black-font-family has-accent-1-color has-xx-large-font-size">#</p>
 <!-- /wp:paragraph -->
 
