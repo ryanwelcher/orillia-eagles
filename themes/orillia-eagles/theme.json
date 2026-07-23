@@ -1,0 +1,537 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "settings": {
+    "appearanceTools": true,
+    "useRootPaddingAwareAlignments": true,
+    "layout": {
+      "contentSize": "720px",
+      "wideSize": "1280px"
+    },
+    "color": {
+      "defaultDuotone": false,
+      "defaultGradients": false,
+      "defaultPalette": false,
+      "palette": [
+        {
+          "slug": "base",
+          "name": "White",
+          "color": "#FFFFFF"
+        },
+        {
+          "slug": "base-2",
+          "name": "Cream",
+          "color": "#F9F7F2"
+        },
+        {
+          "slug": "contrast",
+          "name": "Dark Charcoal",
+          "color": "#1A1A1A"
+        },
+        {
+          "slug": "contrast-2",
+          "name": "Medium Gray",
+          "color": "#6B6B6B"
+        },
+        {
+          "slug": "accent-1",
+          "name": "Warm Gold",
+          "color": "#B8972A"
+        },
+        {
+          "slug": "accent-2",
+          "name": "Light Gold",
+          "color": "#D4B545"
+        },
+        {
+          "slug": "accent-3",
+          "name": "Deep Gold",
+          "color": "#96790E"
+        },
+        {
+          "slug": "dark-dim",
+          "name": "Dark Dim",
+          "color": "rgba(26,26,26,0.1)"
+        },
+        {
+          "slug": "white-solid",
+          "name": "White",
+          "color": "rgba(255,255,255,1)"
+        },
+        {
+          "slug": "white-faint",
+          "name": "White Faint",
+          "color": "rgba(255,255,255,0.08)"
+        },
+        {
+          "slug": "white-muted",
+          "name": "White Muted",
+          "color": "rgba(255,255,255,0.85)"
+        },
+        {
+          "slug": "white-subtle",
+          "name": "White Subtle",
+          "color": "rgba(255,255,255,0.3)"
+        },
+        {
+          "slug": "gold-faint",
+          "name": "Gold Faint",
+          "color": "rgba(184,151,42,0.08)"
+        },
+        {
+          "slug": "white-overlay",
+          "name": "White Overlay",
+          "color": "rgba(255,255,255,0.8)"
+        },
+        {
+          "slug": "dark-faint",
+          "name": "Dark Faint",
+          "color": "rgba(26,26,26,0.08)"
+        },
+        {
+          "slug": "white-glow",
+          "name": "White Glow",
+          "color": "rgba(255,255,255,0.7)"
+        },
+        {
+          "slug": "white-scrim",
+          "name": "White Scrim",
+          "color": "rgba(255,255,255,0.5)"
+        }
+      ],
+      "duotone": [
+        {
+          "slug": "primary-contrast",
+          "name": "Primary Contrast",
+          "colors": [
+            "#1A1A1A",
+            "rgba(255,255,255,0.5)"
+          ]
+        },
+        {
+          "slug": "accent-dark",
+          "name": "Accent Dark",
+          "colors": [
+            "#1A1A1A",
+            "#F9F7F2"
+          ]
+        },
+        {
+          "slug": "accent-light",
+          "name": "Accent Light",
+          "colors": [
+            "#F9F7F2",
+            "rgba(255,255,255,0.5)"
+          ]
+        }
+      ],
+      "gradients": [
+        {
+          "slug": "fade-overlay-1",
+          "name": "Fade Overlay",
+          "gradient": "linear-gradient(148deg,\n      rgba(255,255,255,1) 0%,\n      rgba(255,255,255,1) 38%,\n      rgba(255,255,255,0.92) 44%,\n      rgba(255,255,255,0.6) 52%,\n      rgba(255,255,255,0.15) 62%,\n      rgba(255,255,255,0) 70%\n    )"
+        },
+        {
+          "slug": "fade-overlay-2",
+          "name": "Fade Overlay 2",
+          "gradient": "linear-gradient(to top,\n      rgba(255,255,255,0.85) 0%,\n      rgba(255,255,255,0.3) 30%,\n      transparent 50%\n    )"
+        },
+        {
+          "slug": "fade-overlay-3",
+          "name": "Fade Overlay 3",
+          "gradient": "linear-gradient(148deg,\n    transparent 43.5%,\n    rgba(184, 151, 42, 0.25) 44%,\n    rgba(184, 151, 42, 0.08) 44.8%,\n    transparent 45.5%\n  )"
+        },
+        {
+          "slug": "fade-overlay-4",
+          "name": "Fade Overlay 4",
+          "gradient": "linear-gradient(to top,\n        rgba(255,255,255,1) 0%,\n        rgba(255,255,255,0.97) 35%,\n        rgba(255,255,255,0.8) 55%,\n        rgba(255,255,255,0.3) 75%,\n        transparent 100%\n      )"
+        }
+      ]
+    },
+    "typography": {
+      "defaultFontSizes": false,
+      "fluid": true,
+      "fontFamilies": [
+        {
+          "fontFamily": "\"Archivo Black\", sans-serif",
+          "name": "Archivo Black",
+          "slug": "archivo-black",
+          "fontFace": [
+            {
+              "fontFamily": "Archivo Black",
+              "fontStyle": "normal",
+              "fontWeight": "400",
+              "fontDisplay": "swap",
+              "src": [
+                "file:./assets/fonts/archivo-black/400.woff2"
+              ]
+            }
+          ]
+        },
+        {
+          "fontFamily": "\"Hanken Grotesk\", sans-serif",
+          "name": "Hanken Grotesk",
+          "slug": "hanken-grotesk",
+          "fontFace": [
+            {
+              "fontFamily": "Hanken Grotesk",
+              "fontStyle": "normal",
+              "fontWeight": "400",
+              "fontDisplay": "swap",
+              "src": [
+                "file:./assets/fonts/hanken-grotesk/400.woff2"
+              ]
+            },
+            {
+              "fontFamily": "Hanken Grotesk",
+              "fontStyle": "normal",
+              "fontWeight": "500",
+              "fontDisplay": "swap",
+              "src": [
+                "file:./assets/fonts/hanken-grotesk/500.woff2"
+              ]
+            },
+            {
+              "fontFamily": "Hanken Grotesk",
+              "fontStyle": "normal",
+              "fontWeight": "600",
+              "fontDisplay": "swap",
+              "src": [
+                "file:./assets/fonts/hanken-grotesk/600.woff2"
+              ]
+            },
+            {
+              "fontFamily": "Hanken Grotesk",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "fontDisplay": "swap",
+              "src": [
+                "file:./assets/fonts/hanken-grotesk/700.woff2"
+              ]
+            }
+          ]
+        }
+      ],
+      "fontSizes": [
+        {
+          "slug": "small",
+          "name": "Small",
+          "size": "1rem",
+          "fluid": false
+        },
+        {
+          "slug": "base",
+          "name": "Medium",
+          "size": "1rem",
+          "fluid": false
+        },
+        {
+          "slug": "lg",
+          "name": "Large",
+          "size": "1.125rem",
+          "fluid": false
+        },
+        {
+          "slug": "xl",
+          "name": "Extra Large",
+          "size": "1.25rem",
+          "fluid": false
+        },
+        {
+          "slug": "xx-large",
+          "name": "2X Large",
+          "size": "1.5rem",
+          "fluid": false
+        },
+        {
+          "slug": "xxx-large",
+          "name": "3X Large",
+          "size": "clamp(1.5rem, 2.5vw, 2rem)"
+        },
+        {
+          "slug": "huge",
+          "name": "Huge",
+          "size": "clamp(2rem, 4vw, 3rem)"
+        },
+        {
+          "slug": "display",
+          "name": "Display",
+          "size": "clamp(3.5rem, 10vw, 9rem)"
+        }
+      ]
+    },
+    "spacing": {
+      "blockGap": true,
+      "defaultSpacingSizes": false,
+      "spacingSizes": [
+        {
+          "slug": "20",
+          "name": "X-Small",
+          "size": "0.5rem"
+        },
+        {
+          "slug": "30",
+          "name": "Small",
+          "size": "1rem"
+        },
+        {
+          "slug": "40",
+          "name": "Medium",
+          "size": "2rem"
+        },
+        {
+          "slug": "50",
+          "name": "Large",
+          "size": "4rem"
+        },
+        {
+          "slug": "60",
+          "name": "X-Large",
+          "size": "6rem"
+        },
+        {
+          "slug": "65",
+          "name": "X-Large-2X-Large",
+          "size": "8rem"
+        }
+      ],
+      "units": [
+        "px",
+        "em",
+        "rem",
+        "%",
+        "vh",
+        "vw"
+      ]
+    },
+    "shadow": {
+      "defaultPresets": false,
+      "presets": [
+        {
+          "slug": "shadow-1",
+          "name": "Shadow",
+          "shadow": "0 20px 60px rgba(26, 26, 26, 0.08)"
+        },
+        {
+          "slug": "shadow-2",
+          "name": "Shadow 2",
+          "shadow": "0 10px 40px rgba(26, 26, 26, 0.06)"
+        },
+        {
+          "slug": "shadow-3",
+          "name": "Shadow 3",
+          "shadow": "0 8px 30px rgba(184, 151, 42, 0.1)"
+        }
+      ]
+    },
+    "custom": {
+      "lineHeight": {
+        "none": "1",
+        "tight": "1.1",
+        "snug": "1.25",
+        "normal": "1.5",
+        "relaxed": "1.625",
+        "loose": "2"
+      },
+      "fontWeight": {
+        "thin": "100",
+        "extralight": "200",
+        "light": "300",
+        "normal": "400",
+        "medium": "500",
+        "semibold": "600",
+        "bold": "700",
+        "extrabold": "800",
+        "black": "900"
+      }
+    }
+  },
+  "styles": {
+    "color": {
+      "text": "var:preset|color|contrast",
+      "background": "var:preset|color|base"
+    },
+    "typography": {
+      "fontFamily": "var:preset|font-family|hanken-grotesk",
+      "lineHeight": "1.6"
+    },
+    "css": "body .is-vertical { align-items: stretch; }\n.post-type-post.editor-styles-wrapper { padding: 2rem; }\n.post-type-post .editor-post-title__input { font-size: 2.5rem; }",
+    "spacing": {
+      "blockGap": "0",
+      "padding": {
+        "top": "0",
+        "right": "var:preset|spacing|50",
+        "bottom": "0",
+        "left": "var:preset|spacing|50"
+      }
+    },
+    "elements": {
+      "button": {
+        "border": {
+          "radius": "4px"
+        },
+        "typography": {
+          "fontSize": "inherit",
+          "fontFamily": "inherit",
+          "lineHeight": "1.6"
+        },
+        "color": {
+          "background": "var:preset|color|contrast",
+          "text": "var:preset|color|base"
+        },
+        ":hover": {
+          "color": {
+            "background": "var:preset|color|contrast-2"
+          }
+        },
+        ":focus": {
+          "outline": {
+            "width": "2px",
+            "style": "solid",
+            "offset": "2px"
+          }
+        }
+      },
+      "link": {
+        "color": {
+          "text": "inherit"
+        },
+        ":hover": {
+          "typography": {
+            "textDecoration": "underline"
+          }
+        },
+        ":focus": {
+          "outline": {
+            "width": "2px",
+            "style": "solid",
+            "offset": "2px"
+          }
+        }
+      },
+      "heading": {
+        "typography": {
+          "fontFamily": "var:preset|font-family|archivo-black",
+          "lineHeight": "1.2"
+        }
+      }
+    },
+    "blocks": {
+      "core/list": {
+        "spacing": {
+          "padding": {
+            "left": "0"
+          },
+          "margin": {
+            "top": "0",
+            "bottom": "0"
+          }
+        },
+        "typography": {
+          "fontSize": "inherit",
+          "lineHeight": "inherit"
+        }
+      },
+      "core/separator": {
+        "border": {
+          "width": "0",
+          "style": "none"
+        },
+        "spacing": {
+          "margin": {
+            "top": "0",
+            "bottom": "0"
+          }
+        }
+      },
+      "core/code": {
+        "spacing": {
+          "padding": {
+            "top": "0",
+            "right": "0",
+            "bottom": "0",
+            "left": "0"
+          },
+          "margin": {
+            "top": "0",
+            "bottom": "0"
+          }
+        },
+        "typography": {
+          "fontSize": "inherit",
+          "fontFamily": "inherit"
+        },
+        "color": {
+          "background": "transparent"
+        }
+      },
+      "core/table": {
+        "spacing": {
+          "margin": {
+            "top": "0",
+            "bottom": "0"
+          }
+        }
+      },
+      "core/details": {
+        "spacing": {
+          "margin": {
+            "top": "0",
+            "bottom": "0"
+          }
+        }
+      },
+      "core/navigation": {
+        "typography": {
+          "fontSize": "inherit",
+          "fontFamily": "inherit",
+          "lineHeight": "inherit"
+        },
+        "spacing": {
+          "blockGap": "var:preset|spacing|40"
+        }
+      },
+      "core/navigation-link": {
+        "typography": {
+          "fontSize": "inherit",
+          "fontFamily": "inherit"
+        }
+      },
+      "core/buttons": {
+        "spacing": {
+          "blockGap": "var:preset|spacing|20"
+        }
+      },
+      "core/social-links": {
+        "spacing": {
+          "blockGap": "var:preset|spacing|20"
+        }
+      },
+      "core/quote": {
+        "border": {
+          "left": {
+            "width": "0px",
+            "style": "none"
+          }
+        },
+        "spacing": {
+          "padding": {
+            "left": "0"
+          }
+        }
+      }
+    }
+  },
+  "templateParts": [
+    {
+      "name": "header",
+      "title": "Header",
+      "area": "header"
+    },
+    {
+      "name": "footer",
+      "title": "Footer",
+      "area": "footer"
+    }
+  ]
+}
