@@ -847,19 +847,6 @@ a {
   color: rgba(255, 255, 255, 0.35);
 }
 
-.roster-coaches {
-  text-align: center;
-  margin-top: var(--wp--preset--spacing--60);
-  font-size: var(--wp--preset--font-size--base);
-  color: rgba(255, 255, 255, 0.45);
-  line-height: 1.8;
-}
-
-.roster-coaches strong {
-  color: var(--wp--preset--color--white-glow);
-  font-weight: 600;
-}
-
 @media (max-width: 768px) {
 .roster {
 
@@ -2803,7 +2790,6 @@ body .form-row > * { margin-block-start: 0; margin-block-end: 0; }
 .roster-inner.roster-inner { margin-inline: auto; }
 .roster-header.roster-header { margin-block-end: var(--wp--preset--spacing--60); }
 .roster-subtitle.roster-subtitle { margin-block-start: var(--wp--preset--spacing--30); }
-.roster-coaches.roster-coaches { margin-block-start: var(--wp--preset--spacing--60); }
 .news-inner.news-inner { margin-inline: auto; }
 .news-header.news-header { margin-block-end: var(--wp--preset--spacing--60); }
 .news-card-image-wrap.news-card-image-wrap { margin-block-end: var(--wp--preset--spacing--40); }
