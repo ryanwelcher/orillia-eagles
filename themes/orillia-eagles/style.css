@@ -123,6 +123,39 @@ body .roster-position {
 	align-self: start;
 }
 
+body .roster-grid > .roster_role-coach .roster-player {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+body .roster-grid > .roster_role-coach .roster-number {
+	display: none;
+}
+
+body .roster-grid > .roster_role-coach .roster-name,
+body .roster-grid > .roster_role-coach .roster-position {
+	grid-column: 1;
+}
+
+body .roster-grid > .roster_role-coach .roster-position {
+	font-size: 0;
+}
+
+body .roster-grid > .roster_role-coach .roster-position::before {
+	font-size: var(--wp--preset--font-size--small);
+}
+
+body .roster-grid > .roster_role-coach.team-junior .roster-position::before {
+	content: "Junior Coach";
+}
+
+body .roster-grid > .roster_role-coach.team-intermediate .roster-position::before {
+	content: "Intermediate Coach";
+}
+
+body .roster-grid > .roster_role-coach.team-senior .roster-position::before {
+	content: "Senior Coach";
+}
+
 body .roster-player-photo {
 	position: absolute;
 	z-index: 0;

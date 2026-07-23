@@ -48,16 +48,16 @@ document.querySelectorAll('.roster-tabs').forEach(tabGroup => {
   if (tabs.length === 0 || playerItems.length === 0) return;
 
   tabGroup.setAttribute('role', 'tablist');
-  tabGroup.setAttribute('aria-label', 'Player teams');
+  tabGroup.setAttribute('aria-label', 'Roster filters');
 
-  const getTeam = tab => {
+  const getFilter = tab => {
     const tabWrapper = tab.closest('.roster-tab');
-    const teamClass = Array.from(tabWrapper.classList).find(className => className.startsWith('roster-tab--'));
-    return teamClass ? teamClass.replace('roster-tab--', '') : '';
+    const filterClass = Array.from(tabWrapper.classList).find(className => className.startsWith('roster-tab--'));
+    return filterClass ? filterClass.replace('roster-tab--', '') : '';
   };
 
   const selectTeam = selectedTab => {
-    const selectedTeam = getTeam(selectedTab);
+    const selectedFilter = getFilter(selectedTab);
 
     tabs.forEach(tab => {
       const isSelected = tab === selectedTab;
@@ -68,7 +68,11 @@ document.querySelectorAll('.roster-tabs').forEach(tabGroup => {
     });
 
     playerItems.forEach(item => {
-      item.hidden = !item.classList.contains(`team-${selectedTeam}`);
+      const isCoach = item.classList.contains('roster_role-coach');
+      const matchesFilter = selectedFilter === 'coaches'
+        ? isCoach
+        : item.classList.contains(`team-${selectedFilter}`) && !isCoach;
+      item.hidden = !matchesFilter;
     });
   };
 
