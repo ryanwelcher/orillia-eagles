@@ -1,7 +1,7 @@
 <?php
 /**
  * Title: Page
- * Slug: handmade-jewelry-website/template-page
+ * Slug: orillia-eagles/template-page
  * Categories: hidden
  * Inserter: false
  */

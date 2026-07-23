@@ -1,7 +1,7 @@
 <?php
 /**
  * Title: Single Post
- * Slug: handmade-jewelry-website/template-single
+ * Slug: orillia-eagles/template-single
  * Categories: hidden
  * Inserter: false
  */
@@ -41,7 +41,7 @@
 <!-- /wp:group --></div>
 <!-- /wp:group -->
 
-<!-- wp:pattern {"slug":"handmade-jewelry-website/template-comments"} /--></main>
+<!-- wp:pattern {"slug":"orillia-eagles/template-comments"} /--></main>
 <!-- /wp:group -->
 
 <!-- wp:template-part {"slug":"footer","area":"footer"} /-->

@@ -1,7 +1,7 @@
 <?php
 /**
  * Title: Error 404
- * Slug: handmade-jewelry-website/template-404
+ * Slug: orillia-eagles/template-404
  * Categories: hidden
  * Inserter: false
  */

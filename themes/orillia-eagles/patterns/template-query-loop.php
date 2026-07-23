@@ -1,7 +1,7 @@
 <?php
 /**
  * Title: Post Query Loop
- * Slug: handmade-jewelry-website/template-query-loop
+ * Slug: orillia-eagles/template-query-loop
  * Categories: hidden
  * Inserter: false
  */

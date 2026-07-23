@@ -1,7 +1,7 @@
 <?php
 /**
  * Title: Team Roster: Players & Coaches
- * Slug: handmade-jewelry-website/roster-query
+ * Slug: orillia-eagles/roster-query
  * Categories: query
  * Description: Team roster grid showing Player and Coach roles from the shared roster post type, with Junior, Intermediate, and Senior filters.
  */
