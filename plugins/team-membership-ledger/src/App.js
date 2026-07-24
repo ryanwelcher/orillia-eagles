@@ -22,11 +22,13 @@ export default function App() {
 	const [ currency, setCurrency ] = useState( { symbol: '$', decimals: 2 } );
 	const [ rows, setRows ] = useState( [] );
 	const [ isLoading, setIsLoading ] = useState( false );
+	const [ error, setError ] = useState( null );
 	const [ view, setView ] = useState( DEFAULT_VIEW );
 
 	useEffect( () => {
 		let active = true;
 		setIsLoading( true );
+		setError( null );
 		fetchLedger( productId )
 			.then( ( data ) => {
 				if ( ! active ) {
@@ -35,6 +37,16 @@ export default function App() {
 				setProducts( data.products );
 				setCurrency( data.currency );
 				setRows( data.rows );
+			} )
+			.catch( ( e ) => {
+				if ( ! active ) {
+					return;
+				}
+				setRows( [] );
+				setError(
+					e.message ||
+						__( 'Failed to load the ledger.', 'team-membership-ledger' )
+				);
 			} )
 			.finally( () => active && setIsLoading( false ) );
 		return () => {
@@ -62,6 +74,9 @@ export default function App() {
 				onChange={ ( value ) => setProductId( Number( value ) ) }
 				__nextHasNoMarginBottom
 			/>
+			{ error && (
+				<div className="notice notice-error"><p>{ error }</p></div>
+			) }
 			{ productId === 0 ? (
 				<p>{ __( 'Select a product to view the ledger.', 'team-membership-ledger' ) }</p>
 			) : isLoading ? (
