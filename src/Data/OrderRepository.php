@@ -10,7 +10,7 @@ final class OrderRepository {
 
 	public const AMOUNT_PAID_META = '_tml_amount_paid';
 
-	/** @return array<int,array{customer_id:int,status:string,qty:int,line_total:float,amount_paid:float,date:?string}> */
+	/** @return array<int,array{customer_id:int,order_id:int,status:string,qty:int,line_total:float,amount_paid:float,date:?string}> */
 	public function productRecords( int $product_id ): array {
 		$statuses = array_keys( wc_get_order_statuses() ); // all statuses
 		$orders   = array();
