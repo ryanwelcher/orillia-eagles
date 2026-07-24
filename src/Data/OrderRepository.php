@@ -44,6 +44,11 @@ final class OrderRepository {
 					continue;
 				}
 				$line_total = (float) $item->get_total();
+				// Installment tracking assumes one product per order: the order-level
+				// _tml_amount_paid meta is attributed to this line item. Orders that mix
+				// products (or repeat a product across line items) would misattribute the
+				// partial payment. The plugin's own Rollover always creates single-product
+				// orders, matching the per-season product-per-order model in the README.
 				$paid       = ( 'completed' === $status )
 					? $line_total
 					: (float) $order->get_meta( self::AMOUNT_PAID_META );
