@@ -3,7 +3,7 @@
  * Plugin Name:       Team Membership Ledger
  * Description:        Track who owes / who has paid for dues and events (offline-friendly) for the Orillia Eagles.
  * Version:           0.1.0
- * Requires at least: 6.5
+ * Requires at least: 6.7
  * Requires PHP:      7.4
  * Requires Plugins:  woocommerce
  * Text Domain:       team-membership-ledger
