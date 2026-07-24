@@ -25,17 +25,26 @@ money collected offline. No public storefront, no member logins.
 - **Membership → Roster** — add members (WooCommerce customers) and mark them
   Active/Inactive. Only Active members are charged by Season Rollover.
 - **Membership → Ledger** — pick a product to see every active member's status
-  (Paid / Owes / Not entered), quantity, total, amount paid, and balance.
+  (Paid / Owes / Not entered), and record payments inline:
+  - **Mark Paid** — marks that member's order Completed (paid in full). On a
+    "Not entered" member it creates the charge first, then marks it paid.
+  - **Add payment** — type the amount just received and click Add; it accrues
+    toward the total (e.g. $50 then $30 on a $200 charge → "$80 of $200"). When
+    the running total reaches the order total the order auto-completes. On a
+    "Not entered" member it creates the charge first, then records the payment.
+  - A member with multiple orders for one product shows a note to manage it in
+    WooCommerce (inline actions are hidden to avoid targeting the wrong order).
 - **Membership → Season Rollover** — pick a product and click Generate to raise
   a "Requested" (unpaid) order for every active member who doesn't already have
   one. Safe to re-run.
 
-## Recording payments
+## Recording payments (details)
 
 - An order's **status is the paid flag**: *Requested* = owes, *Completed* = paid.
-- For **installments**, keep the order at Requested/On-hold and set the order
-  meta `_tml_amount_paid` to the running amount received; the Ledger shows the
-  remaining balance. Mark the order Completed once fully paid.
+- The Ledger's **Add payment** stores the running total in the order meta
+  `_tml_amount_paid` and auto-completes the order when it reaches the total.
+- To reverse a payment or mark an order back to unpaid, edit the order in
+  **WooCommerce → Orders**.
 
 ## Local development note (SQLite)
 
