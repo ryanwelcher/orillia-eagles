@@ -1,0 +1,23 @@
+{
+    "name": "orilla-eagles/team-membership-ledger",
+    "description": "Track dues and event payments for the Orillia Eagles.",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "autoload": {
+        "psr-4": { "OrillaEagles\\Ledger\\": "src/" }
+    },
+    "autoload-dev": {
+        "psr-4": { "OrillaEagles\\Ledger\\Tests\\": "tests/" }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "allow-plugins": { "*": false }
+    }
+}
