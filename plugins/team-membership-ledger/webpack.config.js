@@ -1,13 +1,17 @@
 /**
- * Custom webpack config: bundle @wordpress/dataviews (and the @wordpress
- * packages it privately couples with) into our build, because this site's
- * WordPress/Gutenberg does not register a `wp-dataviews` script handle.
+ * Custom webpack config: bundle @wordpress/dataviews into our build, because
+ * this site's WordPress/Gutenberg does not register a `wp-dataviews` script
+ * handle.
  *
- * Strategy: keep the stable, must-be-shared packages external (React via
- * wp-element, plus data-only utils), and bundle everything else under
- * @wordpress/* so DataViews carries its own matching @wordpress/components,
- * @wordpress/data, and @wordpress/private-apis — no host-version mismatch and
- * no cross-boundary private-apis lock.
+ * Strategy: bundle ONLY @wordpress/dataviews; everything it imports
+ * (@wordpress/components, @wordpress/data, @wordpress/private-apis,
+ * @wordpress/element, React, …) is externalized to the host's registered
+ * script handles. Because components/data/private-apis resolve to the HOST's
+ * instances, this build must run against a Gutenberg whose @wordpress/*
+ * versions are compatible with the bundled dataviews (pinned to 17.2.0, which
+ * matches the host's Gutenberg 23.6). This keeps the bundle small and avoids
+ * pulling framer-motion and the broken @wordpress/ui/@wordpress/icons ESM into
+ * the build.
  */
 const path = require( 'path' );
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
