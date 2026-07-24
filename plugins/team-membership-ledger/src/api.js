@@ -11,3 +11,22 @@ export function fetchLedger( productId ) {
 		path: `/tml/v1/ledger?product_id=${ encodeURIComponent( productId ) }`,
 	} );
 }
+
+/**
+ * Record an additive payment; returns the updated row.
+ *
+ * @param {{productId:number, orderId:?number, memberId:?number, amount:number}} args Payload.
+ * @return {Promise<Object|null>} Updated serialized row, or null.
+ */
+export function addPayment( { productId, orderId, memberId, amount } ) {
+	return apiFetch( {
+		path: '/tml/v1/ledger/add-payment',
+		method: 'POST',
+		data: {
+			product_id: productId,
+			order_id: orderId || 0,
+			member_id: memberId || 0,
+			amount,
+		},
+	} );
+}

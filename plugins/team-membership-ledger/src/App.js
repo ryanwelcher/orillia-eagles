@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from '@wordpress/element';
-import { SelectControl, Spinner } from '@wordpress/components';
+import { SelectControl, Spinner, Snackbar } from '@wordpress/components';
 import { DataViews, filterSortAndPaginate } from '@wordpress/dataviews';
 import { __ } from '@wordpress/i18n';
 import { fetchLedger } from './api';
 import { makeFields } from './fields';
+import { makeActions } from './actions';
 
 const DEFAULT_VIEW = {
 	type: 'table',
@@ -24,6 +25,18 @@ export default function App() {
 	const [ isLoading, setIsLoading ] = useState( false );
 	const [ error, setError ] = useState( null );
 	const [ view, setView ] = useState( DEFAULT_VIEW );
+	const [ notice, setNotice ] = useState( null );
+
+	const handleRowUpdated = ( updated ) => {
+		setRows( ( current ) =>
+			current.map( ( r ) => ( r.memberId === updated.memberId ? updated : r ) )
+		);
+	};
+
+	const actions = useMemo(
+		() => makeActions( { productId, onRowUpdated: handleRowUpdated, onNotice: setNotice } ),
+		[ productId ]
+	);
 
 	useEffect( () => {
 		let active = true;
@@ -91,7 +104,13 @@ export default function App() {
 					defaultLayouts={ { table: {} } }
 					getItemId={ ( item ) => String( item.memberId ) }
 					isLoading={ isLoading }
+					actions={ actions }
 				/>
+			) }
+			{ notice && (
+				<div style={ { position: 'fixed', bottom: 20, left: 20, zIndex: 100000 } }>
+					<Snackbar onRemove={ () => setNotice( null ) }>{ notice.message }</Snackbar>
+				</div>
 			) }
 		</div>
 	);
