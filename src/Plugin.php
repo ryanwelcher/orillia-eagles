@@ -24,5 +24,6 @@ final class Plugin {
 		add_action( 'admin_menu', array( \OrillaEagles\Ledger\Admin\Menu::class, 'register' ) );
 		add_action( 'admin_init', array( \OrillaEagles\Ledger\Admin\RosterScreen::class, 'handlePost' ) );
 		add_action( 'admin_init', array( \OrillaEagles\Ledger\Admin\RolloverScreen::class, 'handlePost' ) );
+		add_action( 'admin_init', array( \OrillaEagles\Ledger\Admin\LedgerScreen::class, 'handlePost' ) );
 	}
 }
