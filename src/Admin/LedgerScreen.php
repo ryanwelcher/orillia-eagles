@@ -39,6 +39,17 @@ final class LedgerScreen {
 		$orders = new OrderRepository();
 
 		try {
+			// Validate the action and its own inputs before resolving/creating any order.
+			$amount = 0.0;
+			if ( 'add_payment' === $action ) {
+				$amount = round( (float) wp_unslash( $_POST['amount'] ?? 0 ), 2 );
+				if ( $amount <= 0 ) {
+					throw new \RuntimeException( __( 'Enter a payment amount greater than zero.', 'team-membership-ledger' ) );
+				}
+			} elseif ( 'mark_paid' !== $action ) {
+				throw new \RuntimeException( __( 'Unknown action.', 'team-membership-ledger' ) );
+			}
+
 			// Resolve the target order: an existing one, or create it on the fly.
 			if ( ! $order_id ) {
 				if ( ! $member_id || ! $product_id ) {
@@ -50,15 +61,9 @@ final class LedgerScreen {
 			if ( 'mark_paid' === $action ) {
 				$orders->markPaid( $order_id );
 				$msg = __( 'Marked paid.', 'team-membership-ledger' );
-			} elseif ( 'add_payment' === $action ) {
-				$amount = round( (float) wp_unslash( $_POST['amount'] ?? 0 ), 2 );
-				if ( $amount <= 0 ) {
-					throw new \RuntimeException( __( 'Enter a payment amount greater than zero.', 'team-membership-ledger' ) );
-				}
+			} else {
 				$orders->addPayment( $order_id, $amount );
 				$msg = __( 'Payment recorded.', 'team-membership-ledger' );
-			} else {
-				throw new \RuntimeException( __( 'Unknown action.', 'team-membership-ledger' ) );
 			}
 
 			set_transient( 'tml_ledger_notice', $msg, 30 );
