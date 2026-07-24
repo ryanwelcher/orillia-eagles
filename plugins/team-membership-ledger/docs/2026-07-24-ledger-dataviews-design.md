@@ -37,6 +37,11 @@ with the same security model.
   Rollover is unchanged.
 - **Build tooling — add `@wordpress/scripts`.** None exists today. Standard
   `src/` → `build/` webpack with a single admin script entry (no block.json).
+  **DataViews is bundled, not externalized** (spike-proven): this site's
+  Gutenberg does not register a `wp-dataviews` handle, so a custom
+  `webpack.config.js` bundles `@wordpress/dataviews@17.2.0` and externalizes the
+  rest to host handles, with a `resolve.alias` fixing `@wordpress/icons@15.2.0`'s
+  broken ESM `exports`. The DataViews stylesheet is imported in JS and inlined.
 - **Data delivery — REST read + client-side view state.** One REST read endpoint
   returns the shaped rows (reusing `LedgerCalculator` server-side). DataViews
   does sorting/filtering/pagination client-side — the active roster is dozens of

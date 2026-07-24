@@ -13,10 +13,11 @@
 - **Namespace/PSR-4:** `OrillaEagles\Ledger\` → `src/`; tests `OrillaEagles\Ledger\Tests\` → `tests/`. Text domain: `team-membership-ledger`.
 - **Capability:** every REST route's `permission_callback` requires `Menu::CAP` = `manage_woocommerce`.
 - **Nonce:** REST calls authenticate with the standard `wp_rest` nonce; `@wordpress/api-fetch` in wp-admin is preconfigured with the site root + REST nonce (via the `wp-api-fetch` handle's inline script), so no manual nonce middleware is needed.
+- **DataViews is BUNDLED, not externalized (spike-proven).** This site's Gutenberg (23.6) compiles DataViews into its editor bundles only and does NOT register a `wp-dataviews` script handle. So the build bundles `@wordpress/dataviews` (pinned to `17.2.0`, the version GB 23.6 ships) and externalizes everything else it imports (`@wordpress/components`, `data`, `element`, `i18n`, `private-apis`, `compose`, `primitives`, `a11y`, `date`, `keycodes`, `rich-text`, `warning`, plus `react`/`react-dom`) to the host's registered handles — all confirmed present. A custom `webpack.config.js` does this via `requestToExternal` returning `null` for `@wordpress/dataviews*` (bundle) and `undefined` otherwise (default externalize). A `resolve.alias` forces `@wordpress/icons` to its CJS entry because `@wordpress/icons@15.2.0` ships a broken `exports` field (missing `build-module/index.mjs`). The DataViews stylesheet is imported in JS and bundled/inlined — there is NO `wp-dataviews` style handle to enqueue; do NOT add `wp_enqueue_style('wp-dataviews')`. Enqueue `wp_enqueue_style('wp-components')` for Modal/Button/SelectControl chrome.
 - **Sanitize:** `absint` for all ids; `amount` is `round( (float) …, 2 )` and must be `> 0`. These mirror the retiring `LedgerScreen::handlePost()` exactly.
 - **Payment semantics (unchanged):** `amount` on add-payment is the increment "received now", ADDED to `_tml_amount_paid`; the order auto-completes when the running total reaches the order total (`PaymentCalculator::apply`). No editing down, no refund/undo from the Ledger.
 - **Eligibility rules:** payment actions are hidden on `paid` rows and on rows with `orderCount > 1` (the "multiple orders — manage in WooCommerce" read-only state).
-- **WordPress floor:** the `wp-dataviews` script handle must be registered (WordPress 6.7+). Bump the plugin header `Requires at least` to `6.7`.
+- **WordPress floor:** DataViews is bundled (see above), so the host need not register `wp-dataviews`. Bump the plugin header `Requires at least` to `6.7` (the floor for the externalized `@wordpress/components`/`data` APIs DataViews 17.2.0 expects).
 - **Build outputs** live in `build/` (git-ignored); source in `src/` (`.js`) alongside the existing `src/` PHP. JS entry is `src/index.js`. No `block.json` — this is an admin script, not a block.
 - **Scope of THIS plan:** Ledger only (design Phases 1–2). Roster (Phase 3) is a separate follow-up plan on the same plumbing.
 
@@ -59,15 +60,15 @@
 - Modify: `plugins/team-membership-ledger/team-membership-ledger.php` (`Requires at least: 6.7`)
 - Modify: `plugins/team-membership-ledger/.gitignore`
 
+> **AS-BUILT (spike-adjusted).** A spike established that this site does not
+> expose a `wp-dataviews` handle, so DataViews is BUNDLED via a custom
+> `webpack.config.js` (see Global Constraints). The steps below reflect what was
+> implemented and verified in the browser. Also created: `webpack.config.js`.
+
 **Interfaces:**
-- Produces: a global `window.tmlLedger = { productId: number }`; a DOM node `#tml-ledger-root` on the Ledger admin page; the `wp-dataviews`/`wp-components` styles enqueued.
+- Produces: a global `window.tmlLedger = { productId: number }`; a DOM node `#tml-ledger-root` on the Ledger admin page; `wp-components` style enqueued (DataViews styles are bundled into the JS, not a handle).
 
-- [ ] **Step 1: Verify the `wp-dataviews` handle exists on this site**
-
-Run: `studio wp eval 'echo wp_script_is("wp-dataviews","registered") ? "yes" : "no";'`
-Expected: `yes`. If `no`, stop — the site's WordPress is too old for DataViews; upgrade WP first (`studio config set --wp 6.8`).
-
-- [ ] **Step 2: Create `package.json`**
+- [ ] **Step 1: Create `package.json`** (pins `@wordpress/dataviews` so it can be bundled)
 
 ```json
 {
@@ -80,11 +81,53 @@ Expected: `yes`. If `no`, stop — the site's WordPress is too old for DataViews
   },
   "devDependencies": {
     "@wordpress/scripts": "^30.0.0"
+  },
+  "dependencies": {
+    "@wordpress/dataviews": "17.2.0"
   }
 }
 ```
 
-Note: `@wordpress/*` imports are externalized to the site's `wp.*` globals by `@wordpress/scripts`' dependency-extraction plugin, so they are not installed as dependencies.
+- [ ] **Step 2: Create `webpack.config.js`** (bundle DataViews, externalize the rest, alias the broken icons ESM)
+
+```js
+const path = require( 'path' );
+const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
+const DependencyExtractionWebpackPlugin = require( '@wordpress/dependency-extraction-webpack-plugin' );
+
+module.exports = {
+	...defaultConfig,
+	resolve: {
+		...defaultConfig.resolve,
+		alias: {
+			...( defaultConfig.resolve && defaultConfig.resolve.alias ),
+			// @wordpress/icons@15.2.0 ships a broken `exports` field (missing
+			// build-module/index.mjs); force its working CJS entry.
+			'@wordpress/icons$': path.resolve(
+				__dirname,
+				'node_modules/@wordpress/icons/build/index.cjs'
+			),
+		},
+	},
+	plugins: [
+		...defaultConfig.plugins.filter(
+			( plugin ) =>
+				plugin.constructor.name !== 'DependencyExtractionWebpackPlugin'
+		),
+		new DependencyExtractionWebpackPlugin( {
+			requestToExternal( request ) {
+				if ( request === '@wordpress/dataviews' ) {
+					return null; // bundle
+				}
+				if ( request.startsWith( '@wordpress/dataviews/' ) ) {
+					return null; // bundle its stylesheet import too
+				}
+				return undefined; // default externalization for all others
+			},
+		} ),
+	],
+};
+```
 
 - [ ] **Step 3: Create a minimal `src/index.js` mount check**
 
@@ -126,8 +169,10 @@ Add this static method to `src/Admin/LedgerScreen.php`:
 			true
 		);
 		wp_set_script_translations( 'tml-ledger-app', 'team-membership-ledger' );
+		// DataViews styles are bundled into build/index.js; host component styles
+		// are still needed for Modal/Button/SelectControl chrome. There is no
+		// wp-dataviews style handle on this site (see Global Constraints).
 		wp_enqueue_style( 'wp-components' );
-		wp_enqueue_style( 'wp-dataviews' );
 
 		wp_localize_script(
 			'tml-ledger-app',
@@ -682,7 +727,11 @@ export default function App() {
 
 - [ ] **Step 8: Replace `src/index.js` to render `<App/>`**
 
+The DataViews stylesheet import here is what pulls DataViews into the bundle and
+inlines its CSS (there is no `wp-dataviews` style handle on this site).
+
 ```js
+import '@wordpress/dataviews/build-style/style.css';
 import { createRoot } from '@wordpress/element';
 import App from './App';
 
@@ -1177,8 +1226,10 @@ final class LedgerScreen {
 			true
 		);
 		wp_set_script_translations( 'tml-ledger-app', 'team-membership-ledger' );
+		// DataViews styles are bundled into build/index.js; host component styles
+		// are still needed for Modal/Button/SelectControl chrome. There is no
+		// wp-dataviews style handle on this site (see Global Constraints).
 		wp_enqueue_style( 'wp-components' );
-		wp_enqueue_style( 'wp-dataviews' );
 
 		wp_localize_script(
 			'tml-ledger-app',
