@@ -104,4 +104,17 @@ final class LedgerCalculatorTest extends TestCase {
 		$this->assertNull( $rows[2]->singleOrderId() );
 		$this->assertSame( 0, $rows[2]->orderCount() );
 	}
+
+	public function test_member_with_two_different_orders_has_no_single_target(): void {
+		$records = array(
+			array( 'customer_id' => 1, 'order_id' => 601, 'status' => 'requested', 'qty' => 1, 'line_total' => 100.0, 'amount_paid' => 0.0, 'date' => '2026-01-05 09:00:00' ),
+			array( 'customer_id' => 1, 'order_id' => 602, 'status' => 'requested', 'qty' => 1, 'line_total' => 100.0, 'amount_paid' => 0.0, 'date' => '2026-01-06 09:00:00' ),
+		);
+		$rows = LedgerCalculator::forProduct( $this->members, $records );
+
+		// Alice: two different order ids -> no single action target.
+		$this->assertSame( 2, $rows[0]->orderCount() );
+		$this->assertNull( $rows[0]->singleOrderId() );
+		$this->assertSame( array( 601, 602 ), $rows[0]->orderIds() );
+	}
 }
