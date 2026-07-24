@@ -55,6 +55,7 @@ final class OrderRepository {
 
 				$records[] = array(
 					'customer_id' => $customer_id,
+					'order_id'    => (int) $order->get_id(),
 					'status'      => $status,
 					'qty'         => (int) $item->get_quantity(),
 					'line_total'  => $line_total,

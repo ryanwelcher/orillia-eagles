@@ -24,11 +24,12 @@ final class LedgerCalculator {
 				continue;
 			}
 
-			$qty        = 0;
-			$total      = 0.0;
-			$paid       = 0.0;
-			$all_paid   = true;
-			$date       = null;
+			$qty      = 0;
+			$total    = 0.0;
+			$paid     = 0.0;
+			$all_paid = true;
+			$date     = null;
+			$order_ids = array();
 			foreach ( $own as $r ) {
 				$qty   += (int) $r['qty'];
 				$total += (float) $r['line_total'];
@@ -39,10 +40,13 @@ final class LedgerCalculator {
 				if ( ! empty( $r['date'] ) && ( null === $date || $r['date'] < $date ) ) {
 					$date = (string) $r['date'];
 				}
+				if ( ! empty( $r['order_id'] ) ) {
+					$order_ids[] = (int) $r['order_id'];
+				}
 			}
 
 			$status = $all_paid ? MemberStatus::PAID : MemberStatus::OWES;
-			$rows[] = new LedgerRow( $id, (string) $m['name'], (string) $m['email'], $status, $qty, round( $total, 2 ), round( $paid, 2 ), $date );
+			$rows[] = new LedgerRow( $id, (string) $m['name'], (string) $m['email'], $status, $qty, round( $total, 2 ), round( $paid, 2 ), $date, $order_ids );
 		}
 
 		return $rows;

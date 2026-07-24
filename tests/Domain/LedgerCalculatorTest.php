@@ -81,4 +81,27 @@ final class LedgerCalculatorTest extends TestCase {
 		$this->assertNull( $rows[1]->date() );
 		$this->assertSame( 25.0, $rows[1]->balance() );
 	}
+
+	public function test_row_carries_distinct_order_ids(): void {
+		$records = array(
+			array( 'customer_id' => 1, 'order_id' => 501, 'status' => 'requested', 'qty' => 1, 'line_total' => 100.0, 'amount_paid' => 0.0, 'date' => '2026-01-05 09:00:00' ),
+			array( 'customer_id' => 2, 'order_id' => 502, 'status' => 'requested', 'qty' => 1, 'line_total' => 50.0, 'amount_paid' => 0.0, 'date' => '2026-01-06 09:00:00' ),
+			array( 'customer_id' => 2, 'order_id' => 502, 'status' => 'requested', 'qty' => 1, 'line_total' => 50.0, 'amount_paid' => 0.0, 'date' => '2026-01-06 09:00:00' ),
+		);
+		$rows = LedgerCalculator::forProduct( $this->members, $records );
+
+		// Alice: one order.
+		$this->assertSame( array( 501 ), $rows[0]->orderIds() );
+		$this->assertSame( 501, $rows[0]->singleOrderId() );
+		$this->assertSame( 1, $rows[0]->orderCount() );
+
+		// Bob: two records, same order id -> collapsed to one.
+		$this->assertSame( array( 502 ), $rows[1]->orderIds() );
+		$this->assertSame( 502, $rows[1]->singleOrderId() );
+
+		// Cara: no records -> no orders.
+		$this->assertSame( array(), $rows[2]->orderIds() );
+		$this->assertNull( $rows[2]->singleOrderId() );
+		$this->assertSame( 0, $rows[2]->orderCount() );
+	}
 }
