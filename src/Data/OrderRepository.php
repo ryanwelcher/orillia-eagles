@@ -11,13 +11,24 @@ final class OrderRepository {
 
 	/** @return array<int,array{customer_id:int,status:string,qty:int,line_total:float,amount_paid:float,date:?string}> */
 	public function productRecords( int $product_id ): array {
-		$orders = wc_get_orders(
-			array(
-				'limit'  => -1,
-				'type'   => 'shop_order',
-				'status' => array_keys( wc_get_order_statuses() ), // all statuses
-			)
-		);
+		$statuses = array_keys( wc_get_order_statuses() ); // all statuses
+		$orders   = array();
+		$page     = 1;
+		$per_page = 200;
+		do {
+			$batch = wc_get_orders(
+				array(
+					'limit'   => $per_page,
+					'paged'   => $page,
+					'type'    => 'shop_order',
+					'status'  => $statuses,
+					'orderby' => 'ID',
+					'order'   => 'ASC',
+				)
+			);
+			$orders = array_merge( $orders, $batch );
+			$page++;
+		} while ( count( $batch ) === $per_page );
 
 		$records = array();
 		foreach ( $orders as $order ) {
