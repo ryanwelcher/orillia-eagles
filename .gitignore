@@ -1,0 +1,17 @@
+# Whitelist approach: ignore everything under wp-content by default,
+# then explicitly re-include the projects this repo tracks.
+/*
+
+# Keep this ignore file.
+!/.gitignore
+
+# Track only our custom theme.
+!/themes/
+/themes/*
+!/themes/orillia-eagles/
+
+# Track only our custom plugins (third-party plugins stay ignored).
+!/plugins/
+/plugins/*
+!/plugins/orillia-players/
+!/plugins/team-membership-ledger/
