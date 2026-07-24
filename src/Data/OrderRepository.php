@@ -2,6 +2,7 @@
 namespace OrillaEagles\Ledger\Data;
 
 use OrillaEagles\Ledger\Status\OrderStatus;
+use OrillaEagles\Ledger\Domain\PaymentCalculator;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -9,7 +10,7 @@ final class OrderRepository {
 
 	public const AMOUNT_PAID_META = '_tml_amount_paid';
 
-	/** @return array<int,array{customer_id:int,status:string,qty:int,line_total:float,amount_paid:float,date:?string}> */
+	/** @return array<int,array{customer_id:int,order_id:int,status:string,qty:int,line_total:float,amount_paid:float,date:?string}> */
 	public function productRecords( int $product_id ): array {
 		$statuses = array_keys( wc_get_order_statuses() ); // all statuses
 		$orders   = array();
@@ -55,6 +56,7 @@ final class OrderRepository {
 
 				$records[] = array(
 					'customer_id' => $customer_id,
+					'order_id'    => (int) $order->get_id(),
 					'status'      => $status,
 					'qty'         => (int) $item->get_quantity(),
 					'line_total'  => $line_total,
@@ -86,6 +88,33 @@ final class OrderRepository {
 		$order->calculate_totals();
 		$order->update_status( OrderStatus::SLUG, __( 'Season rollover charge.', 'team-membership-ledger' ) );
 		return (int) $order->get_id();
+	}
+
+	public function markPaid( int $order_id ): void {
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			throw new \RuntimeException( 'Order not found: ' . $order_id );
+		}
+		$order->update_meta_data( self::AMOUNT_PAID_META, (float) $order->get_total() );
+		$order->save();
+		$order->update_status( 'completed', __( 'Marked paid in Membership Ledger.', 'team-membership-ledger' ) );
+	}
+
+	public function addPayment( int $order_id, float $increment ): void {
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			throw new \RuntimeException( 'Order not found: ' . $order_id );
+		}
+		$current = (float) $order->get_meta( self::AMOUNT_PAID_META );
+		$total   = (float) $order->get_total();
+		$result  = PaymentCalculator::apply( $current, $increment, $total );
+
+		$order->update_meta_data( self::AMOUNT_PAID_META, $result['new_paid'] );
+		$order->save();
+
+		if ( $result['should_complete'] ) {
+			$order->update_status( 'completed', __( 'Payment completed in Membership Ledger.', 'team-membership-ledger' ) );
+		}
 	}
 
 	/** @return array<int,array{id:int,name:string}> */

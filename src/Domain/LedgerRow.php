@@ -11,6 +11,7 @@ final class LedgerRow {
 	private float $total;
 	private float $paid;
 	private ?string $date;
+	private array $order_ids;
 
 	public function __construct(
 		int $member_id,
@@ -20,7 +21,8 @@ final class LedgerRow {
 		int $qty,
 		float $total,
 		float $paid,
-		?string $date
+		?string $date,
+		array $order_ids = array()
 	) {
 		$this->member_id = $member_id;
 		$this->name      = $name;
@@ -30,6 +32,7 @@ final class LedgerRow {
 		$this->total     = $total;
 		$this->paid      = $paid;
 		$this->date      = $date;
+		$this->order_ids = array_values( array_unique( array_map( 'intval', $order_ids ) ) );
 	}
 
 	public function memberId(): int { return $this->member_id; }
@@ -41,4 +44,9 @@ final class LedgerRow {
 	public function paid(): float { return $this->paid; }
 	public function balance(): float { return round( $this->total - $this->paid, 2 ); }
 	public function date(): ?string { return $this->date; }
+
+	/** @return int[] */
+	public function orderIds(): array { return $this->order_ids; }
+	public function orderCount(): int { return count( $this->order_ids ); }
+	public function singleOrderId(): ?int { return 1 === count( $this->order_ids ) ? $this->order_ids[0] : null; }
 }
