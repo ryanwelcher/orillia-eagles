@@ -1,5 +1,5 @@
 import { useState } from '@wordpress/element';
-import { Modal, TextControl, Button, Flex, FlexItem } from '@wordpress/components';
+import { TextControl, Button, Flex, FlexItem } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 import { addPayment } from './api';
 
@@ -33,11 +33,18 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 		}
 	};
 
+	// DataViews' RenderModal already provides the Modal wrapper (titled with the
+	// action label), so this returns the modal CONTENT only — wrapping it in
+	// another <Modal> would nest two modals.
 	return (
-		<Modal
-			title={ sprintf( /* translators: %s: member name */ __( 'Add payment — %s', 'team-membership-ledger' ), item.name ) }
-			onRequestClose={ closeModal }
-		>
+		<div>
+			<p>
+				{ sprintf(
+					/* translators: %s: member name */
+					__( 'Recording a payment for %s.', 'team-membership-ledger' ),
+					item.name
+				) }
+			</p>
 			<TextControl
 				label={ __( 'Amount received now', 'team-membership-ledger' ) }
 				type="number"
@@ -59,7 +66,7 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 					</Button>
 				</FlexItem>
 			</Flex>
-		</Modal>
+		</div>
 	);
 }
 
