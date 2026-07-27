@@ -1,17 +1,21 @@
-# Whitelist approach: ignore everything under wp-content by default,
-# then explicitly re-include the projects this repo tracks.
+# The repo root is the WordPress install root; only the wp-content projects
+# below are versioned. Whitelist approach: ignore everything, then re-include.
 /*
 
 # Keep this ignore file.
 !/.gitignore
 
-# Track only our custom theme.
-!/themes/
-/themes/*
-!/themes/orillia-eagles/
+# Only descend into wp-content, and only the projects below within it.
+!/wp-content/
+/wp-content/*
 
-# Track only our custom plugins (third-party plugins stay ignored).
-!/plugins/
-/plugins/*
-!/plugins/orillia-players/
-!/plugins/team-membership-ledger/
+# Our custom theme.
+!/wp-content/themes/
+/wp-content/themes/*
+!/wp-content/themes/orillia-eagles/
+
+# Our custom plugins (third-party plugins stay ignored).
+!/wp-content/plugins/
+/wp-content/plugins/*
+!/wp-content/plugins/orillia-players/
+!/wp-content/plugins/team-membership-ledger/
