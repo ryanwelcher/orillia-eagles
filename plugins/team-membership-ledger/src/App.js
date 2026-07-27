@@ -18,7 +18,11 @@ const DEFAULT_VIEW = {
 };
 
 export default function App() {
-	const [ productId, setProductId ] = useState( window.tmlLedger?.productId || 0 );
+	// wp_localize_script stringifies values, so coerce the initial id to a number
+	// (it must match the numeric product ids from the REST response).
+	const [ productId, setProductId ] = useState(
+		Number( window.tmlLedger?.productId ) || 0
+	);
 	const [ products, setProducts ] = useState( [] );
 	const [ currency, setCurrency ] = useState( { symbol: '$', decimals: 2 } );
 	const [ rows, setRows ] = useState( [] );
@@ -80,6 +84,8 @@ export default function App() {
 		...products.map( ( p ) => ( { value: p.id, label: p.name } ) ),
 	];
 
+	const productName = products.find( ( p ) => p.id === productId )?.name || '';
+
 	return (
 		<div>
 			<SelectControl
@@ -102,6 +108,15 @@ export default function App() {
 						</Button>
 					</p>
 				</div>
+			) }
+			{ productId !== 0 && (
+				<h2
+					className="tml-ledger__title"
+					style={ { marginTop: '24px', marginBottom: '12px' } }
+				>
+					{ productName ||
+						__( 'Member ledger', 'team-membership-ledger' ) }
+				</h2>
 			) }
 			{ productId === 0 ? (
 				<p>{ __( 'Select a product to view the ledger.', 'team-membership-ledger' ) }</p>
