@@ -30,3 +30,21 @@ export function addPayment( { productId, orderId, memberId, amount } ) {
 		},
 	} );
 }
+
+/**
+ * Mark an order fully paid; returns the updated row.
+ *
+ * @param {{productId:number, orderId:?number, memberId:?number}} args Payload.
+ * @return {Promise<Object|null>} Updated serialized row, or null.
+ */
+export function markPaid( { productId, orderId, memberId } ) {
+	return apiFetch( {
+		path: '/tml/v1/ledger/mark-paid',
+		method: 'POST',
+		data: {
+			product_id: productId,
+			order_id: orderId || 0,
+			member_id: memberId || 0,
+		},
+	} );
+}

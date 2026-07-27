@@ -46,6 +46,21 @@ final class LedgerController {
 				),
 			)
 		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ledger/mark-paid',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( self::class, 'mark_paid' ),
+				'permission_callback' => array( self::class, 'can_manage' ),
+				'args'                => array(
+					'product_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
+					'order_id'   => array( 'type' => 'integer', 'required' => false, 'sanitize_callback' => 'absint', 'default' => 0 ),
+					'member_id'  => array( 'type' => 'integer', 'required' => false, 'sanitize_callback' => 'absint', 'default' => 0 ),
+				),
+			)
+		);
 	}
 
 	public static function can_manage(): bool {
@@ -87,6 +102,21 @@ final class LedgerController {
 		try {
 			$order_id = self::resolve_order( $order_id, $member_id, $product_id );
 			( new OrderRepository() )->addPayment( $order_id, $amount );
+		} catch ( \RuntimeException $e ) {
+			return new \WP_Error( 'tml_action_failed', $e->getMessage(), array( 'status' => 400 ) );
+		}
+
+		return self::row_response( $product_id, $member_id ?: null, $order_id );
+	}
+
+	public static function mark_paid( \WP_REST_Request $request ) {
+		$product_id = absint( $request['product_id'] );
+		$order_id   = absint( $request['order_id'] );
+		$member_id  = absint( $request['member_id'] );
+
+		try {
+			$order_id = self::resolve_order( $order_id, $member_id, $product_id );
+			( new OrderRepository() )->markPaid( $order_id );
 		} catch ( \RuntimeException $e ) {
 			return new \WP_Error( 'tml_action_failed', $e->getMessage(), array( 'status' => 400 ) );
 		}

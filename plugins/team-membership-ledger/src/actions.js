@@ -1,7 +1,7 @@
 import { useState } from '@wordpress/element';
 import { TextControl, Button, Flex, FlexItem } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
-import { addPayment } from './api';
+import { addPayment, markPaid } from './api';
 
 function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal } ) {
 	const [ amount, setAmount ] = useState( '' );
@@ -98,6 +98,34 @@ export function makeActions( { productId, onRowUpdated, onNotice } ) {
 					closeModal={ closeModal }
 				/>
 			),
+		},
+		{
+			id: 'mark-paid',
+			label: __( 'Mark paid', 'team-membership-ledger' ),
+			isEligible: ( item ) => item.status !== 'paid' && item.orderCount <= 1,
+			callback: async ( items ) => {
+				const item = items[ 0 ];
+				try {
+					const updated = await markPaid( {
+						productId,
+						orderId: item.orderId,
+						memberId: item.memberId,
+					} );
+					if ( updated ) {
+						onRowUpdated( updated );
+						onNotice( { type: 'success', message: __( 'Marked paid.', 'team-membership-ledger' ) } );
+					} else {
+						// Payment saved, but the refreshed row could not be resolved;
+						// tell the user so the stale on-screen row isn't mistaken for current.
+						onNotice( {
+							type: 'success',
+							message: __( 'Marked paid. Reload to refresh the ledger.', 'team-membership-ledger' ),
+						} );
+					}
+				} catch ( e ) {
+					onNotice( { type: 'error', message: e.message || __( 'Action failed.', 'team-membership-ledger' ) } );
+				}
+			},
 		},
 	];
 }
