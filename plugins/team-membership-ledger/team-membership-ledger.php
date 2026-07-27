@@ -35,6 +35,12 @@ if ( file_exists( TML_DIR . 'vendor/autoload.php' ) ) {
 	);
 }
 
+// Grant the Membership capability to admins/editors on activation, and remove
+// it on uninstall. (An admin-side safety net in Plugin::boot() covers installs
+// that were already active before this capability existed.)
+register_activation_hook( TML_FILE, array( \OrillaEagles\Ledger\Admin\Capabilities::class, 'grant' ) );
+register_uninstall_hook( TML_FILE, array( \OrillaEagles\Ledger\Admin\Capabilities::class, 'revoke' ) );
+
 // Declare HPOS (custom order tables) compatibility.
 add_action(
 	'before_woocommerce_init',

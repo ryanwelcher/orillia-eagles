@@ -5,7 +5,7 @@ defined( 'ABSPATH' ) || exit;
 
 final class Menu {
 
-	public const CAP  = 'manage_woocommerce';
+	public const CAP  = Capabilities::CAP;
 	public const SLUG = 'tml-roster';
 
 	public static function register(): void {
