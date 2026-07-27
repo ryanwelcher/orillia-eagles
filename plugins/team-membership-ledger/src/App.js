@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from '@wordpress/element';
-import { SelectControl, Spinner, Snackbar } from '@wordpress/components';
+import { SelectControl, Spinner, Snackbar, Button } from '@wordpress/components';
 import { DataViews, filterSortAndPaginate } from '@wordpress/dataviews';
 import { __ } from '@wordpress/i18n';
 import { fetchLedger } from './api';
@@ -26,6 +26,8 @@ export default function App() {
 	const [ error, setError ] = useState( null );
 	const [ view, setView ] = useState( DEFAULT_VIEW );
 	const [ notice, setNotice ] = useState( null );
+	// Bumped by the error "Retry" button to re-run the load effect.
+	const [ reloadKey, setReloadKey ] = useState( 0 );
 
 	const handleRowUpdated = ( updated ) => {
 		setRows( ( current ) =>
@@ -65,7 +67,7 @@ export default function App() {
 		return () => {
 			active = false;
 		};
-	}, [ productId ] );
+	}, [ productId, reloadKey ] );
 
 	const fields = useMemo( () => makeFields( currency ), [ currency ] );
 	const { data: shownData, paginationInfo } = useMemo(
@@ -88,7 +90,18 @@ export default function App() {
 				__nextHasNoMarginBottom
 			/>
 			{ error && (
-				<div className="notice notice-error"><p>{ error }</p></div>
+				<div className="notice notice-error">
+					<p>{ error }</p>
+					<p>
+						<Button
+							variant="secondary"
+							onClick={ () => setReloadKey( ( key ) => key + 1 ) }
+							disabled={ isLoading }
+						>
+							{ __( 'Retry', 'team-membership-ledger' ) }
+						</Button>
+					</p>
+				</div>
 			) }
 			{ productId === 0 ? (
 				<p>{ __( 'Select a product to view the ledger.', 'team-membership-ledger' ) }</p>
