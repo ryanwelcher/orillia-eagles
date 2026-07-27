@@ -5,7 +5,6 @@ use OrillaEagles\Ledger\Admin\Menu;
 use OrillaEagles\Ledger\Data\OrderRepository;
 use OrillaEagles\Ledger\Data\RosterRepository;
 use OrillaEagles\Ledger\Domain\LedgerCalculator;
-use OrillaEagles\Ledger\Domain\LedgerRow;
 use OrillaEagles\Ledger\Domain\LedgerSerializer;
 
 defined( 'ABSPATH' ) || exit;

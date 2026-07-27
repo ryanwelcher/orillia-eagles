@@ -23,8 +23,15 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 			} );
 			if ( updated ) {
 				onRowUpdated( updated );
+				onNotice( { type: 'success', message: __( 'Payment recorded.', 'team-membership-ledger' ) } );
+			} else {
+				// Payment saved, but the refreshed row could not be resolved;
+				// tell the user so the stale on-screen row isn't mistaken for current.
+				onNotice( {
+					type: 'success',
+					message: __( 'Payment recorded. Reload to refresh the ledger.', 'team-membership-ledger' ),
+				} );
 			}
-			onNotice( { type: 'success', message: __( 'Payment recorded.', 'team-membership-ledger' ) } );
 			closeModal();
 		} catch ( e ) {
 			onNotice( { type: 'error', message: e.message || __( 'Payment failed.', 'team-membership-ledger' ) } );
