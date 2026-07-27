@@ -18,8 +18,8 @@ final class Menu {
 			'dashicons-groups',
 			56
 		);
-		add_submenu_page( self::SLUG, __( 'Roster', 'team-membership-ledger' ), __( 'Roster', 'team-membership-ledger' ), self::CAP, self::SLUG, array( RosterScreen::class, 'render' ) );
+		add_submenu_page( self::SLUG, __( 'Members', 'team-membership-ledger' ), __( 'Members', 'team-membership-ledger' ), self::CAP, self::SLUG, array( RosterScreen::class, 'render' ) );
 		add_submenu_page( self::SLUG, __( 'Ledger', 'team-membership-ledger' ), __( 'Ledger', 'team-membership-ledger' ), self::CAP, 'tml-ledger', array( LedgerScreen::class, 'render' ) );
-		add_submenu_page( self::SLUG, __( 'Season Rollover', 'team-membership-ledger' ), __( 'Season Rollover', 'team-membership-ledger' ), self::CAP, 'tml-rollover', array( RolloverScreen::class, 'render' ) );
+		add_submenu_page( self::SLUG, __( 'Create Charges', 'team-membership-ledger' ), __( 'Create Charges', 'team-membership-ledger' ), self::CAP, 'tml-rollover', array( RolloverScreen::class, 'render' ) );
 	}
 }
