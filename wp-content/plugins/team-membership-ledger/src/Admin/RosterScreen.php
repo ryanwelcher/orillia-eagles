@@ -46,7 +46,7 @@ final class RosterScreen {
 		delete_transient( 'tml_roster_error' );
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Roster', 'team-membership-ledger' ); ?></h1>
+			<h1><?php esc_html_e( 'Members', 'team-membership-ledger' ); ?></h1>
 			<?php if ( $err ) : ?>
 				<div class="notice notice-error"><p><?php echo esc_html( $err ); ?></p></div>
 			<?php endif; ?>
@@ -61,7 +61,7 @@ final class RosterScreen {
 				<?php submit_button( __( 'Add member', 'team-membership-ledger' ), 'primary', 'submit', false ); ?>
 			</form>
 
-			<h2><?php esc_html_e( 'Members', 'team-membership-ledger' ); ?></h2>
+			<h2><?php esc_html_e( 'Current members', 'team-membership-ledger' ); ?></h2>
 			<table class="widefat striped">
 				<thead><tr>
 					<th><?php esc_html_e( 'Name', 'team-membership-ledger' ); ?></th>

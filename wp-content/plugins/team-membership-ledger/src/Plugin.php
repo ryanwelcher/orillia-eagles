@@ -21,9 +21,16 @@ final class Plugin {
 		}
 		$this->booted = true;
 		\OrillaEagles\Ledger\Status\OrderStatus::register();
+		// Grant the Membership capability to admins/editors on already-active
+		// installs (activation covers fresh ones). Runs before admin_menu so the
+		// menu's capability check sees it; admin-only to skip the front end.
+		if ( is_admin() ) {
+			\OrillaEagles\Ledger\Admin\Capabilities::ensure();
+		}
 		add_action( 'admin_menu', array( \OrillaEagles\Ledger\Admin\Menu::class, 'register' ) );
+		add_action( 'admin_enqueue_scripts', array( \OrillaEagles\Ledger\Admin\LedgerScreen::class, 'enqueue' ) );
+		add_action( 'rest_api_init', array( \OrillaEagles\Ledger\Rest\LedgerController::class, 'register' ) );
 		add_action( 'admin_init', array( \OrillaEagles\Ledger\Admin\RosterScreen::class, 'handlePost' ) );
 		add_action( 'admin_init', array( \OrillaEagles\Ledger\Admin\RolloverScreen::class, 'handlePost' ) );
-		add_action( 'admin_init', array( \OrillaEagles\Ledger\Admin\LedgerScreen::class, 'handlePost' ) );
 	}
 }

@@ -3,7 +3,7 @@
  * Plugin Name:       Team Membership Ledger
  * Description:        Track who owes / who has paid for dues and events (offline-friendly) for the Orillia Eagles.
  * Version:           0.1.0
- * Requires at least: 6.5
+ * Requires at least: 6.7
  * Requires PHP:      7.4
  * Requires Plugins:  woocommerce
  * Text Domain:       team-membership-ledger
@@ -34,6 +34,12 @@ if ( file_exists( TML_DIR . 'vendor/autoload.php' ) ) {
 		}
 	);
 }
+
+// Grant the Membership capability to admins/editors on activation, and remove
+// it on uninstall. (An admin-side safety net in Plugin::boot() covers installs
+// that were already active before this capability existed.)
+register_activation_hook( TML_FILE, array( \OrillaEagles\Ledger\Admin\Capabilities::class, 'grant' ) );
+register_uninstall_hook( TML_FILE, array( \OrillaEagles\Ledger\Admin\Capabilities::class, 'revoke' ) );
 
 // Declare HPOS (custom order tables) compatibility.
 add_action(

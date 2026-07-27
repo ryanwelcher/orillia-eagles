@@ -73,7 +73,7 @@ final class RolloverScreen {
 		delete_transient( 'tml_rollover_notice' );
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Season Rollover', 'team-membership-ledger' ); ?></h1>
+			<h1><?php esc_html_e( 'Create Charges', 'team-membership-ledger' ); ?></h1>
 			<?php if ( $notice ) : ?>
 				<div class="notice notice-success"><p><?php echo esc_html( $notice ); ?></p></div>
 			<?php endif; ?>
@@ -87,7 +87,7 @@ final class RolloverScreen {
 						<option value="<?php echo esc_attr( $p['id'] ); ?>"><?php echo esc_html( $p['name'] ); ?></option>
 					<?php endforeach; ?>
 				</select>
-				<?php submit_button( __( 'Generate orders for active roster', 'team-membership-ledger' ), 'primary', 'submit', false ); ?>
+				<?php submit_button( __( 'Create charges for active members', 'team-membership-ledger' ), 'primary', 'submit', false ); ?>
 			</form>
 		</div>
 		<?php
