@@ -158,3 +158,123 @@ if (valueNumbers.length > 0) {
 
   valueNumbers.forEach(el => counterObserver.observe(el));
 }
+
+// :::SECTION:Sticky Scroll-Aware Nav:::
+const heroNav = document.querySelector('.hero-nav');
+
+if (heroNav) {
+  const PIN_THRESHOLD = 10;   // px scrolled before the bar gets its pinned shadow
+  // Keep the nav visible well down the page before hide-on-scroll-down engages.
+  const HIDE_THRESHOLD = Math.max(600, Math.round(window.innerHeight * 0.9));
+  let lastScrollY = window.scrollY;
+  let ticking = false;
+
+  // Expose the nav's height so non-hero pages can reserve space for the fixed bar.
+  const setNavHeight = () => {
+    document.documentElement.style.setProperty('--nav-height', heroNav.offsetHeight + 'px');
+  };
+  setNavHeight();
+  window.addEventListener('resize', setNavHeight, { passive: true });
+
+  const DIRECTION_DEADZONE = 5; // px — ignore sub-pixel jitter / scroll-end bounce
+
+  const updateNav = () => {
+    const currentY = window.scrollY;
+    const delta = currentY - lastScrollY;
+
+    // Pinned styling once we've moved off the very top.
+    heroNav.classList.toggle('is-pinned', currentY > PIN_THRESHOLD);
+
+    if (currentY <= HIDE_THRESHOLD) {
+      // Near the top: always show.
+      heroNav.classList.remove('is-hidden');
+    } else if (delta > DIRECTION_DEADZONE) {
+      // Scrolling down meaningfully: hide.
+      heroNav.classList.add('is-hidden');
+    } else if (delta < -DIRECTION_DEADZONE) {
+      // Scrolling up meaningfully: reveal.
+      heroNav.classList.remove('is-hidden');
+    }
+    // Movements within the deadzone leave the current state untouched.
+
+    lastScrollY = currentY;
+    ticking = false;
+  };
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(updateNav);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  updateNav();
+}
+
+// :::SECTION:Back To Top Button:::
+const backToTop = document.createElement('button');
+backToTop.type = 'button';
+backToTop.className = 'back-to-top';
+backToTop.setAttribute('aria-label', 'Back to top');
+backToTop.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+document.body.appendChild(backToTop);
+
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// This theme sets `html { scroll-behavior: smooth }`, which makes
+// `scrollTo({ behavior: 'smooth' })` a silent no-op here. Drive the scroll
+// manually with `behavior: 'instant'` per frame so it works reliably.
+const scrollToTop = () => {
+  if (prefersReducedMotion) {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    return;
+  }
+
+  const startY = window.scrollY;
+  const duration = 500;
+  let startTime = null;
+
+  const step = (timestamp) => {
+    if (startTime === null) startTime = timestamp;
+    const progress = Math.min((timestamp - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+    window.scrollTo({ top: Math.round(startY * (1 - eased)), behavior: 'instant' });
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    }
+  };
+
+  window.requestAnimationFrame(step);
+};
+
+backToTop.addEventListener('click', scrollToTop);
+
+const hero = document.querySelector('.hero');
+
+if (hero) {
+  // Front page: reveal the button once the hero has scrolled out of view.
+  const heroObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      backToTop.classList.toggle('is-visible', !entry.isIntersecting);
+    });
+  }, { threshold: 0, rootMargin: '0px 0px 0px 0px' });
+
+  heroObserver.observe(hero);
+} else {
+  // Pages with no hero: reveal after roughly one viewport of scrolling.
+  let btnTicking = false;
+
+  const updateButton = () => {
+    backToTop.classList.toggle('is-visible', window.scrollY > window.innerHeight);
+    btnTicking = false;
+  };
+
+  window.addEventListener('scroll', () => {
+    if (!btnTicking) {
+      window.requestAnimationFrame(updateButton);
+      btnTicking = true;
+    }
+  }, { passive: true });
+
+  updateButton();
+}

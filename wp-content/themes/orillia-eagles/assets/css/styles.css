@@ -2876,6 +2876,119 @@ body .form-row > * { margin-block-start: 0; margin-block-end: 0; }
  animation: none !important; 
 }
 html {
- scroll-behavior: auto !important; 
+ scroll-behavior: auto !important;
 }
+}
+
+
+/* ==========================================================================
+   Sticky navigation + back-to-top
+   ========================================================================== */
+
+/* Fixed, scroll-aware nav.
+   The front-page nav is authored INSIDE the 75vh `.hero` (which also has
+   `overflow: clip`), so `position: sticky` can't pin it for the whole page.
+   `position: fixed` escapes both constraints and stays pinned across the page. */
+.hero-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  transition: top 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Reserve space for the fixed nav on templates that have no hero behind it
+   (inner pages use the solid `parts/header.html` nav, not a transparent hero nav). */
+body:not(.home) {
+  padding-top: var(--nav-height, 4.5rem);
+}
+
+/* On the front page the nav is authored inside `.hero`; because it's fixed
+   (out of flow) the hero content would slide up underneath it. Reserve the
+   nav's height at the top of the hero so it stays locked ABOVE the content. */
+.hero {
+  padding-top: var(--nav-height, 4.5rem);
+}
+
+/* Once scrolled a little: solid dark bar + shadow so it lifts off the content.
+   On the front page the nav starts transparent over the light hero (dark text)
+   and gains a dark background here, so the text must flip to the light base
+   color to stay legible. */
+.hero-nav.is-pinned {
+  background-color: var(--wp--preset--color--contrast);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.hero-nav.is-pinned .hero-logo-text,
+.hero-nav.is-pinned .hero-nav-links a {
+  color: var(--wp--preset--color--base);
+}
+
+.hero-nav.is-pinned .hero-nav-links a:hover {
+  color: var(--wp--preset--color--accent-1);
+}
+
+/* Hidden state: slide up out of view when scrolling down.
+   Uses `top` (not `transform`) so it doesn't collide with the intro
+   `heroFadeDown` animation, which holds a transform via `fill-mode: both`. */
+.hero-nav.is-hidden {
+  top: calc(-1 * var(--nav-height, 5rem));
+}
+
+/* Back-to-top button (injected by JS). */
+.back-to-top {
+  position: fixed;
+  right: var(--wp--preset--spacing--40);
+  bottom: var(--wp--preset--spacing--40);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--wp--preset--color--accent-1);
+  color: var(--wp--preset--color--base);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(1rem);
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease, background-color 0.3s ease;
+}
+
+.back-to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  background-color: var(--wp--preset--color--contrast);
+}
+
+.back-to-top:focus-visible {
+  outline: 2px solid var(--wp--preset--color--contrast);
+  outline-offset: 3px;
+}
+
+.back-to-top svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-nav {
+    transition: none;
+  }
+  .back-to-top {
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+    transform: none;
+  }
+  .back-to-top.is-visible {
+    transform: none;
+  }
 }
