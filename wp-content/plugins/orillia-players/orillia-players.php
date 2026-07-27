@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/includes/post-type.php';
 require_once __DIR__ . '/includes/taxonomy.php';
 require_once __DIR__ . '/includes/meta-box.php';
+require_once __DIR__ . '/includes/block-bindings.php';
 
 /**
  * On activation: register CPT/taxonomy so rewrite rules pick them up,
