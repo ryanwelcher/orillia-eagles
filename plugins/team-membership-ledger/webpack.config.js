@@ -19,6 +19,20 @@ const DependencyExtractionWebpackPlugin = require( '@wordpress/dependency-extrac
 
 module.exports = {
 	...defaultConfig,
+	module: {
+		...defaultConfig.module,
+		rules: [
+			// @wordpress/dataviews declares "sideEffects": false, so webpack
+			// tree-shakes the bare `import '.../style.css'` and emits no CSS.
+			// Flag that stylesheet as having side effects so wp-scripts extracts
+			// it to build/style-index.css (which we enqueue).
+			{
+				test: /@wordpress[\\/]dataviews[\\/].*\.css$/,
+				sideEffects: true,
+			},
+			...defaultConfig.module.rules,
+		],
+	},
 	resolve: {
 		...defaultConfig.resolve,
 		alias: {

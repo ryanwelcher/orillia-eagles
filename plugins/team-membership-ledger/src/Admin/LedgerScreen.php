@@ -24,9 +24,17 @@ final class LedgerScreen {
 			true
 		);
 		wp_set_script_translations( 'tml-ledger-app', 'team-membership-ledger' );
-		// DataViews styles are bundled into build/index.js; the host's component
-		// styles are still needed for Modal/Button/SelectControl chrome.
+		// Host component styles (Modal/Button/SelectControl chrome) plus the
+		// bundled DataViews stylesheet extracted to build/style-index.css. There
+		// is no wp-dataviews style handle on this site, so we ship our own copy.
 		wp_enqueue_style( 'wp-components' );
+		wp_enqueue_style(
+			'tml-ledger-app',
+			plugins_url( 'build/style-index.css', TML_FILE ),
+			array( 'wp-components' ),
+			$asset['version']
+		);
+		wp_style_add_data( 'tml-ledger-app', 'rtl', 'replace' );
 
 		wp_localize_script(
 			'tml-ledger-app',
