@@ -2,7 +2,7 @@
 /**
  * Title: Team Roster: Players & Coaches
  * Slug: orillia-eagles/roster-query
- * Categories: query
+ * Categories: orillia-eagles, query
  * Description: Team roster grid showing Player and Coach roles from the shared roster post type, with Junior, Intermediate, and Senior filters.
  */
 ?>

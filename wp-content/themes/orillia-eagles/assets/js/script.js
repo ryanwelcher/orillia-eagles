@@ -67,11 +67,15 @@ document.querySelectorAll('.roster-tabs').forEach(tabGroup => {
       tab.setAttribute('tabindex', isSelected ? '0' : '-1');
     });
 
+    // Some tabs cover more than one team (e.g. Intermediate and Senior share a tab).
+    const teamsForFilter = { intermediate: ['intermediate', 'senior'] };
+    const teams = teamsForFilter[selectedFilter] || [selectedFilter];
+
     playerItems.forEach(item => {
       const isCoach = item.classList.contains('roster_role-coach');
       const matchesFilter = selectedFilter === 'coaches'
         ? isCoach
-        : item.classList.contains(`team-${selectedFilter}`) && !isCoach;
+        : !isCoach && teams.some(team => item.classList.contains(`team-${team}`));
       item.hidden = !matchesFilter;
     });
   };

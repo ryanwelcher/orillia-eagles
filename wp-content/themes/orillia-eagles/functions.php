@@ -25,6 +25,21 @@ function orillia_eagles_setup() {
 add_action( 'after_setup_theme', 'orillia_eagles_setup' );
 
 /**
+ * Register a dedicated block pattern category so the theme's custom patterns are
+ * grouped together (and easy to find) in the Site Editor pattern explorer.
+ */
+function orillia_eagles_register_pattern_categories() {
+    register_block_pattern_category(
+        'orillia-eagles',
+        array(
+            'label'       => __( 'Orillia Eagles', 'orillia-eagles' ),
+            'description' => __( 'Custom patterns built for the Orillia Eagles theme.', 'orillia-eagles' ),
+        )
+    );
+}
+add_action( 'init', 'orillia_eagles_register_pattern_categories' );
+
+/**
  * Enqueue theme styles on frontend only.
  * Editor styles are loaded via add_editor_style() in theme setup to prevent
  * font styles from leaking into WordPress admin UI.
