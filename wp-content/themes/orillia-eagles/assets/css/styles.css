@@ -2992,3 +2992,62 @@ body:not(.home) {
     transform: none;
   }
 }
+
+/* -------------------------------------------------------------------------
+ * Schedule table
+ * ---------------------------------------------------------------------- */
+.schedule-inner {
+	max-width: var(--wp--style--global--wide-size, 1200px);
+	margin-inline: auto;
+	padding-inline: clamp(1rem, 4vw, 2.5rem);
+}
+
+.schedule-table {
+	width: 100%;
+	overflow-x: auto;
+}
+
+.schedule-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr 2fr 1fr 1.5fr;
+	align-items: center;
+	gap: 1rem;
+	padding: 0.85rem 1.25rem;
+	min-width: 640px;
+}
+
+.schedule-row--head {
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	background: var(--wp--preset--color--contrast, #111);
+	color: var(--wp--preset--color--base, #fff);
+}
+
+/* Alternating body rows. The head row is a sibling, so target rows inside
+   the post-template wrapper only. */
+.schedule-body .schedule-row:nth-child(odd) {
+	background: rgba(0, 0, 0, 0.04);
+}
+
+.schedule-body .schedule-row:nth-child(even) {
+	background: rgba(0, 0, 0, 0.10);
+}
+
+.schedule-cell {
+	margin: 0;
+}
+
+.schedule-cell--event {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.schedule-event-opponent:empty {
+	display: none;
+}
+
+.schedule-cell--level {
+	font-weight: 600;
+}
