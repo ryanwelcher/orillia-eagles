@@ -3018,6 +3018,7 @@ body:not(.home) {
 	gap: 1rem;
 	padding: 0.85rem 1.25rem;
 	min-width: 640px;
+	transition: background-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .schedule-row--head {
@@ -3038,6 +3039,14 @@ body:not(.home) {
 
 .schedule-body > li:nth-child(even) .schedule-row {
 	background: rgba(0, 0, 0, 0.10);
+}
+
+/* Row highlight on hover. Comes after the striping rules and shares their
+   specificity, so it overrides both odd and even rows. The gold inset bar
+   echoes the accent borders used on the roster and program cards. */
+.schedule-body > li:hover .schedule-row {
+	background: rgba(0, 0, 0, 0.16);
+	box-shadow: inset 4px 0 0 var(--wp--preset--color--accent-1);
 }
 
 .schedule-cell {
