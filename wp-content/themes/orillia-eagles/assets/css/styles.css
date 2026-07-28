@@ -3028,13 +3028,15 @@ body:not(.home) {
 	color: var(--wp--preset--color--base, #fff);
 }
 
-/* Alternating body rows. The head row is a sibling, so target rows inside
-   the post-template wrapper only. */
-.schedule-body .schedule-row:nth-child(odd) {
+/* Alternating body rows. core/post-template wraps each row in its own <li>,
+   so nth-child must target those list items (the .schedule-row is the sole
+   child of each <li> and would otherwise always be :nth-child(1)). The head
+   row lives outside .schedule-body, so it is unaffected. */
+.schedule-body > li:nth-child(odd) .schedule-row {
 	background: rgba(0, 0, 0, 0.04);
 }
 
-.schedule-body .schedule-row:nth-child(even) {
+.schedule-body > li:nth-child(even) .schedule-row {
 	background: rgba(0, 0, 0, 0.10);
 }
 
