@@ -3066,3 +3066,63 @@ body:not(.home) {
 .schedule-cell--level {
 	font-weight: 600;
 }
+
+/* Tablet: match the reduced section padding the other bands use. */
+@media (max-width: 768px) {
+	.schedule {
+		padding: var(--wp--preset--spacing--60) var(--wp--preset--spacing--30);
+	}
+}
+
+/* Phone: stack each row into a labelled card instead of a 5-column table,
+   so there is no horizontal scrolling. Field labels are added inline via
+   ::before (using the cells' modifier classes) since the header row hides. */
+@media (max-width: 640px) {
+	.schedule-table {
+		overflow-x: visible;
+	}
+
+	.schedule-row--head {
+		display: none;
+	}
+
+	.schedule-body > li + li {
+		margin-top: 0.75rem;
+	}
+
+	.schedule-row {
+		grid-template-columns: 1fr;
+		gap: 0.35rem;
+		min-width: 0;
+		padding: 1.1rem 1.25rem;
+	}
+
+	/* Date leads the card. */
+	.schedule-cell--date {
+		font-weight: 700;
+		font-size: var(--wp--preset--font-size--base);
+	}
+
+	/* Event title stays prominent; opponent sits just under it. */
+	.schedule-cell--event {
+		margin-block: 0.15rem;
+	}
+
+	.schedule-cell--time::before,
+	.schedule-cell--level::before,
+	.schedule-cell--location::before {
+		font-weight: 600;
+	}
+
+	.schedule-cell--time::before {
+		content: "Time: ";
+	}
+
+	.schedule-cell--level::before {
+		content: "Level: ";
+	}
+
+	.schedule-cell--location::before {
+		content: "Location: ";
+	}
+}
