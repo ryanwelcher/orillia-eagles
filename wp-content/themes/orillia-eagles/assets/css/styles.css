@@ -2898,23 +2898,13 @@ html {
   transition: top 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Reserve space for the fixed nav on templates that have no hero behind it
-   (inner pages use the solid `parts/header.html` nav, not a transparent hero nav). */
-body:not(.home) {
+/* Reserve space for the fixed nav (parts/header.html) on every template,
+   since it's the same solid header everywhere now and sits out of flow. */
+body {
   padding-top: var(--nav-height, 4.5rem);
 }
 
-/* On the front page the nav is authored inside `.hero`; because it's fixed
-   (out of flow) the hero content would slide up underneath it. Reserve the
-   nav's height at the top of the hero so it stays locked ABOVE the content. */
-.hero {
-  padding-top: var(--nav-height, 4.5rem);
-}
-
-/* Once scrolled a little: solid dark bar + shadow so it lifts off the content.
-   On the front page the nav starts transparent over the light hero (dark text)
-   and gains a dark background here, so the text must flip to the light base
-   color to stay legible. */
+/* Once scrolled a little: shadow so it lifts off the content. */
 .hero-nav.is-pinned {
   background-color: var(--wp--preset--color--contrast);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);

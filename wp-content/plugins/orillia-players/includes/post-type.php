@@ -35,8 +35,8 @@ function orillia_players_register_post_type() {
 		'menu_icon'    => 'dashicons-groups',
 		'menu_position'=> 20,
 		'supports'     => array( 'title', 'editor', 'thumbnail', 'custom-fields' ),
-		'has_archive'  => 'players',
-		'rewrite'      => array( 'slug' => 'players', 'with_front' => false ),
+		'has_archive'  => false,
+		'rewrite'      => false,
 		'show_in_menu' => true,
 		'hierarchical' => false,
 	);

@@ -241,3 +241,250 @@ body .roster-player:focus-within .roster-player-photo img {
 		transform: scale(1.001);
 	}
 }
+
+/* === single post: hero === */
+
+.post-hero {
+	position: relative;
+}
+
+.post-hero-cover.wp-block-cover {
+	display: flex;
+}
+
+.post-hero-cover.wp-block-cover:not(:has(.wp-block-cover__image-background)) {
+	background-image:
+		radial-gradient(circle at 18% 24%, color-mix(in srgb, var(--wp--preset--color--accent-1) 20%, transparent) 0%, transparent 42%),
+		radial-gradient(circle at 82% 12%, color-mix(in srgb, var(--wp--preset--color--accent-1) 14%, transparent) 0%, transparent 38%),
+		repeating-linear-gradient(135deg, color-mix(in srgb, var(--wp--preset--color--base) 4%, transparent) 0px, color-mix(in srgb, var(--wp--preset--color--base) 4%, transparent) 1px, transparent 1px, transparent 34px);
+}
+
+.post-hero-cover .wp-block-cover__inner-container {
+	display: grid;
+	gap: var(--wp--preset--spacing--20);
+	max-width: var(--wp--style--global--wide-size);
+	margin-inline: auto;
+	width: 100%;
+	padding-inline: var(--wp--preset--spacing--40);
+	padding-block: var(--wp--preset--spacing--60) var(--wp--preset--spacing--50);
+}
+
+.post-hero-cover .wp-block-cover__inner-container > * {
+	margin-block-start: 0;
+	margin-block-end: 0;
+}
+
+.post-hero-meta {
+	align-items: center;
+}
+
+.post-hero-category {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--wp--preset--spacing--20);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	padding: 0.35rem 0.9rem;
+	border: 1px solid var(--wp--preset--color--white-subtle);
+	border-radius: 999px;
+}
+
+.post-hero-category a {
+	text-decoration: none;
+}
+
+.post-hero-date {
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+
+.post-hero-title.post-hero-title {
+	line-height: 1.1;
+	text-transform: uppercase;
+	letter-spacing: -0.01em;
+	max-width: 22ch;
+	color: var(--wp--preset--color--base);
+}
+
+/* theme.json's .has-*-background-color / .has-*-color utility classes are
+   emitted with `!important`, which otherwise beats the .hero-nav.is-pinned
+   scroll state set by script.js on inner pages (parts/header.html gives the
+   nav a light has-base-background-color by default). Match specificity so
+   the pinned dark state still wins once the user scrolls. */
+.hero-nav.is-pinned {
+	background-color: var(--wp--preset--color--contrast) !important;
+}
+
+.hero-nav.is-pinned .hero-logo-text,
+.hero-nav.is-pinned .hero-nav-links a {
+	color: var(--wp--preset--color--base) !important;
+}
+
+.post-hero-author {
+	align-items: center;
+}
+
+.post-hero-author-label {
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+/* === single post: content === */
+
+.post-body {
+	font-size: var(--wp--preset--font-size--lg);
+	line-height: 1.75;
+	color: var(--wp--preset--color--contrast-2);
+}
+
+.post-body > * + * {
+	margin-block-start: var(--wp--preset--spacing--40);
+}
+
+.post-body .is-style-lead {
+	font-size: var(--wp--preset--font-size--xl);
+	line-height: 1.6;
+	color: var(--wp--preset--color--contrast);
+	font-weight: 500;
+}
+
+.post-body h2 {
+	font-family: var(--wp--preset--font-family--archivo-black);
+	font-size: var(--wp--preset--font-size--xxx-large);
+	text-transform: uppercase;
+	color: var(--wp--preset--color--contrast);
+	line-height: 1.2;
+	margin-block-start: var(--wp--preset--spacing--50) !important;
+}
+
+.post-body h3 {
+	font-family: var(--wp--preset--font-family--archivo-black);
+	font-size: var(--wp--preset--font-size--xl);
+	text-transform: uppercase;
+	color: var(--wp--preset--color--contrast);
+	line-height: 1.3;
+}
+
+.post-body figure.wp-block-image,
+.post-body figure.wp-block-gallery {
+	margin-block-start: var(--wp--preset--spacing--50);
+	margin-block-end: var(--wp--preset--spacing--50);
+}
+
+.post-body .wp-element-caption {
+	margin-top: var(--wp--preset--spacing--20);
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--contrast-2);
+	text-align: center;
+}
+
+.post-body .wp-block-gallery {
+	--wp--style--unstable-gallery-gap: var(--wp--preset--spacing--20);
+	gap: var(--wp--preset--spacing--20) !important;
+}
+
+.post-body .wp-block-quote {
+	border-left: 3px solid var(--wp--preset--color--accent-1);
+	padding-left: var(--wp--preset--spacing--40);
+}
+
+.post-body .wp-block-pullquote blockquote {
+	border-top: 2px solid var(--wp--preset--color--accent-1);
+	border-bottom: 2px solid var(--wp--preset--color--accent-1);
+	padding: var(--wp--preset--spacing--40) 0;
+	text-align: center;
+}
+
+.post-body .wp-block-pullquote p {
+	font-family: var(--wp--preset--font-family--archivo-black);
+	font-size: var(--wp--preset--font-size--xl);
+	text-transform: uppercase;
+	color: var(--wp--preset--color--contrast);
+	line-height: 1.3;
+}
+
+.post-body .wp-block-pullquote cite {
+	display: block;
+	margin-top: var(--wp--preset--spacing--20);
+	font-size: var(--wp--preset--font-size--small);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--wp--preset--color--accent-1);
+}
+
+.post-body .wp-block-table table {
+	border-collapse: collapse;
+}
+
+.post-body .wp-block-table th,
+.post-body .wp-block-table td {
+	border: 1px solid var(--wp--preset--color--dark-dim);
+	padding: var(--wp--preset--spacing--20) var(--wp--preset--spacing--30);
+}
+
+.post-body .wp-block-table thead {
+	background-color: var(--wp--preset--color--base-2);
+	font-family: var(--wp--preset--font-family--archivo-black);
+	text-transform: uppercase;
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--contrast);
+}
+
+.post-body .wp-block-button .wp-element-button {
+	background-color: var(--wp--preset--color--accent-1);
+	color: var(--wp--preset--color--base);
+}
+
+.post-body .wp-block-button .wp-element-button:hover {
+	background-color: var(--wp--preset--color--accent-3);
+}
+
+.post-tags-row {
+	align-items: center;
+	padding-top: var(--wp--preset--spacing--40);
+	border-top: 1px solid var(--wp--preset--color--dark-dim);
+}
+
+.post-tags a {
+	text-decoration: none;
+	color: var(--wp--preset--color--accent-1);
+	font-weight: 700;
+}
+/* === single post: navigation === */
+
+.post-nav-row .wp-block-post-navigation-link {
+	margin: 0;
+}
+
+.post-nav-link a {
+	font-family: var(--wp--preset--font-family--archivo-black);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	text-decoration: none;
+	transition: color 0.3s ease;
+}
+
+.post-nav-link a:hover {
+	color: var(--wp--preset--color--accent-1);
+}
+/* === single post: responsive === */
+
+@media (max-width: 768px) {
+	.post-hero-cover .wp-block-cover__inner-container {
+		padding-inline: var(--wp--preset--spacing--30);
+		padding-block: var(--wp--preset--spacing--50) var(--wp--preset--spacing--40);
+	}
+
+	.post-hero-title.post-hero-title {
+		max-width: none;
+	}
+
+	.post-body {
+		font-size: var(--wp--preset--font-size--base);
+	}
+
+	.post-body .is-style-lead {
+		font-size: var(--wp--preset--font-size--lg);
+	}
+}

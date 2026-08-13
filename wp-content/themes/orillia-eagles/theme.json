@@ -145,6 +145,11 @@
           "slug": "fade-overlay-4",
           "name": "Fade Overlay 4",
           "gradient": "linear-gradient(to top,\n        rgba(255,255,255,1) 0%,\n        rgba(255,255,255,0.97) 35%,\n        rgba(255,255,255,0.8) 55%,\n        rgba(255,255,255,0.3) 75%,\n        transparent 100%\n      )"
+        },
+        {
+          "slug": "scrim-bottom",
+          "name": "Scrim Bottom",
+          "gradient": "linear-gradient(0deg,\n        rgba(26,26,26,0.95) 0%,\n        rgba(26,26,26,0.75) 35%,\n        rgba(26,26,26,0.25) 70%,\n        rgba(26,26,26,0) 100%\n      )"
         }
       ]
     },
