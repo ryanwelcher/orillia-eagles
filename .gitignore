@@ -19,6 +19,7 @@
 /wp-content/plugins/*
 !/wp-content/plugins/orillia-players/
 !/wp-content/plugins/team-membership-ledger/
+!/wp-content/plugins/orillia-schedule/
 
 # Never commit brainstorming/spec docs, anywhere in the repo.
 **/docs/superpowers/specs/
