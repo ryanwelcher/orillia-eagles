@@ -6,6 +6,7 @@
  * Description: Contact section with a message form and contact details.
  */
 ?>
+
 <!-- wp:group {"tagName":"section","metadata":{"name":"Contact Section"},"align":"full","className":"contact","style":{"spacing":{"blockGap":"0"}},"backgroundColor":"base","layout":{"type":"default"},"anchor":"contact"} -->
 <section class="wp-block-group alignfull contact has-base-background-color has-background" id="contact"><!-- wp:group {"metadata":{"name":"Contact Inner"},"className":"contact-inner","style":{"spacing":{"blockGap":"0"}},"layout":{"type":"default"}} -->
 <div class="wp-block-group contact-inner"><!-- wp:group {"metadata":{"name":"Contact Info"},"className":"contact-info animate-on-scroll","style":{"spacing":{"blockGap":"var:preset|spacing|30"}},"layout":{"type":"default"}} -->
@@ -55,55 +56,35 @@
 <!-- /wp:group -->
 
 <!-- wp:group {"metadata":{"name":"Contact Form Wrap"},"className":"contact-form-wrap animate-on-scroll","style":{"spacing":{"blockGap":"var:preset|spacing|40"}},"layout":{"type":"default"}} -->
-<div class="wp-block-group contact-form-wrap animate-on-scroll"><!-- wp:group {"metadata":{"name":"Contact Form"},"className":"contact-form","style":{"spacing":{"blockGap":"0"}},"layout":{"type":"flex","orientation":"vertical"}} -->
-<div class="wp-block-group contact-form"><!-- wp:group {"metadata":{"name":"Form Row - Name and Email"},"className":"form-row","style":{"spacing":{"blockGap":"0"}},"layout":{"type":"default"}} -->
-<div class="wp-block-group form-row"><!-- wp:group {"metadata":{"name":"Form Group - Name"},"className":"form-group","style":{"spacing":{"blockGap":"0"}},"layout":{"type":"flex","orientation":"vertical"}} -->
-<div class="wp-block-group form-group"><!-- wp:paragraph {"className":"form-label","textColor":"contrast","fontSize":"small"} -->
-<p class="form-label has-contrast-color has-text-color has-small-font-size">Name</p>
-<!-- /wp:paragraph -->
+<div class="wp-block-group contact-form-wrap animate-on-scroll"><!-- wp:jetpack/contact-form {"subject":"New website contact","to":"info@orilliaeagles.ca","jetpackCRM":false,"variationName":"default","lock":{"remove":true,"move":true},"className":"contact-form","layout":{"type":"default"}} -->
+<div class="wp-block-jetpack-contact-form contact-form"><!-- wp:jetpack/field-name {"required":true,"fieldVariant":"name","className":"wp-block-jetpack-field-name form-group contact-name"} -->
+<div><!-- wp:jetpack/label {"label":"Name","className":"form-label"} /-->
 
-<!-- wp:paragraph {"className":"form-input has-hanken-grotesk-font-family","textColor":"contrast","fontSize":"base"} -->
-<p class="form-input has-hanken-grotesk-font-family has-contrast-color has-text-color has-base-font-size">Your full name</p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:group -->
+<!-- wp:jetpack/input {"placeholder":"Your full name","className":"form-input"} /--></div>
+<!-- /wp:jetpack/field-name -->
 
-<!-- wp:group {"metadata":{"name":"Form Group - Email"},"className":"form-group","style":{"spacing":{"blockGap":"0"}},"layout":{"type":"flex","orientation":"vertical"}} -->
-<div class="wp-block-group form-group"><!-- wp:paragraph {"className":"form-label","textColor":"contrast","fontSize":"small"} -->
-<p class="form-label has-contrast-color has-text-color has-small-font-size">Email</p>
-<!-- /wp:paragraph -->
+<!-- wp:jetpack/field-email {"required":true,"className":"wp-block-jetpack-field-email form-group contact-email"} -->
+<div><!-- wp:jetpack/label {"label":"Email","className":"form-label"} /-->
 
-<!-- wp:paragraph {"className":"form-input has-hanken-grotesk-font-family","textColor":"contrast","fontSize":"base"} -->
-<p class="form-input has-hanken-grotesk-font-family has-contrast-color has-text-color has-base-font-size">your@email.com</p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:group --></div>
-<!-- /wp:group -->
+<!-- wp:jetpack/input {"placeholder":"your@email.com","type":"email","className":"form-input"} /--></div>
+<!-- /wp:jetpack/field-email -->
 
-<!-- wp:group {"metadata":{"name":"Form Group - Subject"},"className":"form-group","style":{"spacing":{"blockGap":"0"}},"layout":{"type":"flex","orientation":"vertical"}} -->
-<div class="wp-block-group form-group"><!-- wp:paragraph {"className":"form-label","textColor":"contrast","fontSize":"small"} -->
-<p class="form-label has-contrast-color has-text-color has-small-font-size">I'm interested in...</p>
-<!-- /wp:paragraph -->
+<!-- wp:jetpack/field-select {"id":"","required":true,"options":["General information","New player","Sponsorship","Volunteering"],"className":"form-group contact-interest form-select"} -->
+<div><!-- wp:jetpack/label {"label":"I'm interested in..."} /-->
 
-<!-- wp:paragraph {"className":"form-input form-select has-hanken-grotesk-font-family","textColor":"contrast","fontSize":"base"} -->
-<p class="form-input form-select has-hanken-grotesk-font-family has-contrast-color has-text-color has-base-font-size">Select an option</p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:group -->
+<!-- wp:jetpack/input {"placeholder":"Select one option","type":"dropdown","style":{"border":{"style":"solid"}}} /--></div>
+<!-- /wp:jetpack/field-select -->
 
-<!-- wp:group {"metadata":{"name":"Form Group - Message"},"className":"form-group","style":{"spacing":{"blockGap":"0"}},"layout":{"type":"flex","orientation":"vertical"}} -->
-<div class="wp-block-group form-group"><!-- wp:paragraph {"className":"form-label","textColor":"contrast","fontSize":"small"} -->
-<p class="form-label has-contrast-color has-text-color has-small-font-size">Message</p>
-<!-- /wp:paragraph -->
+<!-- wp:jetpack/field-textarea {"required":true,"className":"wp-block-jetpack-field-textarea form-group contact-message"} -->
+<div><!-- wp:jetpack/label {"label":"Message","className":"form-label"} /-->
 
-<!-- wp:paragraph {"className":"form-input form-textarea has-hanken-grotesk-font-family","textColor":"contrast","fontSize":"base"} -->
-<p class="form-input form-textarea has-hanken-grotesk-font-family has-contrast-color has-text-color has-base-font-size">Tell us a bit about yourself...</p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:group -->
+<!-- wp:jetpack/input {"placeholder":"Tell us a bit about yourself...","type":"textarea","className":"form-input form-textarea"} /--></div>
+<!-- /wp:jetpack/field-textarea -->
 
-<!-- wp:buttons {"metadata":{"name":"Form Submit Button"}} -->
-<div class="wp-block-buttons"><!-- wp:button {"className":"form-submit"} -->
-<div class="wp-block-button form-submit"><a class="wp-block-button__link wp-element-button" href="#">Send Message</a></div>
+<!-- wp:button {"tagName":"button","type":"submit","lock":{"move":false,"remove":true},"className":"form-submit"} -->
+<div class="wp-block-button form-submit"><button type="submit" class="wp-block-button__link wp-element-button">Send Message</button></div>
 <!-- /wp:button --></div>
-<!-- /wp:buttons --></div>
-<!-- /wp:group --></div>
+<!-- /wp:jetpack/contact-form --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group --></section>
 <!-- /wp:group -->
