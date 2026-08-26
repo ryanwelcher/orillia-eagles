@@ -37,12 +37,23 @@
 		.puck:after{content:"";position:absolute;inset:3px 8px auto;border-top:1px solid rgba(255,255,255,.2)}
 		.maintenance-status strong{display:block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase}
 		.maintenance-status span{display:block;margin-top:.25rem;color:rgba(255,255,255,.52);font-size:.92rem}
-		.maintenance-contact{margin:2rem 0 0;padding:0;background:transparent;color:rgba(255,255,255,.5);font-size:.9rem}
-		.maintenance-contact a{color:var(--white);font-weight:700;text-underline-offset:4px;text-decoration-color:var(--gold)}
+		.form-intro{margin:2rem 0 1rem;color:rgba(255,255,255,.62);font-size:.82rem}
+		form.contact-form,form.contact-form>.maintenance-form{width:100%;min-width:0}
+		form.contact-form>.maintenance-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.8rem 1rem}
+		.maintenance-form .maintenance-message-wrap,.maintenance-form .maintenance-submit{grid-column:1/-1}
+		.maintenance-form .maintenance-field-wrap{display:flex;min-width:0;flex-direction:column;gap:.35rem;margin:0}
+		.maintenance-form label{margin:0;color:var(--gold-light);font-size:.64rem;font-weight:700;letter-spacing:.13em;line-height:1.4;text-transform:uppercase}
+		.maintenance-form input,.maintenance-form textarea{box-sizing:border-box;width:100%;margin:0;padding:.72rem .8rem;background:rgba(255,255,255,.055)!important;color:var(--white)!important;border:1px solid var(--line)!important;border-radius:0;font:inherit;outline:none;transition:border-color .2s ease,background-color .2s ease}
+		.maintenance-form input::placeholder,.maintenance-form textarea::placeholder{color:rgba(255,255,255,.34);opacity:1}
+		.maintenance-form input:focus,.maintenance-form textarea:focus{background:rgba(255,255,255,.085)!important;border-color:var(--gold)!important}
+		.maintenance-form textarea{min-height:76px;resize:vertical}
+		.maintenance-form .maintenance-submit{justify-self:start;margin:0}
+		.maintenance-form .maintenance-submit .wp-element-button{height:auto;padding:.78rem 1.25rem;background:var(--gold)!important;color:var(--white)!important;border:0;border-radius:0;font:700 .72rem/1 "Hanken Grotesk",sans-serif;letter-spacing:.12em;text-transform:uppercase;transition:background-color .2s ease,transform .2s ease}
+		.maintenance-form .maintenance-submit .wp-element-button:hover,.maintenance-form .maintenance-submit .wp-element-button:focus-visible{background:var(--gold-light)!important;transform:translateY(-2px)}
 		.corner{position:absolute;z-index:2;right:2rem;bottom:1.65rem;color:rgba(255,255,255,.25);font-size:.65rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;writing-mode:vertical-rl}
 		@keyframes drift{0%,100%{transform:translateX(0) rotate(-3deg)}50%{transform:translateX(12px) rotate(3deg)}}
 		@media(max-width:900px){.shell{grid-template-columns:1fr}.photo{min-height:34svh}.photo:before{background:linear-gradient(0deg,rgba(26,26,26,.92),rgba(26,26,26,.08) 70%)}.photo-label{bottom:1.5rem}.panel{min-height:66svh;padding:2.25rem 1.5rem 4rem}.brand{margin-bottom:4rem}.corner{display:none}}
-		@media(max-width:520px){.photo{min-height:28svh;background-position:48% center}.panel{min-height:72svh}.brand{margin-bottom:3rem}h1{font-size:clamp(3.2rem,16vw,4.6rem)}.lede{line-height:1.6}.maintenance-status{margin-top:2.5rem}}
+		@media(max-width:520px){.photo{min-height:28svh;background-position:48% center}.panel{min-height:72svh}.brand{margin-bottom:3rem}h1{font-size:clamp(3.2rem,16vw,4.6rem)}.lede{line-height:1.6}.maintenance-status{margin-top:2.5rem}form.contact-form>.maintenance-form{grid-template-columns:minmax(0,1fr)}.maintenance-form .maintenance-message-wrap,.maintenance-form .maintenance-submit{grid-column:1}}
 		@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
 	</style>
 </head>
@@ -62,7 +73,30 @@
 					<div class="puck" aria-hidden="true"></div>
 					<div><strong>Maintenance in progress</strong><span>Thanks for your patience. Please check back soon.</span></div>
 				</div>
-				<p class="maintenance-contact">Need to reach the team? <a href="mailto:info@orilliaeagles.ca">info@orilliaeagles.ca</a></p>
+				<p class="form-intro">Need to reach the team? Send us a note.</p>
+				<!-- wp:jetpack/contact-form {"to":"info@orilliaeagles.ca","subject":"Maintenance page enquiry","jetpackCRM":false,"variationName":"default","className":"maintenance-form","layout":{"type":"default"}} -->
+				<div class="wp-block-jetpack-contact-form maintenance-form"><!-- wp:jetpack/field-name {"required":true,"fieldVariant":"name","className":"maintenance-field"} -->
+				<div><!-- wp:jetpack/label {"label":"Name"} /-->
+
+				<!-- wp:jetpack/input {"placeholder":"Your name"} /--></div>
+				<!-- /wp:jetpack/field-name -->
+
+				<!-- wp:jetpack/field-email {"required":true,"className":"maintenance-field"} -->
+				<div><!-- wp:jetpack/label {"label":"Email"} /-->
+
+				<!-- wp:jetpack/input {"placeholder":"you@example.com","type":"email"} /--></div>
+				<!-- /wp:jetpack/field-email -->
+
+				<!-- wp:jetpack/field-textarea {"required":true,"className":"maintenance-field maintenance-message"} -->
+				<div><!-- wp:jetpack/label {"label":"Message"} /-->
+
+				<!-- wp:jetpack/input {"placeholder":"How can we help?","type":"textarea"} /--></div>
+				<!-- /wp:jetpack/field-textarea -->
+
+				<!-- wp:button {"tagName":"button","type":"submit","className":"maintenance-submit"} -->
+				<div class="wp-block-button maintenance-submit"><button type="submit" class="wp-block-button__link wp-element-button">Send message</button></div>
+				<!-- /wp:button --></div>
+				<!-- /wp:jetpack/contact-form -->
 			</div>
 			<div class="corner">Special needs hockey · Orillia, Ontario</div>
 		</section>
