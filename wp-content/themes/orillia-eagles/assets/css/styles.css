@@ -3099,6 +3099,63 @@ body {
 	box-shadow: inset 4px 0 0 var(--wp--preset--color--accent-1);
 }
 
+.schedule-past-controls {
+	display: flex;
+	justify-content: flex-end;
+	margin-bottom: var(--wp--preset--spacing--30);
+}
+
+.schedule-past-toggle {
+	appearance: none;
+	min-height: 44px;
+	padding: 0.75rem 1.1rem;
+	border: 0;
+	background: var(--wp--preset--color--contrast);
+	box-shadow: inset 3px 0 0 var(--wp--preset--color--accent-1);
+	color: var(--wp--preset--color--base);
+	font-family: inherit;
+	font-size: 0.78rem;
+	font-weight: 800;
+	letter-spacing: 0.06em;
+	line-height: 1.2;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.schedule-past-toggle::before {
+	content: "+";
+	margin-right: 0.5rem;
+	color: var(--wp--preset--color--accent-1);
+	font-size: 1rem;
+}
+
+.schedule-past-toggle[aria-expanded="true"]::before {
+	content: "−";
+}
+
+.schedule-past-toggle:hover,
+.schedule-past-toggle:focus-visible {
+	background: var(--wp--preset--color--accent-1);
+	box-shadow: inset 3px 0 0 var(--wp--preset--color--contrast);
+	color: var(--wp--preset--color--contrast);
+	outline: 2px solid var(--wp--preset--color--accent-1);
+	outline-offset: 3px;
+}
+
+.schedule-past-toggle:hover::before,
+.schedule-past-toggle:focus-visible::before {
+	color: currentColor;
+}
+
+.schedule-row--past {
+	opacity: 0.68;
+}
+
+.schedule-body > li:hover .schedule-row--past {
+	background: rgba(0, 0, 0, 0.1);
+	box-shadow: none;
+}
+
 .schedule-cell {
 	margin: 0;
 }
@@ -3106,7 +3163,81 @@ body {
 .schedule-cell--event {
 	display: flex;
 	flex-direction: column;
-	gap: 0.15rem;
+	align-items: flex-start;
+	gap: 0.25rem;
+}
+
+.schedule-event-title a {
+	color: inherit;
+	text-decoration-line: underline;
+	text-decoration-color: var(--wp--preset--color--accent-1);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 0.2em;
+	transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.schedule-event-title a:hover,
+.schedule-event-title a:focus-visible {
+	color: var(--wp--preset--color--accent-3);
+	text-decoration-color: currentColor;
+}
+
+.schedule-cell--location a {
+	color: inherit;
+	text-decoration-line: underline;
+	text-decoration-color: var(--wp--preset--color--accent-1);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.18em;
+	transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.schedule-cell--location a::after {
+	content: "↗";
+	display: inline-block;
+	margin-left: 0.3em;
+	color: var(--wp--preset--color--accent-3);
+	font-size: 0.75em;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.schedule-cell--location a:hover,
+.schedule-cell--location a:focus-visible {
+	color: var(--wp--preset--color--accent-3);
+	text-decoration-color: currentColor;
+}
+
+.schedule-status {
+	display: inline-flex;
+	align-items: center;
+	width: fit-content;
+	padding: 0.2rem 0.55rem;
+	border-left: 3px solid var(--wp--preset--color--accent-1);
+	background: var(--wp--preset--color--contrast);
+	color: var(--wp--preset--color--base);
+	font-size: 0.7rem;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+.schedule-status--postponed {
+	background: var(--wp--preset--color--accent-1);
+	color: var(--wp--preset--color--contrast);
+}
+
+.schedule-body > li .schedule-row--cancelled {
+	box-shadow: inset 4px 0 0 var(--wp--preset--color--contrast);
+}
+
+.schedule-row--cancelled .schedule-event-title {
+	text-decoration: line-through;
+	text-decoration-thickness: 2px;
+}
+
+.schedule-body > li .schedule-row--postponed {
+	box-shadow: inset 4px 0 0 var(--wp--preset--color--accent-1);
 }
 
 .schedule-event-opponent:empty {
@@ -3147,6 +3278,10 @@ body {
 		padding: 1.1rem 1.25rem;
 	}
 
+	.schedule-past-controls {
+		justify-content: center;
+	}
+
 	/* Date leads the card. */
 	.schedule-cell--date {
 		font-weight: 700;
@@ -3158,6 +3293,10 @@ body {
 		margin-block: 0.15rem;
 	}
 
+	.schedule-status {
+		margin-top: 0.15rem;
+	}
+
 	.schedule-cell--time::before,
 	.schedule-cell--level::before,
 	.schedule-cell--location::before {
@@ -3166,6 +3305,11 @@ body {
 
 	.schedule-cell--time::before {
 		content: "Time: ";
+	}
+
+	.schedule-cell--time:empty,
+	.schedule-cell--level-empty {
+		display: none;
 	}
 
 	.schedule-cell--level::before {

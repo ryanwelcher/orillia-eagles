@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Orillia Eagles Schedule
- * Description: Team schedule (games & practices) with Event Type and Level taxonomies plus date/time/location/opponent fields.
- * Version: 1.0.0
+ * Description: Team schedule with date ranges, optional times, statuses, single-event links, and Event Type and Level taxonomies.
+ * Version: 1.3.2
  * Author: Studio Code
  * Text Domain: orillia-schedule
  */
@@ -32,6 +32,22 @@ function orillia_schedule_deactivate() {
 	flush_rewrite_rules();
 }
 register_deactivation_hook( __FILE__, 'orillia_schedule_deactivate' );
+
+/**
+ * Hide completed events behind an accessible toggle when JavaScript is available.
+ */
+function orillia_schedule_enqueue_frontend_assets() {
+	$script_path = __DIR__ . '/assets/js/schedule-past-events.js';
+
+	wp_enqueue_script(
+		'orillia-schedule-past-events',
+		plugins_url( 'assets/js/schedule-past-events.js', __FILE__ ),
+		array(),
+		file_exists( $script_path ) ? filemtime( $script_path ) : '1.3.0',
+		true
+	);
+}
+add_action( 'wp_enqueue_scripts', 'orillia_schedule_enqueue_frontend_assets' );
 
 /**
  * Advanced Query Loop exposes orderBy=meta_value on its Query block, but

@@ -32,11 +32,6 @@
 		h1{max-width:9ch;margin:0;color:var(--white);font-family:"Archivo Black",sans-serif;font-size:clamp(3.4rem,7vw,7.4rem);font-weight:400;letter-spacing:-.035em;line-height:.88;text-transform:uppercase}
 		h1 span{display:block;color:var(--gold-light)}
 		.lede{max-width:38rem;margin:2rem 0 0;color:rgba(255,255,255,.7);font-size:clamp(1rem,1.5vw,1.22rem);line-height:1.75}
-		.maintenance-status{display:grid;grid-template-columns:auto 1fr;gap:1rem 1.25rem;align-items:center;margin-top:clamp(2.5rem,6vh,5rem);padding-top:1.6rem;border-top:1px solid var(--line)}
-		.puck{position:relative;width:48px;height:18px;border-radius:50%;background:#050505;box-shadow:0 8px 16px rgba(0,0,0,.38);animation:drift 3.6s ease-in-out infinite}
-		.puck:after{content:"";position:absolute;inset:3px 8px auto;border-top:1px solid rgba(255,255,255,.2)}
-		.maintenance-status strong{display:block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase}
-		.maintenance-status span{display:block;margin-top:.25rem;color:rgba(255,255,255,.52);font-size:.92rem}
 		.form-intro{margin:2rem 0 1rem;color:rgba(255,255,255,.62);font-size:.82rem}
 		form.contact-form,form.contact-form>.maintenance-form{width:100%;min-width:0}
 		form.contact-form>.maintenance-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.8rem 1rem}
@@ -51,9 +46,8 @@
 		.maintenance-form .maintenance-submit .wp-element-button{height:auto;padding:.78rem 1.25rem;background:var(--gold)!important;color:var(--white)!important;border:0;border-radius:0;font:700 .72rem/1 "Hanken Grotesk",sans-serif;letter-spacing:.12em;text-transform:uppercase;transition:background-color .2s ease,transform .2s ease}
 		.maintenance-form .maintenance-submit .wp-element-button:hover,.maintenance-form .maintenance-submit .wp-element-button:focus-visible{background:var(--gold-light)!important;transform:translateY(-2px)}
 		.corner{position:absolute;z-index:2;right:2rem;bottom:1.65rem;color:rgba(255,255,255,.25);font-size:.65rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;writing-mode:vertical-rl}
-		@keyframes drift{0%,100%{transform:translateX(0) rotate(-3deg)}50%{transform:translateX(12px) rotate(3deg)}}
 		@media(max-width:900px){.shell{grid-template-columns:1fr}.photo{min-height:34svh}.photo:before{background:linear-gradient(0deg,rgba(26,26,26,.92),rgba(26,26,26,.08) 70%)}.photo-label{bottom:1.5rem}.panel{min-height:66svh;padding:2.25rem 1.5rem 4rem}.brand{margin-bottom:4rem}.corner{display:none}}
-		@media(max-width:520px){.photo{min-height:28svh;background-position:48% center}.panel{min-height:72svh}.brand{margin-bottom:3rem}h1{font-size:clamp(3.2rem,16vw,4.6rem)}.lede{line-height:1.6}.maintenance-status{margin-top:2.5rem}form.contact-form>.maintenance-form{grid-template-columns:minmax(0,1fr)}.maintenance-form .maintenance-message-wrap,.maintenance-form .maintenance-submit{grid-column:1}}
+		@media(max-width:520px){.photo{min-height:28svh;background-position:48% center}.panel{min-height:72svh}.brand{margin-bottom:3rem}h1{font-size:clamp(3.2rem,16vw,4.6rem)}.lede{line-height:1.6}form.contact-form>.maintenance-form{grid-template-columns:minmax(0,1fr)}.maintenance-form .maintenance-message-wrap,.maintenance-form .maintenance-submit{grid-column:1}}
 		@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
 	</style>
 </head>
@@ -69,10 +63,6 @@
 				<p class="kicker">Brief intermission</p>
 				<h1>We’re tuning up <span>the rink.</span></h1>
 				<p class="lede">Our website is temporarily off the ice while we make a few improvements. The Eagles will be back online shortly—stronger, faster, and ready for the next shift.</p>
-				<div class="maintenance-status">
-					<div class="puck" aria-hidden="true"></div>
-					<div><strong>Maintenance in progress</strong><span>Thanks for your patience. Please check back soon.</span></div>
-				</div>
 				<p class="form-intro">Need to reach the team? Send us a note.</p>
 				<!-- wp:jetpack/contact-form {"to":"info@orilliaeagles.ca","subject":"Maintenance page enquiry","jetpackCRM":false,"variationName":"default","className":"maintenance-form","layout":{"type":"default"}} -->
 				<div class="wp-block-jetpack-contact-form maintenance-form"><!-- wp:jetpack/field-name {"required":true,"fieldVariant":"name","className":"maintenance-field"} -->
