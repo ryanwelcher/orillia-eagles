@@ -32,6 +32,8 @@ export default function App() {
 	const [ view, setView ] = useState( DEFAULT_VIEW );
 	const [ notice, setNotice ] = useState( null );
 	const [ showPlayers, setShowPlayers ] = useState( true );
+	// "Not entered" rows (no charge yet) are hidden unless asked for.
+	const [ showUnentered, setShowUnentered ] = useState( false );
 	// Row the Add payment modal is open for (null = closed).
 	const [ paymentItem, setPaymentItem ] = useState( null );
 	// Bumped by the error "Retry" button to re-run the load effect.
@@ -128,12 +130,16 @@ export default function App() {
 	// Per-player products sort, filter and paginate member summary rows (full
 	// amounts), then slot each member's players underneath so they stay together.
 	const { data: shownData, paginationInfo } = useMemo( () => {
+		// Filter before grouping so a member whose players all lack a charge drops out.
+		const visibleRows = showUnentered
+			? rows
+			: rows.filter( ( r ) => r.status !== 'not_entered' );
 		if ( ! perPlayer ) {
-			return filterSortAndPaginate( rows, view, fields );
+			return filterSortAndPaginate( visibleRows, view, fields );
 		}
-		const result = filterSortAndPaginate( groupByMember( rows ), view, fields );
+		const result = filterSortAndPaginate( groupByMember( visibleRows ), view, fields );
 		return { ...result, data: showPlayers ? withPlayers( result.data ) : result.data };
-	}, [ rows, view, fields, perPlayer, showPlayers ] );
+	}, [ rows, view, fields, perPlayer, showPlayers, showUnentered ] );
 
 	const productOptions = [
 		{ value: 0, label: __( '— Select a product —', 'team-membership-ledger' ) },
@@ -174,12 +180,27 @@ export default function App() {
 						__( 'Member ledger', 'team-membership-ledger' ) }
 				</h2>
 			) }
-			{ productId !== 0 && perPlayer && (
-				<div style={ { marginBottom: '16px' } }>
+			{ productId !== 0 && (
+				<div
+					style={ {
+						display: 'flex',
+						flexWrap: 'wrap',
+						gap: '12px 24px',
+						marginBottom: '16px',
+					} }
+				>
+					{ perPlayer && (
+						<ToggleControl
+							label={ __( 'Show linked players', 'team-membership-ledger' ) }
+							checked={ showPlayers }
+							onChange={ setShowPlayers }
+							__nextHasNoMarginBottom
+						/>
+					) }
 					<ToggleControl
-						label={ __( 'Show linked players', 'team-membership-ledger' ) }
-						checked={ showPlayers }
-						onChange={ setShowPlayers }
+						label={ __( 'Show members without charges', 'team-membership-ledger' ) }
+						checked={ showUnentered }
+						onChange={ setShowUnentered }
 						__nextHasNoMarginBottom
 					/>
 				</div>

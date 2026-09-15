@@ -34,8 +34,10 @@ money collected offline. No public storefront, no member logins.
   Active/Inactive. Only Active members are charged by Season Rollover. In the
   **Players** column, link each player (from the Players plugin) to the member
   who pays for them. Each player has one paying member.
-- **Membership → Ledger** — pick a product to see every active member's status
-  (Paid / Owes / Not entered), and record payments inline:
+- **Membership → Ledger** — pick a product to see each active member's status
+  (Paid / Owes), and record payments inline. Members with no charge yet
+  (*Not entered*) are hidden. Turn on **Show members without charges** to list
+  them, so you can create a charge from the row:
   - **Mark Paid** — marks that member's order Completed (paid in full). On a
     "Not entered" member it creates the charge first, then marks it paid.
   - **Add payment** — type the amount just received and click Add; it accrues
