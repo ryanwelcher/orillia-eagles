@@ -16,7 +16,10 @@ final class LedgerSerializer {
 	/** @return array<string,mixed> */
 	public static function row( LedgerRow $row ): array {
 		return array(
+			'id'         => $row->memberId() . '-' . $row->playerId(),
 			'memberId'   => $row->memberId(),
+			'playerId'   => $row->playerId(),
+			'playerName' => $row->playerName(),
 			'name'       => $row->name(),
 			'email'      => $row->email(),
 			'status'     => $row->status(),

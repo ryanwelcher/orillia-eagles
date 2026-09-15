@@ -7,11 +7,19 @@ final class RosterRepository {
 
 	public const ACTIVE_META = '_tml_active';
 
+	/** Members are WooCommerce customers; no other user can be billed. */
+	public const ROLE = 'customer';
+
+	public function isMember( int $user_id ): bool {
+		$user = get_userdata( $user_id );
+		return $user && in_array( self::ROLE, (array) $user->roles, true );
+	}
+
 	/** @return array<int,array{id:int,name:string,email:string,active:bool}> */
 	public function allMembers(): array {
 		$users = get_users(
 			array(
-				'role'    => 'customer',
+				'role'    => self::ROLE,
 				'orderby' => 'display_name',
 				'order'   => 'ASC',
 			)

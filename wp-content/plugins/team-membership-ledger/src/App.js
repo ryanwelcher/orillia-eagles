@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from '@wordpress/element';
-import { SelectControl, Spinner, Snackbar, Button } from '@wordpress/components';
+import { SelectControl, Spinner, Snackbar, Button, ToggleControl, Modal } from '@wordpress/components';
 import { DataViews, filterSortAndPaginate } from '@wordpress/dataviews';
 import { __ } from '@wordpress/i18n';
-import { fetchLedger } from './api';
+import { fetchLedger, setQuantity } from './api';
+import { memberSummaries, withPlayers } from './groups';
 import { makeFields } from './fields';
-import { makeActions } from './actions';
+import { makeActions, AddPaymentModal } from './actions';
 
 const DEFAULT_VIEW = {
 	type: 'table',
@@ -30,17 +31,61 @@ export default function App() {
 	const [ error, setError ] = useState( null );
 	const [ view, setView ] = useState( DEFAULT_VIEW );
 	const [ notice, setNotice ] = useState( null );
+	const [ showPlayers, setShowPlayers ] = useState( true );
+	// "Not entered" rows (no charge yet) are hidden unless asked for.
+	const [ showUnentered, setShowUnentered ] = useState( false );
+	// Row the Add payment modal is open for (null = closed).
+	const [ paymentItem, setPaymentItem ] = useState( null );
 	// Bumped by the error "Retry" button to re-run the load effect.
 	const [ reloadKey, setReloadKey ] = useState( 0 );
 
+	const perPlayer = !! products.find( ( p ) => p.id === productId )?.perPlayer;
+	const allowsQty = !! products.find( ( p ) => p.id === productId )?.allowsQty;
+
+	// Accepts one updated row, or a list (member-level actions return every player row).
 	const handleRowUpdated = ( updated ) => {
-		setRows( ( current ) =>
-			current.map( ( r ) => ( r.memberId === updated.memberId ? updated : r ) )
-		);
+		const byId = new Map( ( Array.isArray( updated ) ? updated : [ updated ] ).map( ( r ) => [ r.id, r ] ) );
+		setRows( ( current ) => current.map( ( r ) => byId.get( r.id ) ?? r ) );
 	};
 
 	const actions = useMemo(
-		() => makeActions( { productId, onRowUpdated: handleRowUpdated, onNotice: setNotice } ),
+		() =>
+			makeActions( {
+				productId,
+				perPlayer,
+				onRowUpdated: handleRowUpdated,
+				onNotice: setNotice,
+				onOpenPayment: setPaymentItem,
+			} ),
+		[ productId, perPlayer ]
+	);
+
+	// Returns whether the save worked so the cell can revert on failure.
+	const onSetQty = useMemo(
+		() => async ( item, qty ) => {
+			try {
+				const updated = await setQuantity( {
+					productId,
+					orderId: item.orderId,
+					memberId: item.memberId,
+					playerId: item.playerId,
+					qty,
+				} );
+				if ( updated ) {
+					handleRowUpdated( updated );
+					setNotice( { type: 'success', message: __( 'Quantity updated.', 'team-membership-ledger' ) } );
+				} else {
+					setNotice( {
+						type: 'success',
+						message: __( 'Quantity updated. Reload to refresh the ledger.', 'team-membership-ledger' ),
+					} );
+				}
+				return true;
+			} catch ( e ) {
+				setNotice( { type: 'error', message: e.message || __( 'Could not update the quantity.', 'team-membership-ledger' ) } );
+				return false;
+			}
+		},
 		[ productId ]
 	);
 
@@ -73,11 +118,28 @@ export default function App() {
 		};
 	}, [ productId, reloadKey ] );
 
-	const fields = useMemo( () => makeFields( currency ), [ currency ] );
-	const { data: shownData, paginationInfo } = useMemo(
-		() => filterSortAndPaginate( rows, view, fields ),
-		[ rows, view, fields ]
+	// Per-player products show each member's player rows indented under it.
+	const shownView = useMemo(
+		() => ( perPlayer ? { ...view, showLevels: true } : view ),
+		[ view, perPlayer ]
 	);
+
+	const fields = useMemo(
+		() => makeFields( currency, { allowsQty, onSetQty } ),
+		[ currency, allowsQty, onSetQty ]
+	);
+	// Per-player products sort, filter and paginate member summary rows (full
+	// amounts), then slot each member's players underneath so they stay together.
+	const { data: shownData, paginationInfo } = useMemo( () => {
+		if ( ! perPlayer ) {
+			const visibleRows = showUnentered
+				? rows
+				: rows.filter( ( r ) => r.status !== 'not_entered' );
+			return filterSortAndPaginate( visibleRows, view, fields );
+		}
+		const result = filterSortAndPaginate( memberSummaries( rows, { showUnentered } ), view, fields );
+		return { ...result, data: showPlayers ? withPlayers( result.data ) : result.data };
+	}, [ rows, view, fields, perPlayer, showPlayers, showUnentered ] );
 
 	const productOptions = [
 		{ value: 0, label: __( '— Select a product —', 'team-membership-ledger' ) },
@@ -118,6 +180,31 @@ export default function App() {
 						__( 'Member ledger', 'team-membership-ledger' ) }
 				</h2>
 			) }
+			{ productId !== 0 && (
+				<div
+					style={ {
+						display: 'flex',
+						flexWrap: 'wrap',
+						gap: '12px 24px',
+						marginBottom: '16px',
+					} }
+				>
+					{ perPlayer && (
+						<ToggleControl
+							label={ __( 'Show linked players', 'team-membership-ledger' ) }
+							checked={ showPlayers }
+							onChange={ setShowPlayers }
+							__nextHasNoMarginBottom
+						/>
+					) }
+					<ToggleControl
+						label={ __( 'Show members without charges', 'team-membership-ledger' ) }
+						checked={ showUnentered }
+						onChange={ setShowUnentered }
+						__nextHasNoMarginBottom
+					/>
+				</div>
+			) }
 			{ productId === 0 ? (
 				<p>{ __( 'Select a product to view the ledger.', 'team-membership-ledger' ) }</p>
 			) : isLoading ? (
@@ -126,14 +213,29 @@ export default function App() {
 				<DataViews
 					data={ shownData }
 					fields={ fields }
-					view={ view }
+					view={ shownView }
 					onChangeView={ setView }
 					paginationInfo={ paginationInfo }
 					defaultLayouts={ { table: {} } }
-					getItemId={ ( item ) => String( item.memberId ) }
+					getItemId={ ( item ) => item.id }
+					getItemLevel={ ( item ) => item.level ?? 0 }
 					isLoading={ isLoading }
 					actions={ actions }
 				/>
+			) }
+			{ paymentItem && (
+				<Modal
+					title={ __( 'Add payment', 'team-membership-ledger' ) }
+					onRequestClose={ () => setPaymentItem( null ) }
+				>
+					<AddPaymentModal
+						item={ paymentItem }
+						productId={ productId }
+						onRowUpdated={ handleRowUpdated }
+						onNotice={ setNotice }
+						closeModal={ () => setPaymentItem( null ) }
+					/>
+				</Modal>
 			) }
 			{ notice && (
 				<div style={ { position: 'fixed', bottom: 20, left: 20, zIndex: 100000 } }>

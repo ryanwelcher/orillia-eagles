@@ -1,5 +1,6 @@
-import { __ } from '@wordpress/i18n';
+import { __, _n, sprintf } from '@wordpress/i18n';
 import { formatMoney } from './format';
+import QuantityCell from './QuantityCell';
 
 const STATUS_LABELS = {
 	paid: __( 'Paid', 'team-membership-ledger' ),
@@ -10,10 +11,11 @@ const STATUS_LABELS = {
 /**
  * Build the DataViews field definitions.
  *
- * @param {{symbol:string, decimals:number}} currency Currency config.
+ * @param {{symbol:string, decimals:number}}           currency Currency config.
+ * @param {{allowsQty?:boolean, onSetQty?:Function}} options  Quantity editing for the selected product.
  * @return {Array} Field definitions.
  */
-export function makeFields( currency ) {
+export function makeFields( currency, { allowsQty = false, onSetQty } = {} ) {
 	const money = ( getValue ) => ( { item } ) => formatMoney( getValue( { item } ), currency );
 
 	return [
@@ -22,7 +24,21 @@ export function makeFields( currency ) {
 			label: __( 'Member', 'team-membership-ledger' ),
 			enableGlobalSearch: true,
 			getValue: ( { item } ) => item.name,
-			render: ( { item } ) => item.name,
+			render: ( { item } ) => {
+				// Player rows (level 1) sit under their member, so show the player.
+				if ( item.level === 1 ) {
+					return item.playerName;
+				}
+				if ( item.isMember ) {
+					return sprintf(
+						/* translators: 1: member name, 2: number of linked players */
+						_n( '%1$s (%2$d player)', '%1$s (%2$d players)', item.players.length, 'team-membership-ledger' ),
+						item.name,
+						item.players.length
+					);
+				}
+				return item.name;
+			},
 		},
 		{
 			id: 'status',
@@ -40,6 +56,13 @@ export function makeFields( currency ) {
 			id: 'qty',
 			label: __( 'Qty', 'team-membership-ledger' ),
 			getValue: ( { item } ) => item.qty,
+			// Editable only on a single charge; member summaries and multi-order rows stay read-only.
+			render: ( { item } ) =>
+				allowsQty && onSetQty && ! item.isMember && item.orderCount <= 1 ? (
+					<QuantityCell item={ item } onSetQty={ onSetQty } />
+				) : (
+					item.qty
+				),
 		},
 		{
 			id: 'total',

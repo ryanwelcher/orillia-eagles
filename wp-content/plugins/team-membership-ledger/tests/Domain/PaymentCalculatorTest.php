@@ -24,10 +24,28 @@ final class PaymentCalculatorTest extends TestCase {
 		$this->assertTrue( $r['should_complete'] );
 	}
 
-	public function test_overpayment_completes(): void {
-		$r = PaymentCalculator::apply( 150.0, 60.0, 200.0 );
-		$this->assertSame( 210.0, $r['new_paid'] );
-		$this->assertTrue( $r['should_complete'] );
+	public function test_overpayment_is_refused(): void {
+		$this->expectException( \RuntimeException::class );
+		PaymentCalculator::apply( 150.0, 60.0, 200.0 );
+	}
+
+	public function test_any_payment_on_a_fully_paid_order_is_refused(): void {
+		// e.g. a second, concurrent request that read the order before the first saved.
+		$this->expectException( \RuntimeException::class );
+		PaymentCalculator::apply( 200.0, 0.01, 200.0 );
+	}
+
+	public function test_paid_so_far_is_the_stored_amount_for_open_orders(): void {
+		$this->assertSame( 50.0, PaymentCalculator::paidSoFar( 'tml-requested', 50.0, 200.0 ) );
+	}
+
+	public function test_paid_so_far_is_the_total_for_legacy_completed_orders(): void {
+		$this->assertSame( 200.0, PaymentCalculator::paidSoFar( 'completed', 0.0, 200.0 ) );
+	}
+
+	public function test_paid_so_far_keeps_a_higher_stored_amount_on_completed_orders(): void {
+		// Paid $200 for 2, then lowered to 1 ($100): the $200 still counts.
+		$this->assertSame( 200.0, PaymentCalculator::paidSoFar( 'completed', 200.0, 100.0 ) );
 	}
 
 	public function test_exact_single_payment_completes(): void {

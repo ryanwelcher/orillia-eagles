@@ -23,6 +23,18 @@ final class LedgerSerializerTest extends TestCase {
 		$this->assertSame( '2026-07-24', $out['date'] );
 		$this->assertSame( 55, $out['orderId'] );
 		$this->assertSame( 1, $out['orderCount'] );
+		$this->assertSame( '7-0', $out['id'] );
+		$this->assertSame( 0, $out['playerId'] );
+		$this->assertSame( '', $out['playerName'] );
+	}
+
+	public function test_serializes_player_fields_into_a_unique_id(): void {
+		$row = new LedgerRow( 7, 'Coach', 'c@example.com', MemberStatus::OWES, 1, 200.0, 0.0, null, array( 56 ), 42, 'Mia' );
+		$out = LedgerSerializer::row( $row );
+
+		$this->assertSame( '7-42', $out['id'] );
+		$this->assertSame( 42, $out['playerId'] );
+		$this->assertSame( 'Mia', $out['playerName'] );
 	}
 
 	public function test_null_date_and_multi_order_have_null_order_id(): void {

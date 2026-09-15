@@ -21,6 +21,7 @@ final class Plugin {
 		}
 		$this->booted = true;
 		\OrillaEagles\Ledger\Status\OrderStatus::register();
+		\OrillaEagles\Ledger\Data\ProductFlag::register();
 		// Grant the Membership capability to admins/editors on already-active
 		// installs (activation covers fresh ones). Runs before admin_menu so the
 		// menu's capability check sees it; admin-only to skip the front end.
