@@ -3,7 +3,7 @@ import { SelectControl, Spinner, Snackbar, Button, ToggleControl, Modal } from '
 import { DataViews, filterSortAndPaginate } from '@wordpress/dataviews';
 import { __ } from '@wordpress/i18n';
 import { fetchLedger, setQuantity } from './api';
-import { groupByMember, withPlayers } from './groups';
+import { memberSummaries, withPlayers } from './groups';
 import { makeFields } from './fields';
 import { makeActions, AddPaymentModal } from './actions';
 
@@ -131,14 +131,13 @@ export default function App() {
 	// Per-player products sort, filter and paginate member summary rows (full
 	// amounts), then slot each member's players underneath so they stay together.
 	const { data: shownData, paginationInfo } = useMemo( () => {
-		// Filter before grouping so a member whose players all lack a charge drops out.
-		const visibleRows = showUnentered
-			? rows
-			: rows.filter( ( r ) => r.status !== 'not_entered' );
 		if ( ! perPlayer ) {
+			const visibleRows = showUnentered
+				? rows
+				: rows.filter( ( r ) => r.status !== 'not_entered' );
 			return filterSortAndPaginate( visibleRows, view, fields );
 		}
-		const result = filterSortAndPaginate( groupByMember( visibleRows ), view, fields );
+		const result = filterSortAndPaginate( memberSummaries( rows, { showUnentered } ), view, fields );
 		return { ...result, data: showPlayers ? withPlayers( result.data ) : result.data };
 	}, [ rows, view, fields, perPlayer, showPlayers, showUnentered ] );
 

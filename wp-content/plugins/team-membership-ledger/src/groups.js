@@ -44,6 +44,20 @@ export function groupByMember( rows ) {
 }
 
 /**
+ * Member summary rows to list. Groups first, then hides whole members with no
+ * charges, so a member keeps every player row (charged or not) in its totals.
+ *
+ * @param {Array}   rows                   Serialized ledger rows.
+ * @param {Object}  options
+ * @param {boolean} options.showUnentered Keep members whose players all lack a charge.
+ * @return {Array} Member summary rows.
+ */
+export function memberSummaries( rows, { showUnentered } ) {
+	const members = groupByMember( rows );
+	return showUnentered ? members : members.filter( ( member ) => member.status !== 'not_entered' );
+}
+
+/**
  * Insert each member's player rows (at level 1, members are level 0) directly
  * after the member row. DataViews prefixes one dash per level.
  *

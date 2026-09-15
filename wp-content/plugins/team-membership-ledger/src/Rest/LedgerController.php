@@ -194,6 +194,7 @@ final class LedgerController {
 
 		try {
 			if ( $order_id ) {
+				$order_id = self::resolve_order( $order_id, $member_id, $player_id, $product_id );
 				( new OrderRepository() )->setQuantity( $order_id, $product_id, $qty );
 			} else {
 				$order_id = self::resolve_order( 0, $member_id, $player_id, $product_id, $qty );
@@ -286,6 +287,12 @@ final class LedgerController {
 				/* translators: %s: player name */
 				throw new \RuntimeException( sprintf( __( '%s has more than one order for this product; manage it in WooCommerce.', 'team-membership-ledger' ), $row->playerName() ) );
 			}
+			// Payments act on the whole order, so other items would be paid too.
+			$order = $row->singleOrderId() ? wc_get_order( $row->singleOrderId() ) : null;
+			if ( $order && 1 !== count( $order->get_items() ) ) {
+				/* translators: %s: player name */
+				throw new \RuntimeException( sprintf( __( "%s's order has other items; manage it in WooCommerce.", 'team-membership-ledger' ), $row->playerName() ) );
+			}
 		}
 		return $rows;
 	}
@@ -324,6 +331,17 @@ final class LedgerController {
 	/** Resolve an existing order id, or create the Requested order on the fly. */
 	private static function resolve_order( int $order_id, int $member_id, int $player_id, int $product_id, int $qty = 1 ): int {
 		if ( $order_id ) {
+			// Only act on the order behind this ledger row, not any order id sent in.
+			$order = wc_get_order( $order_id );
+			if (
+				! $order instanceof \WC_Order
+				|| $order instanceof \WC_Order_Refund
+				|| (int) $order->get_customer_id() !== $member_id
+				|| (int) $order->get_meta( OrderRepository::PLAYER_META ) !== $player_id
+				|| ! array_filter( $order->get_items(), static fn( $item ) => (int) $item->get_product_id() === $product_id )
+			) {
+				throw new \RuntimeException( __( 'That order does not belong to this ledger row.', 'team-membership-ledger' ) );
+			}
 			return $order_id;
 		}
 		if ( ! $member_id || ! $product_id ) {

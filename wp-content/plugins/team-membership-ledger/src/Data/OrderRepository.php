@@ -12,6 +12,7 @@ final class OrderRepository {
 
 	public const AMOUNT_PAID_META = '_tml_amount_paid';
 	public const PLAYER_META      = '_tml_player_id';
+	public const UNIT_PRICE_META  = '_tml_unit_price';
 
 	/** @return array<int,array{customer_id:int,player_id:int,order_id:int,status:string,qty:int,line_total:float,amount_paid:float,date:?string}> */
 	public function productRecords( int $product_id ): array {
@@ -117,9 +118,17 @@ final class OrderRepository {
 		if ( ! $order ) {
 			throw new \RuntimeException( 'Order not found: ' . $order_id );
 		}
-		$current = (float) $order->get_meta( self::AMOUNT_PAID_META );
 		$total   = (float) $order->get_total();
-		$result  = PaymentCalculator::apply( $current, $increment, $total );
+		$current = PaymentCalculator::paidSoFar( $order->get_status(), (float) $order->get_meta( self::AMOUNT_PAID_META ), $total );
+		// Re-read here, not just in the controller, so a stale or concurrent
+		// request can't push the paid amount past the total.
+		try {
+			$result = PaymentCalculator::apply( $current, $increment, $total );
+		} catch ( \RuntimeException $e ) {
+			$owed = PaymentCalculator::owed( $current, $total );
+			/* translators: %s: amount owed */
+			throw new \RuntimeException( sprintf( __( 'That is more than the %s owed.', 'team-membership-ledger' ), html_entity_decode( wp_strip_all_tags( wc_price( $owed ) ) ) ) );
+		}
 
 		$order->update_meta_data( self::AMOUNT_PAID_META, $result['new_paid'] );
 		$order->save();
@@ -149,12 +158,13 @@ final class OrderRepository {
 			return;
 		}
 		$line_total = (float) $item->get_total();
-		// Same "paid so far" rule as productRecords().
-		$paid = ( 'completed' === $order->get_status() )
-			? $line_total
-			: (float) $order->get_meta( self::AMOUNT_PAID_META );
-		$plan = QuantityChange::plan( $old_qty, $line_total, $qty, $paid );
+		// Keeps a stored payment that is higher than a lowered line total.
+		$paid = PaymentCalculator::paidSoFar( $order->get_status(), (float) $order->get_meta( self::AMOUNT_PAID_META ), $line_total );
+		// Saved at the first change, so repeated changes don't compound rounding.
+		$saved_unit = $item->get_meta( self::UNIT_PRICE_META );
+		$plan       = QuantityChange::plan( $old_qty, $line_total, $qty, $paid, '' === $saved_unit ? null : (float) $saved_unit );
 
+		$item->update_meta_data( self::UNIT_PRICE_META, $plan['unit_price'] );
 		$item->set_quantity( $qty );
 		$item->set_subtotal( $plan['new_total'] );
 		$item->set_total( $plan['new_total'] );
