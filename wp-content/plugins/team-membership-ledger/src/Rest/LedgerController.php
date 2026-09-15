@@ -9,6 +9,7 @@ use OrillaEagles\Ledger\Data\ProductFlag;
 use OrillaEagles\Ledger\Domain\LedgerCalculator;
 use OrillaEagles\Ledger\Domain\LedgerRow;
 use OrillaEagles\Ledger\Domain\LedgerSerializer;
+use OrillaEagles\Ledger\Domain\PaymentAllocation;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -80,6 +81,37 @@ final class LedgerController {
 					'member_id'  => array( 'type' => 'integer', 'required' => false, 'sanitize_callback' => 'absint', 'default' => 0 ),
 					'player_id'  => array( 'type' => 'integer', 'required' => false, 'sanitize_callback' => 'absint', 'default' => 0 ),
 					'qty'        => array( 'type' => 'integer', 'required' => true, 'minimum' => 1 ),
+				),
+			)
+		);
+
+		// Member-level payments for "Charge per player" products: act on all of
+		// the member's player charges at once.
+		register_rest_route(
+			self::NAMESPACE,
+			'/ledger/member/add-payment',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( self::class, 'member_add_payment' ),
+				'permission_callback' => array( self::class, 'can_manage' ),
+				'args'                => array(
+					'product_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
+					'member_id'  => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
+					'amount'     => array( 'type' => 'number', 'required' => true ),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
+			'/ledger/member/mark-paid',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( self::class, 'member_mark_paid' ),
+				'permission_callback' => array( self::class, 'can_manage' ),
+				'args'                => array(
+					'product_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
+					'member_id'  => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
 				),
 			)
 		);
@@ -171,6 +203,122 @@ final class LedgerController {
 		}
 
 		return self::row_response( $product_id, $order_id );
+	}
+
+	public static function member_add_payment( \WP_REST_Request $request ) {
+		$product_id = absint( $request['product_id'] );
+		$member_id  = absint( $request['member_id'] );
+		$amount     = round( (float) $request['amount'], 2 );
+
+		if ( $amount <= 0 ) {
+			return new \WP_Error( 'tml_invalid_amount', __( 'Enter a payment amount greater than zero.', 'team-membership-ledger' ), array( 'status' => 400 ) );
+		}
+
+		try {
+			$rows = self::member_rows_checked( $product_id, $member_id );
+
+			// Check the amount against what will be owed once missing charges
+			// exist, before creating anything.
+			$product = wc_get_product( $product_id );
+			$owed    = PaymentAllocation::owed(
+				array_map(
+					static fn( LedgerRow $row ) => $row->orderCount() ? $row->balance() : (float) $product->get_price(),
+					$rows
+				)
+			);
+			if ( $amount > $owed ) {
+				/* translators: %s: amount owed */
+				$message = sprintf( __( 'That is more than the %s owed.', 'team-membership-ledger' ), html_entity_decode( wp_strip_all_tags( wc_price( $owed ) ) ) );
+				return new \WP_Error( 'tml_overpayment', $message, array( 'status' => 400 ) );
+			}
+
+			$orders   = new OrderRepository();
+			$balances = array();
+			foreach ( self::ensure_member_charges( $product_id, $member_id, $rows ) as $row ) {
+				$balances[ $row->singleOrderId() ] = $row->balance();
+			}
+			foreach ( PaymentAllocation::fill( $balances, $amount ) as $order_id => $increment ) {
+				$orders->addPayment( $order_id, $increment );
+			}
+		} catch ( \RuntimeException $e ) {
+			return new \WP_Error( 'tml_action_failed', $e->getMessage(), array( 'status' => 400 ) );
+		}
+
+		return self::member_response( $product_id, $member_id );
+	}
+
+	public static function member_mark_paid( \WP_REST_Request $request ) {
+		$product_id = absint( $request['product_id'] );
+		$member_id  = absint( $request['member_id'] );
+
+		try {
+			$rows   = self::member_rows_checked( $product_id, $member_id );
+			$orders = new OrderRepository();
+			foreach ( self::ensure_member_charges( $product_id, $member_id, $rows ) as $row ) {
+				if ( 'paid' !== $row->status() ) {
+					$orders->markPaid( $row->singleOrderId() );
+				}
+			}
+		} catch ( \RuntimeException $e ) {
+			return new \WP_Error( 'tml_action_failed', $e->getMessage(), array( 'status' => 400 ) );
+		}
+
+		return self::member_response( $product_id, $member_id );
+	}
+
+	/**
+	 * The member's player rows for a per-player product, refusing anything a
+	 * member-level action can't safely act on.
+	 *
+	 * @return LedgerRow[]
+	 */
+	private static function member_rows_checked( int $product_id, int $member_id ): array {
+		$product = wc_get_product( $product_id );
+		if ( ! $product || ! ProductFlag::isPerPlayerProduct( $product ) ) {
+			throw new \RuntimeException( __( 'Member payments are only for "Charge per player" products.', 'team-membership-ledger' ) );
+		}
+		$rows = self::member_rows( $product_id, $member_id );
+		if ( ! $rows ) {
+			throw new \RuntimeException( __( 'This member has no linked players.', 'team-membership-ledger' ) );
+		}
+		foreach ( $rows as $row ) {
+			if ( $row->orderCount() > 1 ) {
+				/* translators: %s: player name */
+				throw new \RuntimeException( sprintf( __( '%s has more than one order for this product; manage it in WooCommerce.', 'team-membership-ledger' ), $row->playerName() ) );
+			}
+		}
+		return $rows;
+	}
+
+	/**
+	 * Create the Requested order for any of the member's players without one.
+	 *
+	 * @param LedgerRow[] $rows
+	 * @return LedgerRow[] rows that all have exactly one order.
+	 */
+	private static function ensure_member_charges( int $product_id, int $member_id, array $rows ): array {
+		$created = false;
+		foreach ( $rows as $row ) {
+			if ( 0 === $row->orderCount() ) {
+				( new OrderRepository() )->createRequestedOrder( $member_id, $product_id, $row->playerId() );
+				$created = true;
+			}
+		}
+		return $created ? self::member_rows( $product_id, $member_id ) : $rows;
+	}
+
+	/** @return LedgerRow[] */
+	private static function member_rows( int $product_id, int $member_id ): array {
+		return array_values(
+			array_filter(
+				self::ledger_rows( $product_id, new OrderRepository() ),
+				static fn( LedgerRow $row ) => $row->memberId() === $member_id
+			)
+		);
+	}
+
+	private static function member_response( int $product_id, int $member_id ): \WP_REST_Response {
+		return new \WP_REST_Response( LedgerSerializer::rows( self::member_rows( $product_id, $member_id ) ), 200 );
 	}
 
 	/** Resolve an existing order id, or create the Requested order on the fly. */

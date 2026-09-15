@@ -53,6 +53,34 @@ export function setQuantity( { productId, orderId, memberId, playerId, qty } ) {
 }
 
 /**
+ * Record a payment toward all of a member's player charges; returns their updated rows.
+ *
+ * @param {{productId:number, memberId:number, amount:number}} args Payload.
+ * @return {Promise<Array>} Updated serialized player rows for the member.
+ */
+export function memberAddPayment( { productId, memberId, amount } ) {
+	return apiFetch( {
+		path: '/tml/v1/ledger/member/add-payment',
+		method: 'POST',
+		data: { product_id: productId, member_id: memberId, amount },
+	} );
+}
+
+/**
+ * Mark all of a member's player charges paid; returns their updated rows.
+ *
+ * @param {{productId:number, memberId:number}} args Payload.
+ * @return {Promise<Array>} Updated serialized player rows for the member.
+ */
+export function memberMarkPaid( { productId, memberId } ) {
+	return apiFetch( {
+		path: '/tml/v1/ledger/member/mark-paid',
+		method: 'POST',
+		data: { product_id: productId, member_id: memberId },
+	} );
+}
+
+/**
  * Mark an order fully paid; returns the updated row.
  *
  * @param {{productId:number, orderId:?number, memberId:?number, playerId:?number}} args Payload.

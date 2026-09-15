@@ -59,8 +59,11 @@ money collected offline. No public storefront, no member logins.
 - In the Ledger, each member row shows the full amount for all of their players
   (total, paid, balance). Status is *Paid* only when every player is paid. Use
   the **Show linked players** toggle to show or hide the player rows under each
-  member. Each player row has its own status, balance, and payment actions.
-  Record payments on the player rows, not on the member row.
+  member. Each player row shows its own status and balance.
+- Record payments on the **member row**, not the player rows. **Add payment**
+  pays off one player at a time, in alphabetical order, and cannot be more than
+  the member owes. **Mark paid** marks every player paid. Both first create the
+  charge for any linked player who doesn't have one yet.
 - If you turn on **Charge per player** after member-level orders already exist,
   the Ledger does not show those older orders. Manage them in WooCommerce.
 

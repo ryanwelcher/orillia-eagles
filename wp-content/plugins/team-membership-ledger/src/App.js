@@ -39,21 +39,25 @@ export default function App() {
 	// Bumped by the error "Retry" button to re-run the load effect.
 	const [ reloadKey, setReloadKey ] = useState( 0 );
 
+	const perPlayer = !! products.find( ( p ) => p.id === productId )?.perPlayer;
+	const allowsQty = !! products.find( ( p ) => p.id === productId )?.allowsQty;
+
+	// Accepts one updated row, or a list (member-level actions return every player row).
 	const handleRowUpdated = ( updated ) => {
-		setRows( ( current ) =>
-			current.map( ( r ) => ( r.id === updated.id ? updated : r ) )
-		);
+		const byId = new Map( ( Array.isArray( updated ) ? updated : [ updated ] ).map( ( r ) => [ r.id, r ] ) );
+		setRows( ( current ) => current.map( ( r ) => byId.get( r.id ) ?? r ) );
 	};
 
 	const actions = useMemo(
 		() =>
 			makeActions( {
 				productId,
+				perPlayer,
 				onRowUpdated: handleRowUpdated,
 				onNotice: setNotice,
 				onOpenPayment: setPaymentItem,
 			} ),
-		[ productId ]
+		[ productId, perPlayer ]
 	);
 
 	// Returns whether the save worked so the cell can revert on failure.
@@ -113,9 +117,6 @@ export default function App() {
 			active = false;
 		};
 	}, [ productId, reloadKey ] );
-
-	const perPlayer = !! products.find( ( p ) => p.id === productId )?.perPlayer;
-	const allowsQty = !! products.find( ( p ) => p.id === productId )?.allowsQty;
 
 	// Per-player products show each member's player rows indented under it.
 	const shownView = useMemo(
