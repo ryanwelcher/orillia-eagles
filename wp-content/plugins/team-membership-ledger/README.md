@@ -55,7 +55,9 @@ money collected offline. No public storefront, no member logins.
 - For a **Charge per player** product, Season Rollover creates one order for
   each player linked to an active member. The order is in the member's name, and
   the player is saved in the order meta `_tml_player_id`. Members with no linked
-  players are not charged for that product.
+  players are not charged for that product. Only roster entries tagged **Player**
+  (or not tagged with a roster role yet) are billed — coaches, and any roster
+  role added later, are skipped.
 - In the Ledger, each member row shows the full amount for all of their players
   (total, paid, balance). Status is *Paid* only when every player is paid. Use
   the **Show linked players** toggle to show or hide the player rows under each
@@ -74,6 +76,9 @@ money collected offline. No public storefront, no member logins.
   `_tml_amount_paid` and auto-completes the order when it reaches the total.
 - To reverse a payment or mark an order back to unpaid, edit the order in
   **WooCommerce → Orders**.
+- If two people act on the same member at the same time, the second one is
+  refused rather than charging twice or losing a payment. Reload the Ledger and
+  try again.
 
 ## Local development note (SQLite)
 

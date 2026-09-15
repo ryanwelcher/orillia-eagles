@@ -2,6 +2,7 @@
 namespace OrillaEagles\Ledger\Rest;
 
 use OrillaEagles\Ledger\Admin\Menu;
+use OrillaEagles\Ledger\Data\ActionLock;
 use OrillaEagles\Ledger\Data\BillableRepository;
 use OrillaEagles\Ledger\Data\OrderRepository;
 use OrillaEagles\Ledger\Data\PlayerRepository;
@@ -152,8 +153,15 @@ final class LedgerController {
 		}
 
 		try {
-			$order_id = self::resolve_order( $order_id, $member_id, $player_id, $product_id );
-			( new OrderRepository() )->addPayment( $order_id, $amount );
+			$order_id = self::with_member_lock(
+				$product_id,
+				$member_id,
+				static function () use ( $order_id, $member_id, $player_id, $product_id, $amount ) {
+					$id = self::resolve_order( $order_id, $member_id, $player_id, $product_id );
+					( new OrderRepository() )->addPayment( $id, $amount );
+					return $id;
+				}
+			);
 		} catch ( \RuntimeException $e ) {
 			return new \WP_Error( 'tml_action_failed', $e->getMessage(), array( 'status' => 400 ) );
 		}
@@ -168,8 +176,15 @@ final class LedgerController {
 		$player_id  = absint( $request['player_id'] );
 
 		try {
-			$order_id = self::resolve_order( $order_id, $member_id, $player_id, $product_id );
-			( new OrderRepository() )->markPaid( $order_id );
+			$order_id = self::with_member_lock(
+				$product_id,
+				$member_id,
+				static function () use ( $order_id, $member_id, $player_id, $product_id ) {
+					$id = self::resolve_order( $order_id, $member_id, $player_id, $product_id );
+					( new OrderRepository() )->markPaid( $id );
+					return $id;
+				}
+			);
 		} catch ( \RuntimeException $e ) {
 			return new \WP_Error( 'tml_action_failed', $e->getMessage(), array( 'status' => 400 ) );
 		}
@@ -193,12 +208,18 @@ final class LedgerController {
 		}
 
 		try {
-			if ( $order_id ) {
-				$order_id = self::resolve_order( $order_id, $member_id, $player_id, $product_id );
-				( new OrderRepository() )->setQuantity( $order_id, $product_id, $qty );
-			} else {
-				$order_id = self::resolve_order( 0, $member_id, $player_id, $product_id, $qty );
-			}
+			$order_id = self::with_member_lock(
+				$product_id,
+				$member_id,
+				static function () use ( $order_id, $member_id, $player_id, $product_id, $qty ) {
+					if ( ! $order_id ) {
+						return self::resolve_order( 0, $member_id, $player_id, $product_id, $qty );
+					}
+					$id = self::resolve_order( $order_id, $member_id, $player_id, $product_id );
+					( new OrderRepository() )->setQuantity( $id, $product_id, $qty );
+					return $id;
+				}
+			);
 		} catch ( \RuntimeException $e ) {
 			return new \WP_Error( 'tml_action_failed', $e->getMessage(), array( 'status' => 400 ) );
 		}
@@ -216,36 +237,48 @@ final class LedgerController {
 		}
 
 		try {
-			$rows = self::member_rows_checked( $product_id, $member_id );
+			return self::with_member_lock(
+				$product_id,
+				$member_id,
+				static function () use ( $product_id, $member_id, $amount ) {
+					$rows = self::member_rows_checked( $product_id, $member_id );
 
-			// Check the amount against what will be owed once missing charges
-			// exist, before creating anything.
-			$product = wc_get_product( $product_id );
-			$owed    = PaymentAllocation::owed(
-				array_map(
-					static fn( LedgerRow $row ) => $row->orderCount() ? $row->balance() : (float) $product->get_price(),
-					$rows
-				)
+					// Check the amount against what will be owed once missing charges
+					// exist, before creating anything.
+					$product = wc_get_product( $product_id );
+					$owed    = PaymentAllocation::owed(
+						array_map(
+							static fn( LedgerRow $row ) => $row->orderCount() ? $row->balance() : (float) $product->get_price(),
+							$rows
+						)
+					);
+					if ( $amount > $owed ) {
+						throw new \RuntimeException( self::overpayment_message( $owed ) );
+					}
+
+					$orders   = new OrderRepository();
+					$balances = array();
+					foreach ( self::ensure_member_charges( $product_id, $member_id, $rows ) as $row ) {
+						$balances[ $row->singleOrderId() ] = $row->balance();
+					}
+					// Creating the charges above re-read the balances. Refuse the
+					// whole payment if they no longer absorb it, rather than
+					// applying part of it and reporting success.
+					try {
+						$plan = PaymentAllocation::fill( $balances, $amount );
+					} catch ( \RuntimeException $e ) {
+						throw new \RuntimeException( self::overpayment_message( PaymentAllocation::owed( $balances ) ) );
+					}
+					foreach ( $plan as $order_id => $increment ) {
+						$orders->addPayment( $order_id, $increment );
+					}
+
+					return self::member_response( $product_id, $member_id );
+				}
 			);
-			if ( $amount > $owed ) {
-				/* translators: %s: amount owed */
-				$message = sprintf( __( 'That is more than the %s owed.', 'team-membership-ledger' ), html_entity_decode( wp_strip_all_tags( wc_price( $owed ) ) ) );
-				return new \WP_Error( 'tml_overpayment', $message, array( 'status' => 400 ) );
-			}
-
-			$orders   = new OrderRepository();
-			$balances = array();
-			foreach ( self::ensure_member_charges( $product_id, $member_id, $rows ) as $row ) {
-				$balances[ $row->singleOrderId() ] = $row->balance();
-			}
-			foreach ( PaymentAllocation::fill( $balances, $amount ) as $order_id => $increment ) {
-				$orders->addPayment( $order_id, $increment );
-			}
 		} catch ( \RuntimeException $e ) {
 			return new \WP_Error( 'tml_action_failed', $e->getMessage(), array( 'status' => 400 ) );
 		}
-
-		return self::member_response( $product_id, $member_id );
 	}
 
 	public static function member_mark_paid( \WP_REST_Request $request ) {
@@ -253,18 +286,24 @@ final class LedgerController {
 		$member_id  = absint( $request['member_id'] );
 
 		try {
-			$rows   = self::member_rows_checked( $product_id, $member_id );
-			$orders = new OrderRepository();
-			foreach ( self::ensure_member_charges( $product_id, $member_id, $rows ) as $row ) {
-				if ( 'paid' !== $row->status() ) {
-					$orders->markPaid( $row->singleOrderId() );
+			return self::with_member_lock(
+				$product_id,
+				$member_id,
+				static function () use ( $product_id, $member_id ) {
+					$rows   = self::member_rows_checked( $product_id, $member_id );
+					$orders = new OrderRepository();
+					foreach ( self::ensure_member_charges( $product_id, $member_id, $rows ) as $row ) {
+						if ( 'paid' !== $row->status() ) {
+							$orders->markPaid( $row->singleOrderId() );
+						}
+					}
+
+					return self::member_response( $product_id, $member_id );
 				}
-			}
+			);
 		} catch ( \RuntimeException $e ) {
 			return new \WP_Error( 'tml_action_failed', $e->getMessage(), array( 'status' => 400 ) );
 		}
-
-		return self::member_response( $product_id, $member_id );
 	}
 
 	/**
@@ -328,8 +367,29 @@ final class LedgerController {
 		return new \WP_REST_Response( LedgerSerializer::rows( self::member_rows( $product_id, $member_id ) ), 200 );
 	}
 
+	/**
+	 * Serialize the writes for one member's charges on a product, so two
+	 * requests can't each create a charge or each spend the same balance.
+	 *
+	 * @param callable $write
+	 * @return mixed Whatever $write returns.
+	 */
+	private static function with_member_lock( int $product_id, int $member_id, callable $write ) {
+		return ActionLock::run( sprintf( 'member_%d_%d', $product_id, $member_id ), $write );
+	}
+
+	private static function overpayment_message( float $owed ): string {
+		/* translators: %s: amount owed */
+		return sprintf( __( 'That is more than the %s owed.', 'team-membership-ledger' ), html_entity_decode( wp_strip_all_tags( wc_price( $owed ) ) ) );
+	}
+
 	/** Resolve an existing order id, or create the Requested order on the fly. */
 	private static function resolve_order( int $order_id, int $member_id, int $player_id, int $product_id, int $qty = 1 ): int {
+		// Every charge belongs to a member. Without one there is nothing to check
+		// an order against, and a guest order (customer 0) would match.
+		if ( ! $member_id || ! $product_id ) {
+			throw new \RuntimeException( __( 'No order to act on.', 'team-membership-ledger' ) );
+		}
 		if ( $order_id ) {
 			// Only act on the order behind this ledger row, not any order id sent in.
 			$order = wc_get_order( $order_id );
@@ -343,9 +403,6 @@ final class LedgerController {
 				throw new \RuntimeException( __( 'That order does not belong to this ledger row.', 'team-membership-ledger' ) );
 			}
 			return $order_id;
-		}
-		if ( ! $member_id || ! $product_id ) {
-			throw new \RuntimeException( __( 'No order to act on.', 'team-membership-ledger' ) );
 		}
 		// Only charge a player to the member they are linked to.
 		if ( $player_id && (int) get_post_meta( $player_id, PlayerRepository::MEMBER_META, true ) !== $member_id ) {

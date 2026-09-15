@@ -21,6 +21,17 @@ final class PaymentAllocationTest extends TestCase {
 		$this->assertSame( array( 11 => 120.5, 12 => 79.5 ), $out );
 	}
 
+	public function test_refuses_a_payment_the_balances_cannot_absorb(): void {
+		// A concurrent payment took the balance after the caller checked it.
+		$this->expectException( \RuntimeException::class );
+		PaymentAllocation::fill( array( 11 => 50.0 ), 100.0 );
+	}
+
+	public function test_refuses_a_payment_when_every_order_is_already_paid(): void {
+		$this->expectException( \RuntimeException::class );
+		PaymentAllocation::fill( array( 11 => 0.0, 12 => 0.0 ), 25.0 );
+	}
+
 	public function test_owed_sums_positive_balances(): void {
 		$this->assertSame( 250.0, PaymentAllocation::owed( array( 11 => 200.0, 12 => 50.0, 13 => 0.0 ) ) );
 	}

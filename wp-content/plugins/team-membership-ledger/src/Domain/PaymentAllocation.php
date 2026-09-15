@@ -8,6 +8,7 @@ final class PaymentAllocation {
 	 *
 	 * @param array<int,float> $balances order id => balance still owing, in pay-off order.
 	 * @return array<int,float> order id => amount to apply (orders that get nothing are left out).
+	 * @throws \RuntimeException When the balances can't absorb the whole amount.
 	 */
 	public static function fill( array $balances, float $amount ): array {
 		$left = round( $amount, 2 );
@@ -23,6 +24,11 @@ final class PaymentAllocation {
 			$apply                  = min( $left, $balance );
 			$out[ (int) $order_id ] = $apply;
 			$left                   = round( $left - $apply, 2 );
+		}
+		// Never apply part of a payment and call it a success: the balances can
+		// change between the caller's check and this call.
+		if ( $left > 0 ) {
+			throw new \RuntimeException( sprintf( 'That is more than the %s owed.', number_format( self::owed( $balances ), 2, '.', '' ) ) );
 		}
 		return $out;
 	}

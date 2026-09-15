@@ -56,9 +56,9 @@ final class OrderRepository {
 				// products (or repeat a product across line items) would misattribute the
 				// partial payment. The plugin's own Rollover always creates single-product
 				// orders, matching the per-season product-per-order model in the README.
-				$paid       = ( 'completed' === $status )
-					? $line_total
-					: (float) $order->get_meta( self::AMOUNT_PAID_META );
+				// Completed counts as paid in full, but a stored payment that is
+				// higher wins, so lowering a paid order's quantity doesn't lose it.
+				$paid       = PaymentCalculator::paidSoFar( $status, (float) $order->get_meta( self::AMOUNT_PAID_META ), $line_total );
 
 				$records[] = array(
 					'customer_id' => $customer_id,
