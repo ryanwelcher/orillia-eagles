@@ -1,8 +1,9 @@
 <?php
 namespace OrillaEagles\Ledger\Admin;
 
+use OrillaEagles\Ledger\Data\BillableRepository;
 use OrillaEagles\Ledger\Data\OrderRepository;
-use OrillaEagles\Ledger\Data\RosterRepository;
+use OrillaEagles\Ledger\Domain\Billables;
 use OrillaEagles\Ledger\Domain\RolloverPlan;
 
 defined( 'ABSPATH' ) || exit;
@@ -24,21 +25,19 @@ final class RolloverScreen {
 			self::redirect();
 		}
 
-		$roster = new RosterRepository();
 		$orders = new OrderRepository();
 
-		$active_ids = array_map(
-			static function ( $m ) {
-				return (int) $m['id'];
-			},
-			$roster->activeMembers()
-		);
-		$plan = RolloverPlan::build( $active_ids, $orders->existingCustomerIds( $product_id ) );
+		$by_key = array();
+		foreach ( ( new BillableRepository() )->forProduct( $product_id ) as $b ) {
+			$by_key[ Billables::key( $b['member_id'], $b['player_id'] ) ] = $b;
+		}
+		$plan = RolloverPlan::build( array_keys( $by_key ), $orders->existingBillableKeys( $product_id ) );
 
 		$created = 0;
-		foreach ( $plan['to_create'] as $customer_id ) {
+		foreach ( $plan['to_create'] as $key ) {
+			$b = $by_key[ $key ];
 			try {
-				$orders->createRequestedOrder( $customer_id, $product_id );
+				$orders->createRequestedOrder( $b['member_id'], $product_id, $b['player_id'] );
 				$created++;
 			} catch ( \RuntimeException $e ) {
 				// Skip a single failure; continue the batch.
@@ -77,7 +76,7 @@ final class RolloverScreen {
 			<?php if ( $notice ) : ?>
 				<div class="notice notice-success"><p><?php echo esc_html( $notice ); ?></p></div>
 			<?php endif; ?>
-			<p><?php esc_html_e( 'Creates one "Requested" order for the chosen product against every active member who does not already have one.', 'team-membership-ledger' ); ?></p>
+			<p><?php esc_html_e( 'Creates one "Requested" order for the chosen product against every active member who does not already have one. For "Charge per player" products, it creates one order for each player linked to an active member instead.', 'team-membership-ledger' ); ?></p>
 			<form method="post">
 				<?php wp_nonce_field( 'tml_rollover' ); ?>
 				<input type="hidden" name="tml_rollover_action" value="generate" />

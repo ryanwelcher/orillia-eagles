@@ -3,7 +3,7 @@ import { TextControl, Button, Flex, FlexItem } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 import { addPayment, markPaid } from './api';
 
-function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal } ) {
+export function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal } ) {
 	const [ amount, setAmount ] = useState( '' );
 	const [ busy, setBusy ] = useState( false );
 
@@ -19,6 +19,7 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 				productId,
 				orderId: item.orderId,
 				memberId: item.memberId,
+				playerId: item.playerId,
 				amount: value,
 			} );
 			if ( updated ) {
@@ -40,17 +41,24 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 		}
 	};
 
-	// DataViews' RenderModal already provides the Modal wrapper (titled with the
-	// action label), so this returns the modal CONTENT only — wrapping it in
-	// another <Modal> would nest two modals.
+	// Modal CONTENT only; App wraps it in its own <Modal>. (DataViews' RenderModal
+	// is not used: its modal calls a components private API, kebabCase, that the
+	// site's @wordpress/components does not provide, which crashes the page.)
 	return (
 		<div>
 			<p>
-				{ sprintf(
-					/* translators: %s: member name */
-					__( 'Recording a payment for %s.', 'team-membership-ledger' ),
-					item.name
-				) }
+				{ item.playerName
+					? sprintf(
+						/* translators: 1: player name, 2: member name */
+						__( 'Recording a payment for %1$s (paid by %2$s).', 'team-membership-ledger' ),
+						item.playerName,
+						item.name
+					)
+					: sprintf(
+						/* translators: %s: member name */
+						__( 'Recording a payment for %s.', 'team-membership-ledger' ),
+						item.name
+					) }
 			</p>
 			<TextControl
 				label={ __( 'Amount received now', 'team-membership-ledger' ) }
@@ -80,29 +88,23 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 /**
  * Build DataViews actions.
  *
- * @param {{productId:number, onRowUpdated:Function, onNotice:Function}} ctx Context.
+ * @param {{productId:number, onRowUpdated:Function, onNotice:Function, onOpenPayment:Function}} ctx Context.
  * @return {Array} Actions.
  */
-export function makeActions( { productId, onRowUpdated, onNotice } ) {
+export function makeActions( { productId, onRowUpdated, onNotice, onOpenPayment } ) {
 	return [
 		{
 			id: 'add-payment',
 			label: __( 'Add payment', 'team-membership-ledger' ),
-			isEligible: ( item ) => item.status !== 'paid' && item.orderCount <= 1,
-			RenderModal: ( { items, closeModal } ) => (
-				<AddPaymentModal
-					item={ items[ 0 ] }
-					productId={ productId }
-					onRowUpdated={ onRowUpdated }
-					onNotice={ onNotice }
-					closeModal={ closeModal }
-				/>
-			),
+			// Member summary rows roll up several orders; pay against a player row.
+			isEligible: ( item ) => ! item.isMember && item.status !== 'paid' && item.orderCount <= 1,
+			callback: ( items ) => onOpenPayment( items[ 0 ] ),
 		},
 		{
 			id: 'mark-paid',
 			label: __( 'Mark paid', 'team-membership-ledger' ),
-			isEligible: ( item ) => item.status !== 'paid' && item.orderCount <= 1,
+			// Member summary rows roll up several orders; pay against a player row.
+			isEligible: ( item ) => ! item.isMember && item.status !== 'paid' && item.orderCount <= 1,
 			callback: async ( items ) => {
 				const item = items[ 0 ];
 				try {
@@ -110,6 +112,7 @@ export function makeActions( { productId, onRowUpdated, onNotice } ) {
 						productId,
 						orderId: item.orderId,
 						memberId: item.memberId,
+						playerId: item.playerId,
 					} );
 					if ( updated ) {
 						onRowUpdated( updated );

@@ -4,23 +4,25 @@ namespace OrillaEagles\Ledger\Domain;
 final class LedgerCalculator {
 
 	/**
-	 * @param array $members list of ['id','name','email'].
-	 * @param array $records list of ['customer_id','status','qty','line_total','amount_paid','date'] for one product.
+	 * @param array $billables list of ['member_id','name','email','player_id','player_name'] (see Billables::build()).
+	 * @param array $records   list of ['customer_id','player_id','status','qty','line_total','amount_paid','date'] for one product.
 	 * @return LedgerRow[]
 	 */
-	public static function forProduct( array $members, array $records ): array {
-		$by_member = array();
+	public static function forProduct( array $billables, array $records ): array {
+		$by_key = array();
 		foreach ( $records as $r ) {
-			$by_member[ (int) $r['customer_id'] ][] = $r;
+			$by_key[ Billables::key( (int) $r['customer_id'], (int) ( $r['player_id'] ?? 0 ) ) ][] = $r;
 		}
 
 		$rows = array();
-		foreach ( $members as $m ) {
-			$id  = (int) $m['id'];
-			$own = $by_member[ $id ] ?? array();
+		foreach ( $billables as $b ) {
+			$id          = (int) $b['member_id'];
+			$player_id   = (int) ( $b['player_id'] ?? 0 );
+			$player_name = (string) ( $b['player_name'] ?? '' );
+			$own         = $by_key[ Billables::key( $id, $player_id ) ] ?? array();
 
 			if ( empty( $own ) ) {
-				$rows[] = new LedgerRow( $id, (string) $m['name'], (string) $m['email'], MemberStatus::NOT_ENTERED, 0, 0.0, 0.0, null );
+				$rows[] = new LedgerRow( $id, (string) $b['name'], (string) $b['email'], MemberStatus::NOT_ENTERED, 0, 0.0, 0.0, null, array(), $player_id, $player_name );
 				continue;
 			}
 
@@ -46,7 +48,7 @@ final class LedgerCalculator {
 			}
 
 			$status = $all_paid ? MemberStatus::PAID : MemberStatus::OWES;
-			$rows[] = new LedgerRow( $id, (string) $m['name'], (string) $m['email'], $status, $qty, round( $total, 2 ), round( $paid, 2 ), $date, $order_ids );
+			$rows[] = new LedgerRow( $id, (string) $b['name'], (string) $b['email'], $status, $qty, round( $total, 2 ), round( $paid, 2 ), $date, $order_ids, $player_id, $player_name );
 		}
 
 		return $rows;

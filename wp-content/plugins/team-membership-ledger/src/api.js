@@ -15,10 +15,10 @@ export function fetchLedger( productId ) {
 /**
  * Record an additive payment; returns the updated row.
  *
- * @param {{productId:number, orderId:?number, memberId:?number, amount:number}} args Payload.
+ * @param {{productId:number, orderId:?number, memberId:?number, playerId:?number, amount:number}} args Payload.
  * @return {Promise<Object|null>} Updated serialized row, or null.
  */
-export function addPayment( { productId, orderId, memberId, amount } ) {
+export function addPayment( { productId, orderId, memberId, playerId, amount } ) {
 	return apiFetch( {
 		path: '/tml/v1/ledger/add-payment',
 		method: 'POST',
@@ -26,7 +26,28 @@ export function addPayment( { productId, orderId, memberId, amount } ) {
 			product_id: productId,
 			order_id: orderId || 0,
 			member_id: memberId || 0,
+			player_id: playerId || 0,
 			amount,
+		},
+	} );
+}
+
+/**
+ * Set a charge's quantity (creating the charge if needed); returns the updated row.
+ *
+ * @param {{productId:number, orderId:?number, memberId:?number, playerId:?number, qty:number}} args Payload.
+ * @return {Promise<Object|null>} Updated serialized row, or null.
+ */
+export function setQuantity( { productId, orderId, memberId, playerId, qty } ) {
+	return apiFetch( {
+		path: '/tml/v1/ledger/set-quantity',
+		method: 'POST',
+		data: {
+			product_id: productId,
+			order_id: orderId || 0,
+			member_id: memberId || 0,
+			player_id: playerId || 0,
+			qty,
 		},
 	} );
 }
@@ -34,10 +55,10 @@ export function addPayment( { productId, orderId, memberId, amount } ) {
 /**
  * Mark an order fully paid; returns the updated row.
  *
- * @param {{productId:number, orderId:?number, memberId:?number}} args Payload.
+ * @param {{productId:number, orderId:?number, memberId:?number, playerId:?number}} args Payload.
  * @return {Promise<Object|null>} Updated serialized row, or null.
  */
-export function markPaid( { productId, orderId, memberId } ) {
+export function markPaid( { productId, orderId, memberId, playerId } ) {
 	return apiFetch( {
 		path: '/tml/v1/ledger/mark-paid',
 		method: 'POST',
@@ -45,6 +66,7 @@ export function markPaid( { productId, orderId, memberId } ) {
 			product_id: productId,
 			order_id: orderId || 0,
 			member_id: memberId || 0,
+			player_id: playerId || 0,
 		},
 	} );
 }
