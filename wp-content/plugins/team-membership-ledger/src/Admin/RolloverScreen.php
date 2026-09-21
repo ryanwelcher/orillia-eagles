@@ -4,6 +4,7 @@ namespace OrillaEagles\Ledger\Admin;
 use OrillaEagles\Ledger\Data\ActionLock;
 use OrillaEagles\Ledger\Data\BillableRepository;
 use OrillaEagles\Ledger\Data\OrderRepository;
+use OrillaEagles\Ledger\Data\ProductFlag;
 use OrillaEagles\Ledger\Domain\Billables;
 use OrillaEagles\Ledger\Domain\RolloverPlan;
 
@@ -26,7 +27,8 @@ final class RolloverScreen {
 			self::redirect();
 		}
 
-		$orders = new OrderRepository();
+		$orders     = new OrderRepository();
+		$per_player = ProductFlag::isPerPlayer( $product_id );
 
 		$by_key = array();
 		foreach ( ( new BillableRepository() )->forProduct( $product_id ) as $b ) {
@@ -44,8 +46,13 @@ final class RolloverScreen {
 				// the snapshot isn't duplicated.
 				$made = ActionLock::run(
 					ActionLock::memberKey( $product_id, (int) $b['member_id'] ),
-					static function () use ( $orders, $product_id, $b ) {
+					static function () use ( $orders, $product_id, $per_player, $b ) {
 						if ( $orders->hasCharge( $product_id, (int) $b['member_id'], (int) $b['player_id'] ) ) {
+							return 0;
+						}
+						// Already charged before the product's "Charge per player"
+						// setting changed: charging again would bill them twice.
+						if ( $orders->hasChargeInOtherMode( $product_id, (int) $b['member_id'], $per_player ) ) {
 							return 0;
 						}
 						$orders->createRequestedOrder( $b['member_id'], $product_id, $b['player_id'] );

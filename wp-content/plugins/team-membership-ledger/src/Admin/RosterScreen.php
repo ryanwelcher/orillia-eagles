@@ -39,7 +39,11 @@ final class RosterScreen {
 				set_transient( 'tml_roster_error', $e->getMessage(), 30 );
 			}
 		} elseif ( 'unlink_player' === $action ) {
-			( new PlayerRepository() )->unlink( absint( $_POST['player_id'] ?? 0 ) );
+			try {
+				( new PlayerRepository() )->unlink( absint( $_POST['player_id'] ?? 0 ) );
+			} catch ( \RuntimeException $e ) {
+				set_transient( 'tml_roster_error', $e->getMessage(), 30 );
+			}
 		}
 
 		wp_safe_redirect( admin_url( 'admin.php?page=' . Menu::SLUG ) );
@@ -50,14 +54,20 @@ final class RosterScreen {
 		if ( ! current_user_can( Menu::CAP ) ) {
 			return;
 		}
-		$members  = ( new RosterRepository() )->allMembers();
-		$linked   = array();
-		$unlinked = array();
+		$members    = ( new RosterRepository() )->allMembers();
+		$member_ids = array_flip( wp_list_pluck( $members, 'id' ) );
+		$linked     = array();
+		$unlinked   = array();
+		// Linked to a user who was deleted or is no longer a customer. They have no
+		// row to show under, so list them on their own or they can never be relinked.
+		$orphaned = array();
 		foreach ( ( new PlayerRepository() )->allPlayers() as $p ) {
-			if ( $p['member_id'] ) {
+			if ( ! $p['member_id'] ) {
+				$unlinked[] = $p;
+			} elseif ( isset( $member_ids[ $p['member_id'] ] ) ) {
 				$linked[ $p['member_id'] ][] = $p;
 			} else {
-				$unlinked[] = $p;
+				$orphaned[] = $p;
 			}
 		}
 		$err     = get_transient( 'tml_roster_error' );
@@ -78,6 +88,23 @@ final class RosterScreen {
 				<input type="email" name="email" placeholder="<?php esc_attr_e( 'Email', 'team-membership-ledger' ); ?>" required />
 				<?php submit_button( __( 'Add member', 'team-membership-ledger' ), 'primary', 'submit', false ); ?>
 			</form>
+
+			<?php if ( $orphaned ) : ?>
+				<h2><?php esc_html_e( 'Players linked to a missing member', 'team-membership-ledger' ); ?></h2>
+				<p><?php esc_html_e( 'These players are linked to a user who was deleted or is no longer a member, so they are not being charged. Unlink them, then link them to a current member.', 'team-membership-ledger' ); ?></p>
+				<?php foreach ( $orphaned as $p ) : ?>
+					<form method="post" style="margin:0 0 4px">
+						<?php wp_nonce_field( 'tml_roster' ); ?>
+						<input type="hidden" name="tml_roster_action" value="unlink_player" />
+						<input type="hidden" name="player_id" value="<?php echo esc_attr( $p['id'] ); ?>" />
+						<?php echo esc_html( $p['name'] ); ?>
+						<?php /* translators: %s: player name */ ?>
+						<button class="button-link" aria-label="<?php echo esc_attr( sprintf( __( 'Unlink %s', 'team-membership-ledger' ), $p['name'] ) ); ?>">
+							<?php esc_html_e( 'Unlink', 'team-membership-ledger' ); ?>
+						</button>
+					</form>
+				<?php endforeach; ?>
+			<?php endif; ?>
 
 			<h2><?php esc_html_e( 'Current members', 'team-membership-ledger' ); ?></h2>
 			<table class="widefat striped">

@@ -66,8 +66,16 @@ money collected offline. No public storefront, no member logins.
   pays off one player at a time, in alphabetical order, and cannot be more than
   the member owes. **Mark paid** marks every player paid. Both first create the
   charge for any linked player who doesn't have one yet.
-- If you turn on **Charge per player** after member-level orders already exist,
-  the Ledger does not show those older orders. Manage them in WooCommerce.
+- If you turn on **Charge per player** after member-level orders already exist
+  (or turn it off after player orders exist), the Ledger does not show those
+  older orders. Manage them in WooCommerce. A member who has one is not charged
+  again for that product: Season Rollover skips them, and the Ledger refuses to
+  create a new charge for them.
+- To move a player to a different member, unlink them and then link them again.
+  A player with an unpaid charge cannot be unlinked, because the charge and what
+  was paid toward it would drop out of the Ledger. Settle or cancel that order
+  first. A paid charge stays with the member who paid it, so if you move a
+  player in the middle of a season, check before you run Season Rollover again.
 
 ## Recording payments (details)
 
@@ -77,8 +85,14 @@ money collected offline. No public storefront, no member logins.
 - To reverse a payment or mark an order back to unpaid, edit the order in
   **WooCommerce → Orders**.
 - If two people act on the same member at the same time, the second one is
-  refused rather than charging twice or losing a payment. Reload the Ledger and
-  try again.
+  refused rather than charging twice or losing a payment. The same applies to a
+  Ledger screen that is out of date: it will not create a charge that already
+  exists. Reload the Ledger and try again.
+- An order that is Cancelled, Refunded or Failed in WooCommerce still shows as a
+  row, but the Ledger will not take a payment on it or change its quantity.
+- Amounts assume WooCommerce taxes are off and orders carry no extra fees, which
+  is how this site runs. With taxes on, the row total (the line) and the order
+  total differ, and payments may not complete an order.
 
 ## Local development note (SQLite)
 

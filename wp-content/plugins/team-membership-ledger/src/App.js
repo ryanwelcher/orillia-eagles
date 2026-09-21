@@ -45,7 +45,13 @@ export default function App() {
 	// Accepts one updated row, or a list (member-level actions return every player row).
 	const handleRowUpdated = ( updated ) => {
 		const byId = new Map( ( Array.isArray( updated ) ? updated : [ updated ] ).map( ( r ) => [ r.id, r ] ) );
-		setRows( ( current ) => current.map( ( r ) => byId.get( r.id ) ?? r ) );
+		setRows( ( current ) => {
+			const known = new Set( current.map( ( r ) => r.id ) );
+			// A row the screen hasn't seen (a player linked after it loaded) is
+			// added rather than dropped, or a saved payment would not show at all.
+			const added = [ ...byId.values() ].filter( ( r ) => ! known.has( r.id ) );
+			return [ ...current.map( ( r ) => byId.get( r.id ) ?? r ), ...added ];
+		} );
 	};
 
 	const actions = useMemo(
@@ -131,13 +137,20 @@ export default function App() {
 	// Per-player products sort, filter and paginate member summary rows (full
 	// amounts), then slot each member's players underneath so they stay together.
 	const { data: shownData, paginationInfo } = useMemo( () => {
+		// Filtering Status to "Not entered" asks for those rows as plainly as the
+		// toggle does; without this the filter always gives an empty table.
+		const keepUnentered =
+			showUnentered ||
+			( view.filters ?? [] ).some(
+				( f ) => f.field === 'status' && [].concat( f.value ?? [] ).includes( 'not_entered' )
+			);
 		if ( ! perPlayer ) {
-			const visibleRows = showUnentered
+			const visibleRows = keepUnentered
 				? rows
 				: rows.filter( ( r ) => r.status !== 'not_entered' );
 			return filterSortAndPaginate( visibleRows, view, fields );
 		}
-		const result = filterSortAndPaginate( memberSummaries( rows, { showUnentered } ), view, fields );
+		const result = filterSortAndPaginate( memberSummaries( rows, { showUnentered: keepUnentered } ), view, fields );
 		return { ...result, data: showPlayers ? withPlayers( result.data ) : result.data };
 	}, [ rows, view, fields, perPlayer, showPlayers, showUnentered ] );
 

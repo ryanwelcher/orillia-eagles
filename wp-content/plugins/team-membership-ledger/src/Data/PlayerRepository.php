@@ -112,12 +112,28 @@ final class PlayerRepository {
 		if ( ! ( new RosterRepository() )->isMember( $member_id ) ) {
 			throw new \RuntimeException( __( 'Players can only be linked to a member from the Members list.', 'team-membership-ledger' ) );
 		}
+		// Moving a player is unlink, then link. A link over an existing one is a
+		// stale screen, and would skip the unpaid-charge check in unlink().
+		$current = (int) get_post_meta( $player_id, self::MEMBER_META, true );
+		if ( $current && $current !== $member_id && ( new RosterRepository() )->isMember( $current ) ) {
+			throw new \RuntimeException( __( 'That player is already linked to another member. Unlink them first.', 'team-membership-ledger' ) );
+		}
 		update_post_meta( $player_id, self::MEMBER_META, $member_id );
 	}
 
+	/**
+	 * @throws \RuntimeException When the player still has an unpaid charge under the member.
+	 */
 	public function unlink( int $player_id ): void {
 		if ( self::POST_TYPE !== get_post_type( $player_id ) ) {
 			return;
+		}
+		// Charges are found through the link, so unlinking would drop an unpaid
+		// charge, and what was paid toward it, out of the Ledger. A link to a user
+		// who is no longer a member can always be cleared.
+		$member_id = (int) get_post_meta( $player_id, self::MEMBER_META, true );
+		if ( $member_id && ( new RosterRepository() )->isMember( $member_id ) && ( new OrderRepository() )->hasOpenPlayerCharge( $member_id, $player_id ) ) {
+			throw new \RuntimeException( __( 'That player still has an unpaid charge under this member. Settle or cancel it in WooCommerce before unlinking.', 'team-membership-ledger' ) );
 		}
 		delete_post_meta( $player_id, self::MEMBER_META );
 	}

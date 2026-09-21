@@ -339,6 +339,11 @@ final class LedgerController {
 		if ( ! $rows ) {
 			throw new \RuntimeException( __( 'This member has no linked players.', 'team-membership-ledger' ) );
 		}
+		// An older member-level charge is not shown here, so creating player
+		// charges on top of it would bill the member twice.
+		if ( ( new OrderRepository() )->hasChargeInOtherMode( $product_id, $member_id, true ) ) {
+			throw new \RuntimeException( self::other_mode_message() );
+		}
 		foreach ( $rows as $row ) {
 			if ( $row->orderCount() > 1 ) {
 				/* translators: %s: player name */
@@ -349,6 +354,9 @@ final class LedgerController {
 			if ( $order && 1 !== count( $order->get_items() ) ) {
 				/* translators: %s: player name */
 				throw new \RuntimeException( sprintf( __( "%s's order has other items; manage it in WooCommerce.", 'team-membership-ledger' ), $row->playerName() ) );
+			}
+			if ( $order ) {
+				( new OrderRepository() )->assertNotVoid( $order );
 			}
 		}
 		return $rows;
@@ -445,12 +453,26 @@ final class LedgerController {
 			if ( 1 !== count( $order->get_items() ) ) {
 				throw new \RuntimeException( __( 'That order has other items; manage it in WooCommerce.', 'team-membership-ledger' ) );
 			}
+			// A cancelled or refunded order still lists as a row; paying it or
+			// changing its quantity would bring it back to life.
+			( new OrderRepository() )->assertNotVoid( $order );
 			return $order_id;
+		}
+		// The row said "no charge yet", but that can be stale: another tab, Create
+		// Charges or a retried request may have made one since. The lock only
+		// queues requests, so look again before creating a second charge.
+		$orders     = new OrderRepository();
+		$per_player = ProductFlag::isPerPlayer( $product_id );
+		if ( $orders->hasCharge( $product_id, $member_id, $player_id ) ) {
+			throw new \RuntimeException( __( 'This charge already exists; reload the Ledger and try again.', 'team-membership-ledger' ) );
+		}
+		if ( $orders->hasChargeInOtherMode( $product_id, $member_id, $per_player ) ) {
+			throw new \RuntimeException( self::other_mode_message() );
 		}
 		// A new charge has to match how the product is billed, or it lands in
 		// neither ledger: a player charge on a per-member product is never shown,
 		// and a member-level charge on a per-player product is skipped.
-		if ( ProductFlag::isPerPlayer( $product_id ) ) {
+		if ( $per_player ) {
 			if ( ! $player_id ) {
 				throw new \RuntimeException( __( 'This product is charged per player, so the charge needs a player.', 'team-membership-ledger' ) );
 			}
@@ -464,7 +486,11 @@ final class LedgerController {
 		if ( $player_id && (int) get_post_meta( $player_id, PlayerRepository::MEMBER_META, true ) !== $member_id ) {
 			throw new \RuntimeException( __( 'That player is not linked to this member.', 'team-membership-ledger' ) );
 		}
-		return ( new OrderRepository() )->createRequestedOrder( $member_id, $product_id, $player_id, $qty );
+		return $orders->createRequestedOrder( $member_id, $product_id, $player_id, $qty );
+	}
+
+	private static function other_mode_message(): string {
+		return __( 'This member already has a charge for this product from before its "Charge per player" setting changed; manage it in WooCommerce.', 'team-membership-ledger' );
 	}
 
 	/** Recompute and return the single affected (member, player) row after a write. */

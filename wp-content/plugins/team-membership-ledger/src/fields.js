@@ -23,7 +23,13 @@ export function makeFields( currency, { allowsQty = false, onSetQty } = {} ) {
 			id: 'name',
 			label: __( 'Member', 'team-membership-ledger' ),
 			enableGlobalSearch: true,
-			getValue: ( { item } ) => item.name,
+			// Search runs on this value. A member summary also carries its players'
+			// names, so a player can be found without knowing who pays for them; the
+			// member's name stays first, so sorting is unchanged.
+			getValue: ( { item } ) =>
+				item.isMember
+					? [ item.name, ...item.players.map( ( p ) => p.playerName ) ].join( ' ' )
+					: item.name,
 			render: ( { item } ) => {
 				// Player rows (level 1) sit under their member, so show the player.
 				if ( item.level === 1 ) {
