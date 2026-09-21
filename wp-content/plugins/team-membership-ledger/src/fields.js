@@ -50,7 +50,15 @@ export function makeFields( currency, { allowsQty = false, onSetQty } = {} ) {
 			id: 'status',
 			label: __( 'Status', 'team-membership-ledger' ),
 			elements: Object.entries( STATUS_LABELS ).map( ( [ value, label ] ) => ( { value, label } ) ),
-			getValue: ( { item } ) => item.status,
+			// A member summary answers with every status its players have, so
+			// filtering to Paid still finds a member with one paid player and one
+			// who owes. The filter matches when any of the statuses is selected.
+			getValue: ( { item } ) =>
+				item.isMember ? [ ...new Set( item.players.map( ( p ) => p.status ) ) ].sort() : item.status,
+			sort: ( a, b, direction ) => {
+				const order = [].concat( a ).join( ' ' ).localeCompare( [].concat( b ).join( ' ' ) );
+				return direction === 'asc' ? order : -order;
+			},
 			render: ( { item } ) => {
 				const label = STATUS_LABELS[ item.status ] ?? item.status;
 				return item.orderCount > 1

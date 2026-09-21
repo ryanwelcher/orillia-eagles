@@ -11,7 +11,7 @@ final class PaymentCalculator {
 	 * are never forgotten.
 	 */
 	public static function paidSoFar( string $status, float $stored_paid, float $total ): float {
-		return 'completed' === $status ? max( $stored_paid, $total ) : $stored_paid;
+		return self::linePaid( $status, $stored_paid, $total, true );
 	}
 
 	/**

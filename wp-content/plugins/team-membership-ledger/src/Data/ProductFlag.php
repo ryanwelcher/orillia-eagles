@@ -42,10 +42,11 @@ final class ProductFlag {
 
 	/**
 	 * Whether a charge for this product can have a quantity above 1 (e.g. event
-	 * tickets). Uses WooCommerce's "Sold individually" setting; per-player
+	 * tickets). Uses WooCommerce's "Sold individually" setting, through the
+	 * filtered is_sold_individually() so extensions are respected; per-player
 	 * charges are always one per player.
 	 */
 	public static function allowsQuantity( \WC_Product $product ): bool {
-		return ! self::isPerPlayerProduct( $product ) && ! $product->get_sold_individually();
+		return ! self::isPerPlayerProduct( $product ) && ! $product->is_sold_individually();
 	}
 }

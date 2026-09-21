@@ -74,8 +74,8 @@ money collected offline. No public storefront, no member logins.
 - To move a player to a different member, unlink them and then link them again.
   A player with an unpaid charge cannot be unlinked, because the charge and what
   was paid toward it would drop out of the Ledger. Settle or cancel that order
-  first. A paid charge stays with the member who paid it, so if you move a
-  player in the middle of a season, check before you run Season Rollover again.
+  first. A paid charge stays with the member who paid it, and the player is not
+  charged again for that product under the new member.
 
 ## Recording payments (details)
 
@@ -90,9 +90,8 @@ money collected offline. No public storefront, no member logins.
   exists. Reload the Ledger and try again.
 - An order that is Cancelled, Refunded or Failed in WooCommerce still shows as a
   row, but the Ledger will not take a payment on it or change its quantity.
-- Amounts assume WooCommerce taxes are off and orders carry no extra fees, which
-  is how this site runs. With taxes on, the row total (the line) and the order
-  total differ, and payments may not complete an order.
+- A charge's amount is its order total, so tax or a fee added to the order is
+  part of what the member owes and what a payment is checked against.
 
 ## Local development note (SQLite)
 

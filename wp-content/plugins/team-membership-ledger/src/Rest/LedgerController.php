@@ -244,27 +244,14 @@ final class LedgerController {
 				static function () use ( $product_id, $member_id, $amount ) {
 					$rows = self::member_rows_checked( $product_id, $member_id );
 
-					// Check the amount against what will be owed once missing charges
-					// exist, before creating anything.
-					$product = wc_get_product( $product_id );
-					$owed    = PaymentAllocation::owed(
-						array_map(
-							static fn( LedgerRow $row ) => $row->orderCount() ? $row->balance() : (float) $product->get_price(),
-							$rows
-						)
-					);
-					if ( $amount > $owed ) {
-						throw new \RuntimeException( self::overpayment_message( $owed ) );
-					}
-
+					// Create any missing charge first, then check the amount against the
+					// real balances. An estimate from the product price would use a
+					// different figure than the orders do once tax or a fee applies.
 					$orders   = new OrderRepository();
 					$balances = array();
 					foreach ( self::ensure_member_charges( $product_id, $member_id, $rows ) as $row ) {
 						$balances[ $row->singleOrderId() ] = $row->balance();
 					}
-					// Creating the charges above re-read the balances. Refuse the
-					// whole payment if they no longer absorb it, rather than
-					// applying part of it and reporting success.
 					try {
 						$plan = PaymentAllocation::fill( $balances, $amount );
 					} catch ( \RuntimeException $e ) {
@@ -372,6 +359,7 @@ final class LedgerController {
 		$created = false;
 		foreach ( $rows as $row ) {
 			if ( 0 === $row->orderCount() ) {
+				self::assert_not_charged_elsewhere( $product_id, $member_id, $row->playerId(), $row->playerName() );
 				( new OrderRepository() )->createRequestedOrder( $member_id, $product_id, $row->playerId() );
 				$created = true;
 			}
@@ -394,9 +382,10 @@ final class LedgerController {
 
 	/** @return LedgerRow[] */
 	private static function member_rows( int $product_id, int $member_id ): array {
+		// Runs inside the member lock, so read this member's orders only.
 		return array_values(
 			array_filter(
-				self::ledger_rows( $product_id, new OrderRepository() ),
+				self::ledger_rows( $product_id, new OrderRepository(), $member_id ),
 				static fn( LedgerRow $row ) => $row->memberId() === $member_id
 			)
 		);
@@ -486,7 +475,16 @@ final class LedgerController {
 		if ( $player_id && (int) get_post_meta( $player_id, PlayerRepository::MEMBER_META, true ) !== $member_id ) {
 			throw new \RuntimeException( __( 'That player is not linked to this member.', 'team-membership-ledger' ) );
 		}
+		self::assert_not_charged_elsewhere( $product_id, $member_id, $player_id, (string) get_post_field( 'post_title', $player_id, 'raw' ) );
 		return $orders->createRequestedOrder( $member_id, $product_id, $player_id, $qty );
+	}
+
+	/** A player moved to this member after being charged must not be charged again. */
+	private static function assert_not_charged_elsewhere( int $product_id, int $member_id, int $player_id, string $player_name ): void {
+		if ( ( new OrderRepository() )->playerChargedUnderAnother( $product_id, $player_id, $member_id ) ) {
+			/* translators: %s: player name */
+			throw new \RuntimeException( sprintf( __( '%s was already charged for this product under another member; manage that order in WooCommerce.', 'team-membership-ledger' ), $player_name ) );
+		}
 	}
 
 	private static function other_mode_message(): string {
@@ -503,7 +501,7 @@ final class LedgerController {
 		$member_id = (int) $order->get_customer_id();
 		$player_id = (int) $order->get_meta( OrderRepository::PLAYER_META );
 
-		foreach ( self::ledger_rows( $product_id, new OrderRepository() ) as $row ) {
+		foreach ( self::ledger_rows( $product_id, new OrderRepository(), $member_id ) as $row ) {
 			if ( $row->memberId() === $member_id && $row->playerId() === $player_id ) {
 				return new \WP_REST_Response( LedgerSerializer::row( $row ), 200 );
 			}
@@ -512,10 +510,10 @@ final class LedgerController {
 	}
 
 	/** @return LedgerRow[] */
-	private static function ledger_rows( int $product_id, OrderRepository $orders ): array {
+	private static function ledger_rows( int $product_id, OrderRepository $orders, int $member_id = 0 ): array {
 		return LedgerCalculator::forProduct(
 			( new BillableRepository() )->forProduct( $product_id ),
-			$orders->productRecords( $product_id )
+			$orders->productRecords( $product_id, $member_id )
 		);
 	}
 

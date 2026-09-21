@@ -18,25 +18,10 @@ final class OrderRepository {
 	public const VOID_STATUSES = array( 'cancelled', 'refunded', 'failed' );
 
 	/** @return array<int,array{customer_id:int,player_id:int,order_id:int,status:string,qty:int,line_total:float,amount_paid:float,date:?string}> */
-	public function productRecords( int $product_id ): array {
-		$statuses = array_keys( wc_get_order_statuses() ); // all statuses
-		$orders   = array();
-		$page     = 1;
-		$per_page = 200;
-		do {
-			$batch = wc_get_orders(
-				array(
-					'limit'   => $per_page,
-					'paged'   => $page,
-					'type'    => 'shop_order',
-					'status'  => $statuses,
-					'orderby' => 'ID',
-					'order'   => 'ASC',
-				)
-			);
-			$orders = array_merge( $orders, $batch );
-			$page++;
-		} while ( count( $batch ) === $per_page );
+	public function productRecords( int $product_id, int $customer_id = 0 ): array {
+		// One member's actions only need that member's orders; the full ledger
+		// (customer 0) reads them all.
+		$orders = $this->orders( $customer_id ? array( 'customer_id' => $customer_id ) : array() );
 
 		$records = array();
 		foreach ( $orders as $order ) {
@@ -54,7 +39,10 @@ final class OrderRepository {
 				if ( (int) $item->get_product_id() !== $product_id ) {
 					continue;
 				}
-				$line_total = (float) $item->get_total();
+				// A single-item order is the charge, so its amount is the order total:
+				// the same figure payments are checked against, including any tax or
+				// fee. Only a line of several falls back to the line's own total.
+				$line_total = 1 === count( $items ) ? (float) $order->get_total() : (float) $item->get_total();
 				// Installment tracking assumes one product per order: the order-level
 				// _tml_amount_paid meta is attributed to this line item. Orders that mix
 				// products (or repeat a product across line items) would misattribute the
@@ -126,7 +114,7 @@ final class OrderRepository {
 	}
 
 	/** @return int[] the player id (0 = member-level) of each of the customer's orders for the product. */
-	private function chargedPlayerIds( int $product_id, int $customer_id ): array {
+	public function chargedPlayerIds( int $product_id, int $customer_id ): array {
 		$ids = array();
 		foreach ( $this->customerOrders( $customer_id ) as $order ) {
 			foreach ( $order->get_items() as $item ) {
@@ -139,20 +127,62 @@ final class OrderRepository {
 		return $ids;
 	}
 
+	/**
+	 * Whether the player already has a live charge for the product under a
+	 * different member, which happens when a player is moved after being charged.
+	 * Voided orders don't count, so cancelling the old charge frees the player.
+	 */
+	public function playerChargedUnderAnother( int $product_id, int $player_id, int $customer_id ): bool {
+		if ( ! $player_id ) {
+			return false;
+		}
+		// The meta query narrows the read where the order store supports it; the
+		// checks below hold either way.
+		$where = array( 'meta_query' => array( array( 'key' => self::PLAYER_META, 'value' => (string) $player_id ) ) ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+		foreach ( $this->orders( $where ) as $order ) {
+			if (
+				(int) $order->get_meta( self::PLAYER_META ) !== $player_id
+				|| (int) $order->get_customer_id() === $customer_id
+				|| ! $order->get_customer_id()
+				|| in_array( $order->get_status(), self::VOID_STATUSES, true )
+			) {
+				continue;
+			}
+			foreach ( $order->get_items() as $item ) {
+				if ( (int) $item->get_product_id() === $product_id ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	/** @return \WC_Order[] every order of one customer, in any status. */
 	private function customerOrders( int $customer_id ): array {
+		return $this->orders( array( 'customer_id' => $customer_id ) );
+	}
+
+	/**
+	 * @param array $where extra wc_get_orders() arguments.
+	 * @return \WC_Order[] matching orders in any status, oldest first.
+	 */
+	private function orders( array $where = array() ): array {
 		$statuses = array_keys( wc_get_order_statuses() );
 		$orders   = array();
 		$page     = 1;
-		$per_page = 100;
+		$per_page = 200;
 		do {
 			$batch  = wc_get_orders(
-				array(
-					'limit'       => $per_page,
-					'paged'       => $page,
-					'type'        => 'shop_order',
-					'status'      => $statuses,
-					'customer_id' => $customer_id,
+				array_merge(
+					array(
+						'limit'   => $per_page,
+						'paged'   => $page,
+						'type'    => 'shop_order',
+						'status'  => $statuses,
+						'orderby' => 'ID',
+						'order'   => 'ASC',
+					),
+					$where
 				)
 			);
 			$orders = array_merge( $orders, $batch );
@@ -279,8 +309,8 @@ final class OrderRepository {
 			return;
 		}
 		$line_total = (float) $item->get_total();
-		// Keeps a stored payment that is higher than a lowered line total.
-		$paid = PaymentCalculator::paidSoFar( $order->get_status(), (float) $order->get_meta( self::AMOUNT_PAID_META ), $line_total );
+		// Keeps a stored payment that is higher than a lowered total.
+		$paid = PaymentCalculator::paidSoFar( $order->get_status(), (float) $order->get_meta( self::AMOUNT_PAID_META ), (float) $order->get_total() );
 		// Saved at the first change, so repeated changes don't compound rounding.
 		$saved_unit = $item->get_meta( self::UNIT_PRICE_META );
 		$saved_unit = '' === $saved_unit ? null : (float) $saved_unit;
@@ -307,9 +337,12 @@ final class OrderRepository {
 		);
 		// Only move between paid and unpaid. An unpaid order keeps whatever open
 		// status it has (Requested, On hold, ...) rather than being forced to one.
-		if ( $plan['is_paid'] && 'completed' !== $order->get_status() ) {
+		// Paid is judged against the recalculated order total, the figure every
+		// payment is checked against, not the line (they differ with tax or fees).
+		$is_paid = round( $paid, 2 ) >= round( (float) $order->get_total(), 2 );
+		if ( $is_paid && 'completed' !== $order->get_status() ) {
 			$order->update_status( 'completed' );
-		} elseif ( ! $plan['is_paid'] && 'completed' === $order->get_status() ) {
+		} elseif ( ! $is_paid && 'completed' === $order->get_status() ) {
 			$order->update_status( OrderStatus::SLUG );
 		}
 	}

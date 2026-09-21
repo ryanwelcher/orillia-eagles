@@ -36,36 +36,53 @@ final class RolloverScreen {
 		}
 		$plan = RolloverPlan::build( array_keys( $by_key ), $orders->existingBillableKeys( $product_id ) );
 
+		// Group what is missing by member: one lock and one read of that member's
+		// orders covers all of their players.
+		$by_member = array();
+		foreach ( $plan['to_create'] as $key ) {
+			$by_member[ (int) $by_key[ $key ]['member_id'] ][] = $by_key[ $key ];
+		}
+
 		$created = 0;
 		$skipped = count( $plan['to_skip'] );
-		foreach ( $plan['to_create'] as $key ) {
-			$b = $by_key[ $key ];
+		foreach ( $by_member as $member_id => $missing ) {
+			$made = 0;
 			try {
 				// The plan is a snapshot. Take the same lock the Ledger's own
-				// actions take, and re-check inside it, so a charge created since
+				// actions take, and look again inside it, so a charge created since
 				// the snapshot isn't duplicated.
 				$made = ActionLock::run(
-					ActionLock::memberKey( $product_id, (int) $b['member_id'] ),
-					static function () use ( $orders, $product_id, $per_player, $b ) {
-						if ( $orders->hasCharge( $product_id, (int) $b['member_id'], (int) $b['player_id'] ) ) {
-							return 0;
-						}
+					ActionLock::memberKey( $product_id, $member_id ),
+					static function () use ( $orders, $product_id, $per_player, $member_id, $missing ) {
 						// Already charged before the product's "Charge per player"
 						// setting changed: charging again would bill them twice.
-						if ( $orders->hasChargeInOtherMode( $product_id, (int) $b['member_id'], $per_player ) ) {
+						if ( $orders->hasChargeInOtherMode( $product_id, $member_id, $per_player ) ) {
 							return 0;
 						}
-						$orders->createRequestedOrder( $b['member_id'], $product_id, $b['player_id'] );
-						return 1;
+						$charged = $orders->chargedPlayerIds( $product_id, $member_id );
+						$made    = 0;
+						foreach ( $missing as $b ) {
+							$player_id = (int) $b['player_id'];
+							if ( in_array( $player_id, $charged, true ) || $orders->playerChargedUnderAnother( $product_id, $player_id, $member_id ) ) {
+								continue;
+							}
+							try {
+								$orders->createRequestedOrder( $member_id, $product_id, $player_id );
+								$made++;
+							} catch ( \RuntimeException $e ) {
+								// Skip a single failure and continue with the rest.
+								continue;
+							}
+						}
+						return $made;
 					}
 				);
 			} catch ( \RuntimeException $e ) {
-				// Skip a single failure, including a member another request is
-				// already charging, and continue the batch.
+				// Another request is charging this member right now; leave them to it.
 				$made = 0;
 			}
 			$created += $made;
-			$skipped += $made ? 0 : 1;
+			$skipped += count( $missing ) - $made;
 		}
 
 		set_transient(
