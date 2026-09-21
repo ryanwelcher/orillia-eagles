@@ -7,6 +7,7 @@ use OrillaEagles\Ledger\Data\BillableRepository;
 use OrillaEagles\Ledger\Data\OrderRepository;
 use OrillaEagles\Ledger\Data\PlayerRepository;
 use OrillaEagles\Ledger\Data\ProductFlag;
+use OrillaEagles\Ledger\Data\RosterRepository;
 use OrillaEagles\Ledger\Domain\LedgerCalculator;
 use OrillaEagles\Ledger\Domain\LedgerRow;
 use OrillaEagles\Ledger\Domain\LedgerSerializer;
@@ -420,6 +421,12 @@ final class LedgerController {
 		if ( ! $member_id || ! $product_id ) {
 			throw new \RuntimeException( __( 'No order to act on.', 'team-membership-ledger' ) );
 		}
+		// The ledger lists customers, so a charge against any other user would be
+		// invisible in it. Membership, not active membership: an inactive member's
+		// outstanding charges still have to be payable.
+		if ( ! ( new RosterRepository() )->isMember( $member_id ) ) {
+			throw new \RuntimeException( __( 'That member is not in the ledger.', 'team-membership-ledger' ) );
+		}
 		if ( $order_id ) {
 			// Only act on the order behind this ledger row, not any order id sent in.
 			$order = wc_get_order( $order_id );
@@ -432,7 +439,26 @@ final class LedgerController {
 			) {
 				throw new \RuntimeException( __( 'That order does not belong to this ledger row.', 'team-membership-ledger' ) );
 			}
+			// A payment and Mark paid act on the whole order, so any other item on
+			// it would be paid off too while the row shows only this line. Quantity
+			// changes and the member-level path refuse these already.
+			if ( 1 !== count( $order->get_items() ) ) {
+				throw new \RuntimeException( __( 'That order has other items; manage it in WooCommerce.', 'team-membership-ledger' ) );
+			}
 			return $order_id;
+		}
+		// A new charge has to match how the product is billed, or it lands in
+		// neither ledger: a player charge on a per-member product is never shown,
+		// and a member-level charge on a per-player product is skipped.
+		if ( ProductFlag::isPerPlayer( $product_id ) ) {
+			if ( ! $player_id ) {
+				throw new \RuntimeException( __( 'This product is charged per player, so the charge needs a player.', 'team-membership-ledger' ) );
+			}
+			if ( ! PlayerRepository::isBillable( $player_id ) ) {
+				throw new \RuntimeException( __( 'Only players can be charged for this product.', 'team-membership-ledger' ) );
+			}
+		} elseif ( $player_id ) {
+			throw new \RuntimeException( __( 'This product is not charged per player.', 'team-membership-ledger' ) );
 		}
 		// Only charge a player to the member they are linked to.
 		if ( $player_id && (int) get_post_meta( $player_id, PlayerRepository::MEMBER_META, true ) !== $member_id ) {
