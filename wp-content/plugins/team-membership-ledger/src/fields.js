@@ -1,5 +1,6 @@
-import { __ } from '@wordpress/i18n';
+import { __, _n, sprintf } from '@wordpress/i18n';
 import { formatMoney } from './format';
+import QuantityCell from './QuantityCell';
 
 const STATUS_LABELS = {
 	paid: __( 'Paid', 'team-membership-ledger' ),
@@ -10,10 +11,11 @@ const STATUS_LABELS = {
 /**
  * Build the DataViews field definitions.
  *
- * @param {{symbol:string, decimals:number}} currency Currency config.
+ * @param {{symbol:string, decimals:number}}           currency Currency config.
+ * @param {{allowsQty?:boolean, onSetQty?:Function}} options  Quantity editing for the selected product.
  * @return {Array} Field definitions.
  */
-export function makeFields( currency ) {
+export function makeFields( currency, { allowsQty = false, onSetQty } = {} ) {
 	const money = ( getValue ) => ( { item } ) => formatMoney( getValue( { item } ), currency );
 
 	return [
@@ -21,14 +23,45 @@ export function makeFields( currency ) {
 			id: 'name',
 			label: __( 'Member', 'team-membership-ledger' ),
 			enableGlobalSearch: true,
-			getValue: ( { item } ) => item.name,
-			render: ( { item } ) => item.name,
+			// Search runs on this value. A member summary also carries its players'
+			// names, so a player can be found without knowing who pays for them; the
+			// member's name stays first, so sorting is unchanged.
+			getValue: ( { item } ) =>
+				item.isMember
+					? [ item.name, ...item.players.map( ( p ) => p.playerName ) ].join( ' ' )
+					: item.name,
+			render: ( { item } ) => {
+				// Player rows (level 1) sit under their member, so show the player.
+				if ( item.level === 1 ) {
+					return item.playerName;
+				}
+				if ( item.isMember ) {
+					return sprintf(
+						/* translators: 1: member name, 2: number of linked players */
+						_n( '%1$s (%2$d player)', '%1$s (%2$d players)', item.players.length, 'team-membership-ledger' ),
+						item.name,
+						item.players.length
+					);
+				}
+				return item.name;
+			},
 		},
 		{
 			id: 'status',
 			label: __( 'Status', 'team-membership-ledger' ),
 			elements: Object.entries( STATUS_LABELS ).map( ( [ value, label ] ) => ( { value, label } ) ),
-			getValue: ( { item } ) => item.status,
+			// A member summary answers with every status its players have, so
+			// filtering to Paid still finds a member with one paid player and one
+			// who owes. The filter matches when any of the statuses is selected.
+			getValue: ( { item } ) =>
+				item.isMember ? [ ...new Set( item.players.map( ( p ) => p.status ) ) ].sort() : item.status,
+			// Without these the field gets DataViews' default `is`/`isNot`, which
+			// compare with ===, so a list of statuses would never match anything.
+			filterBy: { operators: [ 'isAny', 'isNone' ] },
+			sort: ( a, b, direction ) => {
+				const order = [].concat( a ).join( ' ' ).localeCompare( [].concat( b ).join( ' ' ) );
+				return direction === 'asc' ? order : -order;
+			},
 			render: ( { item } ) => {
 				const label = STATUS_LABELS[ item.status ] ?? item.status;
 				return item.orderCount > 1
@@ -40,6 +73,13 @@ export function makeFields( currency ) {
 			id: 'qty',
 			label: __( 'Qty', 'team-membership-ledger' ),
 			getValue: ( { item } ) => item.qty,
+			// Editable only on a single charge; member summaries and multi-order rows stay read-only.
+			render: ( { item } ) =>
+				allowsQty && onSetQty && ! item.isMember && item.orderCount <= 1 ? (
+					<QuantityCell item={ item } onSetQty={ onSetQty } />
+				) : (
+					item.qty
+				),
 		},
 		{
 			id: 'total',

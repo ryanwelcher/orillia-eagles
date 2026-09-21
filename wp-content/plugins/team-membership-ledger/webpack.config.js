@@ -8,10 +8,25 @@
  * @wordpress/element, React, …) is externalized to the host's registered
  * script handles. Because components/data/private-apis resolve to the HOST's
  * instances, this build must run against a Gutenberg whose @wordpress/*
- * versions are compatible with the bundled dataviews (pinned to 17.2.0, which
- * matches the host's Gutenberg 23.6). This keeps the bundle small and avoids
- * pulling framer-motion and the broken @wordpress/ui/@wordpress/icons ESM into
- * the build.
+ * versions are compatible with the bundled dataviews (pinned to 17.2.0). This
+ * keeps the bundle small and avoids pulling framer-motion and the broken
+ * @wordpress/ui/@wordpress/icons ESM into the build.
+ *
+ * The match is NOT exact. Checked against the host's Gutenberg 23.9.1 by
+ * searching its components build for each private API dataviews 17.2.0 unlocks,
+ * most are missing: `kebabCase` (RenderModal actions), `DateCalendar` and
+ * `DateRangeCalendar` (date fields and their filters), and the DataForm
+ * controls `ValidatedCheckboxControl`, `ValidatedComboboxControl`,
+ * `ValidatedFormTokenField`, `ValidatedNumberControl`, `ValidatedRadioControl`,
+ * `ValidatedSelectControl`, `ValidatedToggleControl` and
+ * `ValidatedToggleGroupControl`. Present: `Menu`, `Badge`,
+ * `ValidatedInputControl`, `ValidatedTextareaControl`,
+ * `ValidatedContentEditableControl`, `withIgnoreIMEEvents`.
+ *
+ * Anything that renders a missing one throws. The Ledger stays clear of them:
+ * actions open our own <Modal>, no field declares a `type`, and DataForm is not
+ * used. App.js wraps the table in an error boundary in case that ever slips.
+ * Keep it that way, or re-check those exports after changing either version.
  */
 const path = require( 'path' );
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
