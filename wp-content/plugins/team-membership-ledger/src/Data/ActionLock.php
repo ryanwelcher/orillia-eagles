@@ -11,6 +11,11 @@ defined( 'ABSPATH' ) || exit;
  * `INSERT IGNORE` either wins or does nothing, so exactly one request takes the
  * lock. This is how WordPress core locks in `WP_Upgrader::create_lock()`;
  * `add_option()` can't do it, because it overwrites instead of failing.
+ *
+ * The stored value is a one-off token, not just a timestamp, so a request only
+ * ever takes over or releases the exact lock it saw: two requests can't both
+ * take over one stale lock, and a request that overran the timeout can't
+ * release the lock that replaced it.
  */
 final class ActionLock {
 
@@ -18,6 +23,11 @@ final class ActionLock {
 	private const TIMEOUT = 30;
 
 	private const PREFIX = 'tml_lock_';
+
+	/** The lock covering one member's charges for one product. */
+	public static function memberKey( int $product_id, int $member_id ): string {
+		return sprintf( 'member_%d_%d', $product_id, $member_id );
+	}
 
 	/**
 	 * Run $write while holding the named lock.
@@ -27,52 +37,97 @@ final class ActionLock {
 	 * @throws \RuntimeException When someone else holds the lock.
 	 */
 	public static function run( string $name, callable $write ) {
-		if ( ! self::acquire( $name ) ) {
+		$handle = self::acquire( $name );
+		if ( null === $handle ) {
 			throw new \RuntimeException( __( 'Another change to this member is still saving. Try again in a moment.', 'team-membership-ledger' ) );
 		}
 		try {
 			return $write();
 		} finally {
-			self::release( $name );
+			self::release( $name, $handle );
 		}
 	}
 
-	private static function acquire( string $name ): bool {
-		if ( self::insert( $name ) ) {
-			return true;
+	/** @return string|null The handle we now hold, or null if someone else holds it. */
+	private static function acquire( string $name ): ?string {
+		$mine = wp_generate_password( 12, false ) . '|' . time();
+		if ( self::insert( $name, $mine ) ) {
+			return $mine;
 		}
-		// Someone holds it. Only take it over once the timeout has passed, which
-		// means that request died before it could release.
-		if ( time() - self::heldSince( $name ) < self::TIMEOUT ) {
-			return false;
+		$held = self::held( $name );
+		if ( '' === $held ) {
+			// Released between our insert and this read; try once more.
+			return self::insert( $name, $mine ) ? $mine : null;
 		}
-		self::release( $name );
-		return self::insert( $name );
+		if ( time() - self::startedAt( $held ) < self::TIMEOUT ) {
+			return null;
+		}
+		// Stale, so that request died. Take it over only if it is still the exact
+		// lock we read, so two requests can't both take over the same one.
+		return self::steal( $name, $held, $mine ) ? $mine : null;
 	}
 
-	private static function release( string $name ): void {
-		delete_option( self::option( $name ) );
+	/** Delete our own lock only: a request that overran must not release its replacement. */
+	private static function release( string $name, string $handle ): void {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- See insert().
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} WHERE option_name = %s AND option_value = %s",
+				self::option( $name ),
+				$handle
+			)
+		);
+		wp_cache_delete( self::option( $name ), 'options' );
 	}
 
-	private static function insert( string $name ): bool {
+	private static function insert( string $name, string $handle ): bool {
 		global $wpdb;
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The insert is the test-and-set; the Options API has no equivalent.
-		return (bool) $wpdb->query(
+		$won = (bool) $wpdb->query(
 			$wpdb->prepare(
 				"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
 				self::option( $name ),
-				(string) time()
+				$handle
 			)
+		);
+		if ( $won ) {
+			wp_cache_delete( self::option( $name ), 'options' );
+		}
+		return $won;
+	}
+
+	/** One atomic compare-and-set: only the request still matching $held wins. */
+	private static function steal( string $name, string $held, string $handle ): bool {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- See insert().
+		$won = (bool) $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s",
+				$handle,
+				self::option( $name ),
+				$held
+			)
+		);
+		if ( $won ) {
+			wp_cache_delete( self::option( $name ), 'options' );
+		}
+		return $won;
+	}
+
+	/** Read past the options cache, because these writes go behind it. */
+	private static function held( string $name ): string {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- See insert().
+		return (string) $wpdb->get_var(
+			$wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::option( $name ) )
 		);
 	}
 
-	/** Read past the options cache, because insert() writes behind it. */
-	private static function heldSince( string $name ): int {
-		global $wpdb;
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- See insert().
-		return (int) $wpdb->get_var(
-			$wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::option( $name ) )
-		);
+	/** A handle we can't parse counts as stale, which clears a lock left by an older version. */
+	private static function startedAt( string $handle ): int {
+		$parts = explode( '|', $handle );
+		return (int) ( $parts[1] ?? 0 );
 	}
 
 	private static function option( string $name ): string {

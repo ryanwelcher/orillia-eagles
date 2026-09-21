@@ -84,6 +84,41 @@ final class OrderRepository {
 		return array_map( 'strval', array_keys( $keys ) );
 	}
 
+	/**
+	 * Whether this (member, player) already has an order for the product.
+	 *
+	 * Scoped to the one customer, so it is cheap enough to re-check inside a
+	 * lock; existingBillableKeys() scans every order for a whole batch.
+	 */
+	public function hasCharge( int $product_id, int $customer_id, int $player_id ): bool {
+		$statuses = array_keys( wc_get_order_statuses() );
+		$page     = 1;
+		$per_page = 100;
+		do {
+			$batch = wc_get_orders(
+				array(
+					'limit'       => $per_page,
+					'paged'       => $page,
+					'type'        => 'shop_order',
+					'status'      => $statuses,
+					'customer_id' => $customer_id,
+				)
+			);
+			foreach ( $batch as $order ) {
+				if ( (int) $order->get_meta( self::PLAYER_META ) !== $player_id ) {
+					continue;
+				}
+				foreach ( $order->get_items() as $item ) {
+					if ( (int) $item->get_product_id() === $product_id ) {
+						return true;
+					}
+				}
+			}
+			$page++;
+		} while ( count( $batch ) === $per_page );
+		return false;
+	}
+
 	public function createRequestedOrder( int $customer_id, int $product_id, int $player_id = 0, int $qty = 1 ): int {
 		$product = wc_get_product( $product_id );
 		if ( ! $product ) {

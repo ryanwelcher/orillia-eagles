@@ -350,7 +350,20 @@ final class LedgerController {
 				$created = true;
 			}
 		}
-		return $created ? self::member_rows( $product_id, $member_id ) : $rows;
+		if ( ! $created ) {
+			return $rows;
+		}
+		// member_rows_checked() vetted the rows before anything was created. Vet
+		// the re-read too, so a charge that appeared meanwhile can't reach the
+		// payment loop as a null order id and apply only part of a payment.
+		$rows = self::member_rows( $product_id, $member_id );
+		foreach ( $rows as $row ) {
+			if ( 1 !== $row->orderCount() ) {
+				/* translators: %s: player name */
+				throw new \RuntimeException( sprintf( __( "%s's charges changed while this was saving; reload the Ledger and try again.", 'team-membership-ledger' ), $row->playerName() ) );
+			}
+		}
+		return $rows;
 	}
 
 	/** @return LedgerRow[] */
@@ -375,7 +388,7 @@ final class LedgerController {
 	 * @return mixed Whatever $write returns.
 	 */
 	private static function with_member_lock( int $product_id, int $member_id, callable $write ) {
-		return ActionLock::run( sprintf( 'member_%d_%d', $product_id, $member_id ), $write );
+		return ActionLock::run( ActionLock::memberKey( $product_id, $member_id ), $write );
 	}
 
 	private static function overpayment_message( float $owed ): string {

@@ -1,6 +1,7 @@
 <?php
 namespace OrillaEagles\Ledger\Admin;
 
+use OrillaEagles\Ledger\Data\ActionLock;
 use OrillaEagles\Ledger\Data\BillableRepository;
 use OrillaEagles\Ledger\Data\OrderRepository;
 use OrillaEagles\Ledger\Domain\Billables;
@@ -34,24 +35,39 @@ final class RolloverScreen {
 		$plan = RolloverPlan::build( array_keys( $by_key ), $orders->existingBillableKeys( $product_id ) );
 
 		$created = 0;
+		$skipped = count( $plan['to_skip'] );
 		foreach ( $plan['to_create'] as $key ) {
 			$b = $by_key[ $key ];
 			try {
-				$orders->createRequestedOrder( $b['member_id'], $product_id, $b['player_id'] );
-				$created++;
+				// The plan is a snapshot. Take the same lock the Ledger's own
+				// actions take, and re-check inside it, so a charge created since
+				// the snapshot isn't duplicated.
+				$made = ActionLock::run(
+					ActionLock::memberKey( $product_id, (int) $b['member_id'] ),
+					static function () use ( $orders, $product_id, $b ) {
+						if ( $orders->hasCharge( $product_id, (int) $b['member_id'], (int) $b['player_id'] ) ) {
+							return 0;
+						}
+						$orders->createRequestedOrder( $b['member_id'], $product_id, $b['player_id'] );
+						return 1;
+					}
+				);
 			} catch ( \RuntimeException $e ) {
-				// Skip a single failure; continue the batch.
-				continue;
+				// Skip a single failure, including a member another request is
+				// already charging, and continue the batch.
+				$made = 0;
 			}
+			$created += $made;
+			$skipped += $made ? 0 : 1;
 		}
 
 		set_transient(
 			'tml_rollover_notice',
 			sprintf(
 				/* translators: 1: created count, 2: skipped count. */
-				__( '%1$d order(s) created, %2$d skipped (already had one).', 'team-membership-ledger' ),
+				__( '%1$d order(s) created, %2$d skipped.', 'team-membership-ledger' ),
 				$created,
-				count( $plan['to_skip'] )
+				$skipped
 			),
 			30
 		);
