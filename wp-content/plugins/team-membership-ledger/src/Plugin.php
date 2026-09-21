@@ -28,6 +28,8 @@ final class Plugin {
 		if ( is_admin() ) {
 			\OrillaEagles\Ledger\Admin\Capabilities::ensure();
 		}
+		add_action( 'woocommerce_order_status_changed', array( \OrillaEagles\Ledger\Data\OrderRepository::class, 'onStatusChanged' ), 10, 4 );
+		\OrillaEagles\Ledger\Data\PlayerRepository::register();
 		add_action( 'admin_menu', array( \OrillaEagles\Ledger\Admin\Menu::class, 'register' ) );
 		add_action( 'admin_enqueue_scripts', array( \OrillaEagles\Ledger\Admin\LedgerScreen::class, 'enqueue' ) );
 		add_action( 'rest_api_init', array( \OrillaEagles\Ledger\Rest\LedgerController::class, 'register' ) );

@@ -14,6 +14,41 @@ final class PlayerRepository {
 	public const ROLE_TAXONOMY = 'roster_role';
 	public const PLAYER_ROLE   = 'player';
 
+	public static function register(): void {
+		add_filter( 'pre_trash_post', array( self::class, 'guardRemoval' ), 10, 2 );
+		add_filter( 'pre_delete_post', array( self::class, 'guardRemoval' ), 10, 2 );
+	}
+
+	/**
+	 * Refuse to trash or delete a player who still has an unpaid charge. Rows
+	 * come from the roster, so removing the player would drop the charge, and
+	 * what was paid toward it, out of the Ledger, exactly what unlink() refuses.
+	 *
+	 * @param bool|null $check null to let WordPress carry on.
+	 * @param \WP_Post  $post
+	 * @return bool|null
+	 */
+	public static function guardRemoval( $check, $post ) {
+		if ( null !== $check || ! $post instanceof \WP_Post || self::POST_TYPE !== $post->post_type ) {
+			return $check;
+		}
+		$member_id = (int) get_post_meta( $post->ID, self::MEMBER_META, true );
+		if ( ! $member_id || ! ( new OrderRepository() )->hasOpenPlayerCharge( $member_id, (int) $post->ID ) ) {
+			return $check;
+		}
+		$message = sprintf(
+			/* translators: %s: player name */
+			__( '%s still has an unpaid charge in the Membership Ledger. Settle or cancel that order in WooCommerce before removing the player.', 'team-membership-ledger' ),
+			$post->post_title
+		);
+		// The list table and editor only show a generic failure, so explain it
+		// where a page can be shown; elsewhere (REST, WP-CLI) just refuse.
+		if ( is_admin() && ! wp_doing_ajax() && ! ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			wp_die( esc_html( $message ), '', array( 'back_link' => true ) );
+		}
+		return false;
+	}
+
 	/**
 	 * Only players are billed. Coaches share the post type, and the taxonomy can
 	 * gain roles later, so a post tagged with some other role is left out. A post
@@ -43,6 +78,22 @@ final class PlayerRepository {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Whether the player exists, is not in the trash, and is linked to the member.
+	 *
+	 * @param bool $fresh read the link past the post-meta cache, for a long-running
+	 *                    request whose cache was primed before someone moved the player.
+	 */
+	public static function isLinkedTo( int $player_id, int $member_id, bool $fresh = false ): bool {
+		if ( $fresh ) {
+			clean_post_cache( $player_id );
+		}
+		if ( self::POST_TYPE !== get_post_type( $player_id ) || 'trash' === get_post_status( $player_id ) ) {
+			return false;
+		}
+		return (int) get_post_meta( $player_id, self::MEMBER_META, true ) === $member_id;
 	}
 
 	/** @return array<int,array{id:int,name:string,member_id:int}> */
@@ -98,7 +149,7 @@ final class PlayerRepository {
 	}
 
 	public function link( int $player_id, int $member_id ): void {
-		if ( self::POST_TYPE !== get_post_type( $player_id ) ) {
+		if ( self::POST_TYPE !== get_post_type( $player_id ) || 'trash' === get_post_status( $player_id ) ) {
 			throw new \RuntimeException( __( 'That player could not be found.', 'team-membership-ledger' ) );
 		}
 		if ( ! self::isBillable( $player_id ) ) {

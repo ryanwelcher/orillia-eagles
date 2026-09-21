@@ -10,9 +10,9 @@ final class QuantityChange {
 	 * the existing line (line total ÷ quantity), so a later change to the
 	 * product's price does not re-price the charge and rounding can't drift.
 	 *
-	 * @return array{unit_price:float,new_total:float,is_paid:bool}
+	 * @return array{unit_price:float,new_total:float}
 	 */
-	public static function plan( int $old_qty, float $line_total, int $new_qty, float $paid, ?float $unit_price = null ): array {
+	public static function plan( int $old_qty, float $line_total, int $new_qty, ?float $unit_price = null ): array {
 		if ( $old_qty < 1 ) {
 			throw new \RuntimeException( 'The existing quantity must be at least 1.' );
 		}
@@ -25,7 +25,15 @@ final class QuantityChange {
 		return array(
 			'unit_price' => $unit_price,
 			'new_total'  => $new_total,
-			'is_paid'    => round( $paid, 2 ) >= $new_total,
 		);
+	}
+
+	/**
+	 * Whether what has been paid covers the order after a quantity change.
+	 * Judged against the order total, the figure payments are checked against,
+	 * which differs from the line once tax or a fee applies.
+	 */
+	public static function isPaid( float $paid, float $order_total ): bool {
+		return round( $paid, 2 ) >= round( $order_total, 2 );
 	}
 }

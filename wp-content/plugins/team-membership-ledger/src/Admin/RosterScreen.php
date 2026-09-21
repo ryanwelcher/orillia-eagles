@@ -50,6 +50,14 @@ final class RosterScreen {
 		exit;
 	}
 
+	/**
+	 * The screen has a form per row, and wp_nonce_field() gives every one the same
+	 * id="_wpnonce". Same field, without the repeated id.
+	 */
+	private static function nonce_field(): void {
+		printf( '<input type="hidden" name="_wpnonce" value="%s" />', esc_attr( wp_create_nonce( 'tml_roster' ) ) );
+	}
+
 	public static function render(): void {
 		if ( ! current_user_can( Menu::CAP ) ) {
 			return;
@@ -81,7 +89,7 @@ final class RosterScreen {
 
 			<h2><?php esc_html_e( 'Add member', 'team-membership-ledger' ); ?></h2>
 			<form method="post">
-				<?php wp_nonce_field( 'tml_roster' ); ?>
+				<?php self::nonce_field(); ?>
 				<input type="hidden" name="tml_roster_action" value="create" />
 				<input type="text" name="first_name" placeholder="<?php esc_attr_e( 'First name', 'team-membership-ledger' ); ?>" required />
 				<input type="text" name="last_name" placeholder="<?php esc_attr_e( 'Last name', 'team-membership-ledger' ); ?>" required />
@@ -94,7 +102,7 @@ final class RosterScreen {
 				<p><?php esc_html_e( 'These players are linked to a user who was deleted or is no longer a member, so they are not being charged. Unlink them, then link them to a current member.', 'team-membership-ledger' ); ?></p>
 				<?php foreach ( $orphaned as $p ) : ?>
 					<form method="post" style="margin:0 0 4px">
-						<?php wp_nonce_field( 'tml_roster' ); ?>
+						<?php self::nonce_field(); ?>
 						<input type="hidden" name="tml_roster_action" value="unlink_player" />
 						<input type="hidden" name="player_id" value="<?php echo esc_attr( $p['id'] ); ?>" />
 						<?php echo esc_html( $p['name'] ); ?>
@@ -122,7 +130,7 @@ final class RosterScreen {
 						<td>
 							<?php foreach ( $linked[ $m['id'] ] ?? array() as $p ) : ?>
 								<form method="post" style="margin:0 0 4px">
-									<?php wp_nonce_field( 'tml_roster' ); ?>
+									<?php self::nonce_field(); ?>
 									<input type="hidden" name="tml_roster_action" value="unlink_player" />
 									<input type="hidden" name="player_id" value="<?php echo esc_attr( $p['id'] ); ?>" />
 									<?php echo esc_html( $p['name'] ); ?>
@@ -134,7 +142,7 @@ final class RosterScreen {
 							<?php endforeach; ?>
 							<?php if ( $unlinked ) : ?>
 								<form method="post" style="margin:0">
-									<?php wp_nonce_field( 'tml_roster' ); ?>
+									<?php self::nonce_field(); ?>
 									<input type="hidden" name="tml_roster_action" value="link_player" />
 									<input type="hidden" name="user_id" value="<?php echo esc_attr( $m['id'] ); ?>" />
 									<label class="screen-reader-text" for="tml-link-player-<?php echo esc_attr( $m['id'] ); ?>"><?php esc_html_e( 'Player to link', 'team-membership-ledger' ); ?></label>
@@ -150,7 +158,7 @@ final class RosterScreen {
 						</td>
 						<td>
 							<form method="post" style="margin:0">
-								<?php wp_nonce_field( 'tml_roster' ); ?>
+								<?php self::nonce_field(); ?>
 								<input type="hidden" name="tml_roster_action" value="toggle" />
 								<input type="hidden" name="user_id" value="<?php echo esc_attr( $m['id'] ); ?>" />
 								<input type="hidden" name="active" value="<?php echo $m['active'] ? '0' : '1'; ?>" />

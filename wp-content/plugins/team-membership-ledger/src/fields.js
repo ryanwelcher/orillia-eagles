@@ -55,6 +55,9 @@ export function makeFields( currency, { allowsQty = false, onSetQty } = {} ) {
 			// who owes. The filter matches when any of the statuses is selected.
 			getValue: ( { item } ) =>
 				item.isMember ? [ ...new Set( item.players.map( ( p ) => p.status ) ) ].sort() : item.status,
+			// Without these the field gets DataViews' default `is`/`isNot`, which
+			// compare with ===, so a list of statuses would never match anything.
+			filterBy: { operators: [ 'isAny', 'isNone' ] },
 			sort: ( a, b, direction ) => {
 				const order = [].concat( a ).join( ' ' ).localeCompare( [].concat( b ).join( ' ' ) );
 				return direction === 'asc' ? order : -order;

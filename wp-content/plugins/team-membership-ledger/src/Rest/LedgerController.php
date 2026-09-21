@@ -158,8 +158,19 @@ final class LedgerController {
 				$product_id,
 				$member_id,
 				static function () use ( $order_id, $member_id, $player_id, $product_id, $amount ) {
-					$id = self::resolve_order( $order_id, $member_id, $player_id, $product_id );
-					( new OrderRepository() )->addPayment( $id, $amount );
+					$orders = new OrderRepository();
+					$id     = self::resolve_order( $order_id, $member_id, $player_id, $product_id );
+					try {
+						$orders->addPayment( $id, $amount );
+					} catch ( \RuntimeException $e ) {
+						// The charge was only created to take this payment. Leaving it
+						// behind would show a charge nobody asked for, on a row the
+						// screen still thinks has none, so every retry would be refused.
+						if ( ! $order_id ) {
+							$orders->deleteOrder( $id );
+						}
+						throw $e;
+					}
 					return $id;
 				}
 			);
@@ -249,12 +260,16 @@ final class LedgerController {
 					// different figure than the orders do once tax or a fee applies.
 					$orders   = new OrderRepository();
 					$balances = array();
-					foreach ( self::ensure_member_charges( $product_id, $member_id, $rows ) as $row ) {
+					$created  = array();
+					foreach ( self::ensure_member_charges( $product_id, $member_id, $rows, $created ) as $row ) {
 						$balances[ $row->singleOrderId() ] = $row->balance();
 					}
 					try {
 						$plan = PaymentAllocation::fill( $balances, $amount );
 					} catch ( \RuntimeException $e ) {
+						// Refused before any money moved: take back the charges made
+						// for it, so the screen and the orders still agree.
+						array_map( array( $orders, 'deleteOrder' ), $created );
 						throw new \RuntimeException( self::overpayment_message( PaymentAllocation::owed( $balances ) ) );
 					}
 					// Each order is a separate save with no rollback between them, so
@@ -342,9 +357,6 @@ final class LedgerController {
 				/* translators: %s: player name */
 				throw new \RuntimeException( sprintf( __( "%s's order has other items; manage it in WooCommerce.", 'team-membership-ledger' ), $row->playerName() ) );
 			}
-			if ( $order ) {
-				( new OrderRepository() )->assertNotVoid( $order );
-			}
 		}
 		return $rows;
 	}
@@ -353,15 +365,13 @@ final class LedgerController {
 	 * Create the Requested order for any of the member's players without one.
 	 *
 	 * @param LedgerRow[] $rows
+	 * @param int[]       $created filled with the ids of the orders created here.
 	 * @return LedgerRow[] rows that all have exactly one order.
 	 */
-	private static function ensure_member_charges( int $product_id, int $member_id, array $rows ): array {
-		$created = false;
+	private static function ensure_member_charges( int $product_id, int $member_id, array $rows, array &$created = array() ): array {
 		foreach ( $rows as $row ) {
 			if ( 0 === $row->orderCount() ) {
-				self::assert_not_charged_elsewhere( $product_id, $member_id, $row->playerId(), $row->playerName() );
-				( new OrderRepository() )->createRequestedOrder( $member_id, $product_id, $row->playerId() );
-				$created = true;
+				$created[] = ( new OrderRepository() )->createRequestedOrder( $member_id, $product_id, $row->playerId() );
 			}
 		}
 		if ( ! $created ) {
@@ -436,6 +446,12 @@ final class LedgerController {
 			) {
 				throw new \RuntimeException( __( 'That order does not belong to this ledger row.', 'team-membership-ledger' ) );
 			}
+			// The Ledger only shows a player's charge under the member they are
+			// linked to now. Once the player is moved, unlinked or deleted, the
+			// order has no row, so a request naming it is out of date or crafted.
+			if ( $player_id && ! PlayerRepository::isLinkedTo( $player_id, $member_id ) ) {
+				throw new \RuntimeException( __( 'That player is no longer linked to this member; manage the order in WooCommerce.', 'team-membership-ledger' ) );
+			}
 			// A payment and Mark paid act on the whole order, so any other item on
 			// it would be paid off too while the row shows only this line. Quantity
 			// changes and the member-level path refuse these already.
@@ -444,7 +460,7 @@ final class LedgerController {
 			}
 			// A cancelled or refunded order still lists as a row; paying it or
 			// changing its quantity would bring it back to life.
-			( new OrderRepository() )->assertNotVoid( $order );
+			( new OrderRepository() )->assertLive( $order );
 			return $order_id;
 		}
 		// The row said "no charge yet", but that can be stale: another tab, Create
@@ -452,10 +468,11 @@ final class LedgerController {
 		// queues requests, so look again before creating a second charge.
 		$orders     = new OrderRepository();
 		$per_player = ProductFlag::isPerPlayer( $product_id );
-		if ( $orders->hasCharge( $product_id, $member_id, $player_id ) ) {
+		$charged    = $orders->chargedPlayerIds( $product_id, $member_id );
+		if ( in_array( $player_id, $charged, true ) ) {
 			throw new \RuntimeException( __( 'This charge already exists; reload the Ledger and try again.', 'team-membership-ledger' ) );
 		}
-		if ( $orders->hasChargeInOtherMode( $product_id, $member_id, $per_player ) ) {
+		if ( OrderRepository::inOtherMode( $charged, $per_player ) ) {
 			throw new \RuntimeException( self::other_mode_message() );
 		}
 		// A new charge has to match how the product is billed, or it lands in
@@ -472,7 +489,7 @@ final class LedgerController {
 			throw new \RuntimeException( __( 'This product is not charged per player.', 'team-membership-ledger' ) );
 		}
 		// Only charge a player to the member they are linked to.
-		if ( $player_id && (int) get_post_meta( $player_id, PlayerRepository::MEMBER_META, true ) !== $member_id ) {
+		if ( $player_id && ! PlayerRepository::isLinkedTo( $player_id, $member_id ) ) {
 			throw new \RuntimeException( __( 'That player is not linked to this member.', 'team-membership-ledger' ) );
 		}
 		self::assert_not_charged_elsewhere( $product_id, $member_id, $player_id, (string) get_post_field( 'post_title', $player_id, 'raw' ) );
@@ -509,11 +526,28 @@ final class LedgerController {
 		return new \WP_REST_Response( null, 200 );
 	}
 
-	/** @return LedgerRow[] */
+	/**
+	 * The ledger for a product, or for one member of it.
+	 *
+	 * @return LedgerRow[]
+	 */
 	private static function ledger_rows( int $product_id, OrderRepository $orders, int $member_id = 0 ): array {
-		return LedgerCalculator::forProduct(
-			( new BillableRepository() )->forProduct( $product_id ),
+		$rows = LedgerCalculator::forProduct(
+			( new BillableRepository() )->forProduct( $product_id, $member_id ),
 			$orders->productRecords( $product_id, $member_id )
+		);
+		if ( ! ProductFlag::isPerPlayer( $product_id ) ) {
+			return $rows;
+		}
+		// A player moved here after being charged under another member is already
+		// dealt with for this product. Leave them out instead of listing a "Not
+		// entered" row: it could never be charged, so it would hold the member at
+		// Owes for good and make every member-level payment fail.
+		return array_values(
+			array_filter(
+				$rows,
+				static fn( LedgerRow $row ) => $row->orderCount() || ! $orders->playerChargedUnderAnother( $product_id, $row->playerId(), $row->memberId() )
+			)
 		);
 	}
 

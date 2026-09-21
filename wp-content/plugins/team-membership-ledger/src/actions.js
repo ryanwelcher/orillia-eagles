@@ -25,7 +25,7 @@ export function AddPaymentModal( { item, productId, onRowUpdated, onNotice, clos
 					amount: value,
 				} );
 			if ( updated ) {
-				onRowUpdated( updated );
+				onRowUpdated( updated, productId );
 				onNotice( { type: 'success', message: __( 'Payment recorded.', 'team-membership-ledger' ) } );
 			} else {
 				// Payment saved, but the refreshed row could not be resolved;
@@ -136,7 +136,7 @@ export function makeActions( { productId, perPlayer, onRowUpdated, onNotice, onO
 							playerId: item.playerId,
 						} );
 					if ( updated ) {
-						onRowUpdated( updated );
+						onRowUpdated( updated, productId );
 						onNotice( { type: 'success', message: __( 'Marked paid.', 'team-membership-ledger' ) } );
 					} else {
 						// Payment saved, but the refreshed row could not be resolved;

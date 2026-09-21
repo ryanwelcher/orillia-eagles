@@ -4,6 +4,7 @@ namespace OrillaEagles\Ledger\Admin;
 use OrillaEagles\Ledger\Data\ActionLock;
 use OrillaEagles\Ledger\Data\BillableRepository;
 use OrillaEagles\Ledger\Data\OrderRepository;
+use OrillaEagles\Ledger\Data\PlayerRepository;
 use OrillaEagles\Ledger\Data\ProductFlag;
 use OrillaEagles\Ledger\Domain\Billables;
 use OrillaEagles\Ledger\Domain\RolloverPlan;
@@ -44,6 +45,7 @@ final class RolloverScreen {
 		}
 
 		$created = 0;
+		$busy    = 0;
 		$skipped = count( $plan['to_skip'] );
 		foreach ( $by_member as $member_id => $missing ) {
 			$made = 0;
@@ -56,14 +58,22 @@ final class RolloverScreen {
 					static function () use ( $orders, $product_id, $per_player, $member_id, $missing ) {
 						// Already charged before the product's "Charge per player"
 						// setting changed: charging again would bill them twice.
-						if ( $orders->hasChargeInOtherMode( $product_id, $member_id, $per_player ) ) {
+						// Voided orders count here: a charge someone cancelled on purpose
+						// is not raised again by a bulk run.
+						$charged = $orders->chargedPlayerIds( $product_id, $member_id, true );
+						if ( OrderRepository::inOtherMode( $charged, $per_player ) ) {
 							return 0;
 						}
-						$charged = $orders->chargedPlayerIds( $product_id, $member_id );
-						$made    = 0;
+						$made = 0;
 						foreach ( $missing as $b ) {
 							$player_id = (int) $b['player_id'];
 							if ( in_array( $player_id, $charged, true ) || $orders->playerChargedUnderAnother( $product_id, $player_id, $member_id ) ) {
+								continue;
+							}
+							// The links were read before this loop began, and a big run
+							// takes a while. A player moved or unlinked since must not be
+							// charged under the member they have left.
+							if ( $player_id && ! PlayerRepository::isLinkedTo( $player_id, $member_id, true ) ) {
 								continue;
 							}
 							try {
@@ -78,23 +88,35 @@ final class RolloverScreen {
 					}
 				);
 			} catch ( \RuntimeException $e ) {
-				// Another request is charging this member right now; leave them to it.
+				// Someone is charging this member right now, or an earlier run died
+				// holding their lock. Say so: they are not charged, and uncharged
+				// members are hidden in the Ledger by default.
 				$made = 0;
+				$busy++;
 			}
 			$created += $made;
 			$skipped += count( $missing ) - $made;
 		}
 
-		set_transient(
-			'tml_rollover_notice',
-			sprintf(
-				/* translators: 1: created count, 2: skipped count. */
-				__( '%1$d order(s) created, %2$d skipped.', 'team-membership-ledger' ),
-				$created,
-				$skipped
-			),
-			30
+		$notice = sprintf(
+			/* translators: 1: created count, 2: skipped count. */
+			__( '%1$d order(s) created, %2$d skipped.', 'team-membership-ledger' ),
+			$created,
+			$skipped
 		);
+		if ( $busy ) {
+			$notice .= ' ' . sprintf(
+				/* translators: %d: number of members */
+				_n(
+					'%d member was busy with another change and was NOT charged. Run this again in a couple of minutes.',
+					'%d members were busy with another change and were NOT charged. Run this again in a couple of minutes.',
+					$busy,
+					'team-membership-ledger'
+				),
+				$busy
+			);
+		}
+		set_transient( 'tml_rollover_notice', $notice, 30 );
 		self::redirect();
 	}
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from '@wordpress/element';
+import { useState, useEffect, useMemo, useRef, Component } from '@wordpress/element';
 import { SelectControl, Spinner, Snackbar, Button, ToggleControl, Modal } from '@wordpress/components';
 import { DataViews, filterSortAndPaginate } from '@wordpress/dataviews';
 import { __ } from '@wordpress/i18n';
@@ -17,6 +17,30 @@ const DEFAULT_VIEW = {
 	fields: [ 'status', 'qty', 'total', 'paid', 'balance', 'date' ],
 	titleField: 'name',
 };
+
+/**
+ * The bundled DataViews leans on private @wordpress/components APIs of the host
+ * (see webpack.config.js). If one is missing it throws while rendering; show
+ * that instead of a blank screen.
+ */
+class TableBoundary extends Component {
+	constructor( props ) {
+		super( props );
+		this.state = { failed: false };
+	}
+	static getDerivedStateFromError() {
+		return { failed: true };
+	}
+	render() {
+		return this.state.failed ? (
+			<div className="notice notice-error">
+				<p>{ __( 'The ledger table could not be shown. Reload the page; if it keeps happening, the site’s Gutenberg version may not match this plugin.', 'team-membership-ledger' ) }</p>
+			</div>
+		) : (
+			this.props.children
+		);
+	}
+}
 
 export default function App() {
 	// wp_localize_script stringifies values, so coerce the initial id to a number
@@ -42,15 +66,33 @@ export default function App() {
 	const perPlayer = !! products.find( ( p ) => p.id === productId )?.perPlayer;
 	const allowsQty = !! products.find( ( p ) => p.id === productId )?.allowsQty;
 
+	// Row ids don't carry the product, so a reply that lands after the product
+	// was switched must not be merged into the other product's rows.
+	const productRef = useRef( productId );
+	productRef.current = productId;
+
 	// Accepts one updated row, or a list (member-level actions return every player row).
-	const handleRowUpdated = ( updated ) => {
-		const byId = new Map( ( Array.isArray( updated ) ? updated : [ updated ] ).map( ( r ) => [ r.id, r ] ) );
+	const handleRowUpdated = ( updated, forProductId = productRef.current ) => {
+		if ( forProductId !== productRef.current ) {
+			return;
+		}
+		const isList = Array.isArray( updated );
+		const list = isList ? updated : [ updated ];
+		const byId = new Map( list.map( ( r ) => [ r.id, r ] ) );
+		// A member-level reply is that member's whole set of rows, so a player no
+		// longer in it (unlinked since the screen loaded) goes.
+		const members = new Set( isList ? list.map( ( r ) => r.memberId ) : [] );
 		setRows( ( current ) => {
 			const known = new Set( current.map( ( r ) => r.id ) );
 			// A row the screen hasn't seen (a player linked after it loaded) is
 			// added rather than dropped, or a saved payment would not show at all.
-			const added = [ ...byId.values() ].filter( ( r ) => ! known.has( r.id ) );
-			return [ ...current.map( ( r ) => byId.get( r.id ) ?? r ), ...added ];
+			const added = list.filter( ( r ) => ! known.has( r.id ) );
+			return [
+				...current
+					.filter( ( r ) => ! members.has( r.memberId ) || byId.has( r.id ) )
+					.map( ( r ) => byId.get( r.id ) ?? r ),
+				...added,
+			];
 		} );
 	};
 
@@ -78,7 +120,7 @@ export default function App() {
 					qty,
 				} );
 				if ( updated ) {
-					handleRowUpdated( updated );
+					handleRowUpdated( updated, productId );
 					setNotice( { type: 'success', message: __( 'Quantity updated.', 'team-membership-ledger' ) } );
 				} else {
 					setNotice( {
@@ -154,6 +196,15 @@ export default function App() {
 		return { ...result, data: showPlayers ? withPlayers( result.data ) : result.data };
 	}, [ rows, view, fields, perPlayer, showPlayers, showUnentered ] );
 
+	// Fewer rows (the toggle, another product, a filter) can leave the view on a
+	// page that no longer exists; DataViews then shows nothing and no pager.
+	useEffect( () => {
+		const last = Math.max( 1, paginationInfo.totalPages || 1 );
+		if ( view.page > last ) {
+			setView( ( current ) => ( { ...current, page: last } ) );
+		}
+	}, [ paginationInfo.totalPages, view.page ] );
+
 	const productOptions = [
 		{ value: 0, label: __( '— Select a product —', 'team-membership-ledger' ) },
 		...products.map( ( p ) => ( { value: p.id, label: p.name } ) ),
@@ -223,6 +274,7 @@ export default function App() {
 			) : isLoading ? (
 				<Spinner />
 			) : (
+				<TableBoundary>
 				<DataViews
 					data={ shownData }
 					fields={ fields }
@@ -235,6 +287,7 @@ export default function App() {
 					isLoading={ isLoading }
 					actions={ actions }
 				/>
+				</TableBoundary>
 			) }
 			{ paymentItem && (
 				<Modal
@@ -246,7 +299,9 @@ export default function App() {
 						productId={ productId }
 						onRowUpdated={ handleRowUpdated }
 						onNotice={ setNotice }
-						closeModal={ () => setPaymentItem( null ) }
+						// Closes this row's modal only. A slow reply for a modal that
+						// was dismissed must not shut the one opened since.
+						closeModal={ () => setPaymentItem( ( current ) => ( current === paymentItem ? null : current ) ) }
 					/>
 				</Modal>
 			) }

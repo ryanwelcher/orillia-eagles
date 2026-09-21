@@ -14,11 +14,19 @@ final class OrderRepository {
 	public const PLAYER_META      = '_tml_player_id';
 	public const UNIT_PRICE_META  = '_tml_unit_price';
 
-	/** Statuses that mean the charge was voided in WooCommerce. */
+	/**
+	 * Statuses that mean the charge was voided in WooCommerce. A voided order is
+	 * not a charge: the Ledger leaves it out, so the row reads "Not entered" and
+	 * nothing is owed on it. Season Rollover still counts it, so that a charge
+	 * someone cancelled on purpose is not raised again behind their back.
+	 */
 	public const VOID_STATUSES = array( 'cancelled', 'refunded', 'failed' );
 
+	/** Set while this class changes a status itself, so onStatusChanged() stays out of it. */
+	private static bool $changing_status = false;
+
 	/** @return array<int,array{customer_id:int,player_id:int,order_id:int,status:string,qty:int,line_total:float,amount_paid:float,date:?string}> */
-	public function productRecords( int $product_id, int $customer_id = 0 ): array {
+	public function productRecords( int $product_id, int $customer_id = 0, bool $include_void = false ): array {
 		// One member's actions only need that member's orders; the full ledger
 		// (customer 0) reads them all.
 		$orders = $this->orders( $customer_id ? array( 'customer_id' => $customer_id ) : array() );
@@ -30,6 +38,9 @@ final class OrderRepository {
 				continue;
 			}
 			$status = $order->get_status(); // slug without wc- prefix
+			if ( ! $include_void && in_array( $status, self::VOID_STATUSES, true ) ) {
+				continue;
+			}
 			$date   = $order->get_date_created() ? $order->get_date_created()->date( 'Y-m-d H:i:s' ) : null;
 			// 0 = a member-level charge; otherwise the player this charge is for.
 			$player_id = (int) $order->get_meta( self::PLAYER_META );
@@ -69,10 +80,13 @@ final class OrderRepository {
 		return $records;
 	}
 
-	/** @return string[] "member:player" keys that already have an order for the product. */
+	/**
+	 * @return string[] "member:player" keys Season Rollover should leave alone:
+	 * those with an order for the product, voided ones included.
+	 */
 	public function existingBillableKeys( int $product_id ): array {
 		$keys = array();
-		foreach ( $this->productRecords( $product_id ) as $r ) {
+		foreach ( $this->productRecords( $product_id, 0, true ) as $r ) {
 			$keys[ Billables::key( $r['customer_id'], $r['player_id'] ) ] = true;
 		}
 		return array_map( 'strval', array_keys( $keys ) );
@@ -95,12 +109,22 @@ final class OrderRepository {
 	 * show those, so without this check a new charge would bill them again.
 	 */
 	public function hasChargeInOtherMode( int $product_id, int $customer_id, bool $per_player ): bool {
-		foreach ( $this->chargedPlayerIds( $product_id, $customer_id ) as $player_id ) {
+		return self::inOtherMode( $this->chargedPlayerIds( $product_id, $customer_id ), $per_player );
+	}
+
+	/** @param int[] $charged_player_ids as returned by chargedPlayerIds(). */
+	public static function inOtherMode( array $charged_player_ids, bool $per_player ): bool {
+		foreach ( $charged_player_ids as $player_id ) {
 			if ( $per_player ? 0 === $player_id : 0 !== $player_id ) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/** Whether any live charge exists for the product, under any member. */
+	public function hasLiveCharges( int $product_id ): bool {
+		return (bool) $this->productRecords( $product_id );
 	}
 
 	/** Whether this player has a charge under this member that is not settled yet. */
@@ -113,10 +137,16 @@ final class OrderRepository {
 		return false;
 	}
 
-	/** @return int[] the player id (0 = member-level) of each of the customer's orders for the product. */
-	public function chargedPlayerIds( int $product_id, int $customer_id ): array {
+	/**
+	 * @return int[] the player id (0 = member-level) of each of the customer's
+	 * charges for the product. Voided orders only count when asked for.
+	 */
+	public function chargedPlayerIds( int $product_id, int $customer_id, bool $include_void = false ): array {
 		$ids = array();
 		foreach ( $this->customerOrders( $customer_id ) as $order ) {
+			if ( ! $include_void && in_array( $order->get_status(), self::VOID_STATUSES, true ) ) {
+				continue;
+			}
 			foreach ( $order->get_items() as $item ) {
 				if ( (int) $item->get_product_id() === $product_id ) {
 					$ids[] = (int) $order->get_meta( self::PLAYER_META );
@@ -136,14 +166,15 @@ final class OrderRepository {
 		if ( ! $player_id ) {
 			return false;
 		}
-		// The meta query narrows the read where the order store supports it; the
-		// checks below hold either way.
-		$where = array( 'meta_query' => array( array( 'key' => self::PLAYER_META, 'value' => (string) $player_id ) ) ); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+		// meta_key/meta_value narrows the read on both order stores (the posts
+		// store ignores meta_query); the checks below hold either way. An order
+		// with customer 0 counts: WooCommerce resets the customer when the user is
+		// deleted, and that player was still charged.
+		$where = array( 'meta_key' => self::PLAYER_META, 'meta_value' => (string) $player_id ); // phpcs:ignore WordPress.DB.SlowDBQuery
 		foreach ( $this->orders( $where ) as $order ) {
 			if (
 				(int) $order->get_meta( self::PLAYER_META ) !== $player_id
 				|| (int) $order->get_customer_id() === $customer_id
-				|| ! $order->get_customer_id()
 				|| in_array( $order->get_status(), self::VOID_STATUSES, true )
 			) {
 				continue;
@@ -203,7 +234,6 @@ final class OrderRepository {
 			if ( is_wp_error( $order ) ) {
 				throw new \RuntimeException( $order->get_error_message() );
 			}
-			$order->add_product( $product, max( 1, $qty ) );
 			$order->set_created_via( 'team-membership-ledger' );
 			$note = __( 'Season rollover charge.', 'team-membership-ledger' );
 			if ( $player_id ) {
@@ -211,8 +241,18 @@ final class OrderRepository {
 				/* translators: %s: player name */
 				$note = sprintf( __( 'Season rollover charge for %s.', 'team-membership-ledger' ), get_post_field( 'post_title', $player_id, 'raw' ) );
 			}
+			// Save the player before the product goes on. A request killed part way
+			// then leaves an order with no items, which nothing counts, rather than
+			// a player charge that reads as a member-level one.
+			$order->save();
+			$order->add_product( $product, max( 1, $qty ) );
 			$order->calculate_totals();
-			$order->update_status( OrderStatus::SLUG, $note );
+			self::$changing_status = true;
+			try {
+				$order->update_status( OrderStatus::SLUG, $note );
+			} finally {
+				self::$changing_status = false;
+			}
 		} catch ( \RuntimeException $e ) {
 			throw $e;
 		} catch ( \Exception $e ) {
@@ -221,8 +261,23 @@ final class OrderRepository {
 		return (int) $order->get_id();
 	}
 
-	/** Throw when the order was voided in WooCommerce, so the Ledger never revives it. */
-	public function assertNotVoid( \WC_Order $order ): void {
+	/** Remove a charge this request created, when the action it was created for is refused. */
+	public function deleteOrder( int $order_id ): void {
+		$order = wc_get_order( $order_id );
+		if ( $order ) {
+			$order->delete( true );
+		}
+	}
+
+	/**
+	 * Throw unless the order is a live charge. Allows the registered statuses
+	 * only, so a trashed order is refused along with the voided ones and an
+	 * out-of-date screen can never bring either back.
+	 */
+	public function assertLive( \WC_Order $order ): void {
+		if ( ! wc_is_order_status( 'wc-' . $order->get_status() ) ) {
+			throw new \RuntimeException( __( 'That order was removed in WooCommerce; reload the Ledger.', 'team-membership-ledger' ) );
+		}
 		if ( in_array( $order->get_status(), self::VOID_STATUSES, true ) ) {
 			/* translators: %s: order status label */
 			throw new \RuntimeException( sprintf( __( 'That order is %s in WooCommerce; manage it there.', 'team-membership-ledger' ), wc_get_order_status_name( $order->get_status() ) ) );
@@ -253,6 +308,16 @@ final class OrderRepository {
 	 * @throws \RuntimeException When the order is gone or the increment overpays.
 	 */
 	public function assertCanPay( int $order_id, float $increment ): void {
+		$this->payable( $order_id, $increment );
+	}
+
+	/**
+	 * Read the order fresh and work out what the increment does to it.
+	 *
+	 * @return array{0:\WC_Order,1:array{new_paid:float,should_complete:bool}}
+	 * @throws \RuntimeException When the order is gone or the increment overpays.
+	 */
+	private function payable( int $order_id, float $increment ): array {
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
 			throw new \RuntimeException( __( 'A charge for this member no longer exists; reload the Ledger and try again.', 'team-membership-ledger' ) );
@@ -260,26 +325,16 @@ final class OrderRepository {
 		$total   = (float) $order->get_total();
 		$current = PaymentCalculator::paidSoFar( $order->get_status(), (float) $order->get_meta( self::AMOUNT_PAID_META ), $total );
 		try {
-			PaymentCalculator::apply( $current, $increment, $total );
+			return array( $order, PaymentCalculator::apply( $current, $increment, $total ) );
 		} catch ( \RuntimeException $e ) {
 			throw new \RuntimeException( self::overpaymentMessage( PaymentCalculator::owed( $current, $total ) ) );
 		}
 	}
 
 	public function addPayment( int $order_id, float $increment ): void {
-		$order = wc_get_order( $order_id );
-		if ( ! $order ) {
-			throw new \RuntimeException( 'Order not found: ' . $order_id );
-		}
-		$total   = (float) $order->get_total();
-		$current = PaymentCalculator::paidSoFar( $order->get_status(), (float) $order->get_meta( self::AMOUNT_PAID_META ), $total );
-		// Re-read here, not just in the controller, so a stale or concurrent
+		// Read again here, not just in the controller, so a stale or concurrent
 		// request can't push the paid amount past the total.
-		try {
-			$result = PaymentCalculator::apply( $current, $increment, $total );
-		} catch ( \RuntimeException $e ) {
-			throw new \RuntimeException( self::overpaymentMessage( PaymentCalculator::owed( $current, $total ) ) );
-		}
+		list( $order, $result ) = $this->payable( $order_id, $increment );
 
 		$order->update_meta_data( self::AMOUNT_PAID_META, $result['new_paid'] );
 		$order->save();
@@ -287,6 +342,31 @@ final class OrderRepository {
 		if ( $result['should_complete'] ) {
 			$order->update_status( 'completed', __( 'Payment completed in Membership Ledger.', 'team-membership-ledger' ) );
 		}
+	}
+
+	/**
+	 * When an order is reopened in WooCommerce (the way to reverse a payment),
+	 * clear what the Ledger had recorded. Otherwise the order reads "Owes" with a
+	 * balance of 0 and every Add payment is refused as an overpayment.
+	 *
+	 * Hooked to woocommerce_order_status_changed.
+	 */
+	public static function onStatusChanged( $order_id, $from, $to, $order ): void {
+		if ( self::$changing_status || 'completed' !== $from || ! $order instanceof \WC_Order ) {
+			return;
+		}
+		if ( in_array( $to, self::VOID_STATUSES, true ) || '' === (string) $order->get_meta( self::AMOUNT_PAID_META ) ) {
+			return;
+		}
+		$order->add_order_note(
+			sprintf(
+				/* translators: %s: amount that had been recorded as paid */
+				__( 'Reopened in WooCommerce: the %s recorded as paid in the Membership Ledger was cleared. Record what was actually received with Add payment.', 'team-membership-ledger' ),
+				html_entity_decode( wp_strip_all_tags( wc_price( (float) $order->get_meta( self::AMOUNT_PAID_META ) ) ) )
+			)
+		);
+		$order->update_meta_data( self::AMOUNT_PAID_META, 0 );
+		$order->save_meta_data();
 	}
 
 	/**
@@ -319,13 +399,17 @@ final class OrderRepository {
 		if ( null !== $saved_unit && abs( round( $saved_unit * $old_qty, 2 ) - $line_total ) > 0.005 ) {
 			$saved_unit = null;
 		}
-		$plan = QuantityChange::plan( $old_qty, $line_total, $qty, $paid, $saved_unit );
+		$plan = QuantityChange::plan( $old_qty, $line_total, $qty, $saved_unit );
 
 		$item->update_meta_data( self::UNIT_PRICE_META, $plan['unit_price'] );
 		$item->set_quantity( $qty );
 		$item->set_subtotal( $plan['new_total'] );
 		$item->set_total( $plan['new_total'] );
 		$item->save();
+		// Keeps stock in step for a stock-managed product (event tickets).
+		if ( function_exists( 'wc_maybe_adjust_line_item_product_stock' ) ) {
+			wc_maybe_adjust_line_item_product_stock( $item );
+		}
 		$order->calculate_totals();
 		// Keep what was already paid, including when a Completed order reopens.
 		$order->update_meta_data( self::AMOUNT_PAID_META, $paid );
@@ -339,11 +423,17 @@ final class OrderRepository {
 		// status it has (Requested, On hold, ...) rather than being forced to one.
 		// Paid is judged against the recalculated order total, the figure every
 		// payment is checked against, not the line (they differ with tax or fees).
-		$is_paid = round( $paid, 2 ) >= round( (float) $order->get_total(), 2 );
-		if ( $is_paid && 'completed' !== $order->get_status() ) {
-			$order->update_status( 'completed' );
-		} elseif ( ! $is_paid && 'completed' === $order->get_status() ) {
-			$order->update_status( OrderStatus::SLUG );
+		$is_paid = QuantityChange::isPaid( $paid, (float) $order->get_total() );
+		// This reopening keeps what was paid, unlike one made in WooCommerce.
+		self::$changing_status = true;
+		try {
+			if ( $is_paid && 'completed' !== $order->get_status() ) {
+				$order->update_status( 'completed' );
+			} elseif ( ! $is_paid && 'completed' === $order->get_status() ) {
+				$order->update_status( OrderStatus::SLUG );
+			}
+		} finally {
+			self::$changing_status = false;
 		}
 	}
 

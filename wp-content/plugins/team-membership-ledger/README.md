@@ -18,11 +18,15 @@ money collected offline. No public storefront, no member logins.
    (Dues / Banquets / Game Tickets). Use one product per season, e.g.
    "2027 Membership Dues". Tick **Charge per player** (Product data → General)
    on products billed per player, such as dues. Leave it off for products billed
-   per member, such as banquet tickets.
+   per member, such as banquet tickets. Decide this before you create charges:
+   once a product has charges, the setting is locked, because changing it would
+   drop those charges out of the Ledger. Use a new product instead.
    **Quantity:** in the Ledger you can edit the quantity (Qty) of charges for
    products where members may order more than one, such as event tickets. Tick
    **Sold individually** (Product data → Inventory) on products that must stay
-   at 1. "Charge per player" products are always 1. A new quantity uses the
+   at 1. "Charge per player" products are always 1. Type the quantity and press
+   **Enter** to save it; leaving the box without Enter puts it back. A new
+   quantity uses the
    charge's original unit price, and the order becomes Paid or Owes based on
    what has been paid so far.
 5. **Treasurer exports** (optional, free) — install *Advanced Order Export for
@@ -48,7 +52,8 @@ money collected offline. No public storefront, no member logins.
     WooCommerce (inline actions are hidden to avoid targeting the wrong order).
 - **Membership → Season Rollover** — pick a product and click Generate to raise
   a "Requested" (unpaid) order for every active member who doesn't already have
-  one. Safe to re-run.
+  one. Safe to re-run. If the notice says a member was busy and was not charged,
+  run it again in a couple of minutes.
 
 ## Per-player products
 
@@ -66,16 +71,16 @@ money collected offline. No public storefront, no member logins.
   pays off one player at a time, in alphabetical order, and cannot be more than
   the member owes. **Mark paid** marks every player paid. Both first create the
   charge for any linked player who doesn't have one yet.
-- If you turn on **Charge per player** after member-level orders already exist
-  (or turn it off after player orders exist), the Ledger does not show those
-  older orders. Manage them in WooCommerce. A member who has one is not charged
-  again for that product: Season Rollover skips them, and the Ledger refuses to
-  create a new charge for them.
+- **Charge per player** cannot be changed on a product that already has charges.
+  If a product does have charges from the other setting (made before this
+  check existed), the Ledger does not show them, and a member who has one is not
+  charged again for that product. Manage those orders in WooCommerce.
 - To move a player to a different member, unlink them and then link them again.
   A player with an unpaid charge cannot be unlinked, because the charge and what
   was paid toward it would drop out of the Ledger. Settle or cancel that order
-  first. A paid charge stays with the member who paid it, and the player is not
-  charged again for that product under the new member.
+  first. A paid charge stays with the member who paid it: for that product the
+  player is not listed or charged again under the new member. For the same
+  reason a player with an unpaid charge cannot be moved to the Trash.
 
 ## Recording payments (details)
 
@@ -83,13 +88,19 @@ money collected offline. No public storefront, no member logins.
 - The Ledger's **Add payment** stores the running total in the order meta
   `_tml_amount_paid` and auto-completes the order when it reaches the total.
 - To reverse a payment or mark an order back to unpaid, edit the order in
-  **WooCommerce → Orders**.
+  **WooCommerce → Orders**. Setting a Completed order back to an open status
+  clears the amount the Ledger had recorded as paid (an order note says how
+  much), so record what was actually received with **Add payment**.
 - If two people act on the same member at the same time, the second one is
   refused rather than charging twice or losing a payment. The same applies to a
   Ledger screen that is out of date: it will not create a charge that already
   exists. Reload the Ledger and try again.
-- An order that is Cancelled, Refunded or Failed in WooCommerce still shows as a
-  row, but the Ledger will not take a payment on it or change its quantity.
+- An order that is Cancelled, Refunded or Failed in WooCommerce is not a charge.
+  The Ledger leaves it out, so the member or player reads *Not entered* and owes
+  nothing on it. Season Rollover does not raise it again on its own; create the
+  charge from the Ledger row if they should be charged after all.
+- If **Add payment** is refused on a member with no charge yet (the amount is too
+  high, say), the charge that was created for it is removed again.
 - A charge's amount is its order total, so tax or a fee added to the order is
   part of what the member owes and what a payment is checked against.
 

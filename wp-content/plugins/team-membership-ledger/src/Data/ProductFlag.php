@@ -28,7 +28,16 @@ final class ProductFlag {
 
 	/** WooCommerce has already checked the product-save nonce and capability here. */
 	public static function save( \WC_Product $product ): void {
-		$product->update_meta_data( self::META, isset( $_POST[ self::META ] ) ? 'yes' : 'no' ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$wanted = isset( $_POST[ self::META ] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		// Charges are matched to members or to players by this setting. Changing it
+		// once charges exist would drop every one of them, and what was paid toward
+		// them, out of the Ledger, so refuse and say why.
+		if ( $wanted !== self::isPerPlayerProduct( $product ) && $product->get_id() && ( new OrderRepository() )->hasLiveCharges( (int) $product->get_id() ) ) {
+			// Only there on the product edit screen, which is where this runs.
+			class_exists( '\WC_Admin_Meta_Boxes' ) && \WC_Admin_Meta_Boxes::add_error( __( '"Charge per player" was not changed: this product already has charges in the Membership Ledger, and changing it would hide them. Create a new product for the new way of charging.', 'team-membership-ledger' ) );
+			return;
+		}
+		$product->update_meta_data( self::META, $wanted ? 'yes' : 'no' );
 	}
 
 	public static function isPerPlayer( int $product_id ): bool {
