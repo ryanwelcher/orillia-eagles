@@ -19,8 +19,17 @@ defined( 'ABSPATH' ) || exit;
  */
 final class ActionLock {
 
-	/** Long enough for a slow order write, short enough to clear a request that died. */
-	private const TIMEOUT = 30;
+	/**
+	 * How long before a held lock counts as abandoned.
+	 *
+	 * Deliberately far longer than any real request: a member payment re-reads
+	 * the order store several times and can create an order per player, and if
+	 * that overran the timeout, the next request would take the lock and write
+	 * alongside it — the very thing this class exists to prevent. The cost of
+	 * erring long is that a request killed mid-write blocks that one member for
+	 * a couple of minutes.
+	 */
+	private const TIMEOUT = 120;
 
 	private const PREFIX = 'tml_lock_';
 
