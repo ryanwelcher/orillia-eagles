@@ -16,19 +16,33 @@ final class PlayerRepository {
 
 	/**
 	 * Only players are billed. Coaches share the post type, and the taxonomy can
-	 * gain roles later, so anything tagged with another role is left out. A post
+	 * gain roles later, so a post tagged with some other role is left out. A post
 	 * with no role yet is still a player, so a new roster entry is never silently
-	 * left off the ledger.
+	 * left off the ledger, and a post tagged Player as well as another role is
+	 * billed — the Player tag decides.
+	 *
+	 * `roster_role` is hierarchical, and allPlayers() matches child terms the way
+	 * WP_Tax_Query does, so a role nested under Player (a "Goalie", say) counts
+	 * here too. Otherwise a roster entry could be listed and then refused a link.
 	 */
 	public static function isBillable( int $post_id ): bool {
 		if ( ! taxonomy_exists( self::ROLE_TAXONOMY ) ) {
 			return true;
 		}
-		$roles = wp_get_object_terms( $post_id, self::ROLE_TAXONOMY, array( 'fields' => 'slugs' ) );
+		$roles = wp_get_object_terms( $post_id, self::ROLE_TAXONOMY );
 		if ( is_wp_error( $roles ) || ! $roles ) {
 			return true;
 		}
-		return in_array( self::PLAYER_ROLE, $roles, true );
+		$player = get_term_by( 'slug', self::PLAYER_ROLE, self::ROLE_TAXONOMY );
+		foreach ( $roles as $role ) {
+			if ( self::PLAYER_ROLE === $role->slug ) {
+				return true;
+			}
+			if ( $player && term_is_ancestor_of( $player->term_id, $role->term_id, self::ROLE_TAXONOMY ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** @return array<int,array{id:int,name:string,member_id:int}> */

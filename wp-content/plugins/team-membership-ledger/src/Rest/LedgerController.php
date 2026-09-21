@@ -269,8 +269,25 @@ final class LedgerController {
 					} catch ( \RuntimeException $e ) {
 						throw new \RuntimeException( self::overpayment_message( PaymentAllocation::owed( $balances ) ) );
 					}
+					// Each order is a separate save with no rollback between them, so
+					// check every one before writing any.
 					foreach ( $plan as $order_id => $increment ) {
-						$orders->addPayment( $order_id, $increment );
+						$orders->assertCanPay( $order_id, $increment );
+					}
+					$applied = 0;
+					foreach ( $plan as $order_id => $increment ) {
+						try {
+							$orders->addPayment( $order_id, $increment );
+						} catch ( \RuntimeException $e ) {
+							// Never report a plain failure once money is recorded: a
+							// retry would pay the earlier charges a second time.
+							throw new \RuntimeException(
+								$applied
+									? __( 'Part of that payment was recorded before a charge could not be updated. Reload the Ledger to see what was applied.', 'team-membership-ledger' )
+									: $e->getMessage()
+							);
+						}
+						$applied++;
 					}
 
 					return self::member_response( $product_id, $member_id );

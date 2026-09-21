@@ -46,7 +46,8 @@ final class OrderRepository {
 			// 0 = a member-level charge; otherwise the player this charge is for.
 			$player_id = (int) $order->get_meta( self::PLAYER_META );
 
-			foreach ( $order->get_items() as $item ) {
+			$items = $order->get_items();
+			foreach ( $items as $item ) {
 				if ( (int) $item->get_product_id() !== $product_id ) {
 					continue;
 				}
@@ -56,9 +57,11 @@ final class OrderRepository {
 				// products (or repeat a product across line items) would misattribute the
 				// partial payment. The plugin's own Rollover always creates single-product
 				// orders, matching the per-season product-per-order model in the README.
-				// Completed counts as paid in full, but a stored payment that is
-				// higher wins, so lowering a paid order's quantity doesn't lose it.
-				$paid       = PaymentCalculator::paidSoFar( $status, (float) $order->get_meta( self::AMOUNT_PAID_META ), $line_total );
+				// Completed counts as paid in full, and a higher stored payment wins
+				// so lowering a paid order's quantity doesn't lose it — but only on a
+				// single-item order, because the stored amount is order-wide and
+				// would otherwise be credited to one line of several.
+				$paid       = PaymentCalculator::linePaid( $status, (float) $order->get_meta( self::AMOUNT_PAID_META ), $line_total, 1 === count( $items ) );
 
 				$records[] = array(
 					'customer_id' => $customer_id,
@@ -146,6 +149,24 @@ final class OrderRepository {
 		$order->update_meta_data( self::AMOUNT_PAID_META, (float) $order->get_total() );
 		$order->save();
 		$order->update_status( 'completed', __( 'Marked paid in Membership Ledger.', 'team-membership-ledger' ) );
+	}
+
+	/**
+	 * Throw unless this increment could be applied to the order right now.
+	 *
+	 * Lets a caller paying several orders check them all before writing any,
+	 * because the writes are separate order saves with no rollback between them.
+	 *
+	 * @throws \RuntimeException When the order is gone or the increment overpays.
+	 */
+	public function assertCanPay( int $order_id, float $increment ): void {
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			throw new \RuntimeException( __( 'A charge for this member no longer exists; reload the Ledger and try again.', 'team-membership-ledger' ) );
+		}
+		$total   = (float) $order->get_total();
+		$current = PaymentCalculator::paidSoFar( $order->get_status(), (float) $order->get_meta( self::AMOUNT_PAID_META ), $total );
+		PaymentCalculator::apply( $current, $increment, $total );
 	}
 
 	public function addPayment( int $order_id, float $increment ): void {
