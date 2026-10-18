@@ -4,10 +4,10 @@ Internal WooCommerce back-office for the Orillia Eagles: track who owes / who
 has paid for per-season dues and events (banquets, game tickets), including
 money collected offline. No public storefront.
 
-A member is any user account with the `_tml_member` user meta flag, whatever
-its role, so an administrator who is also a parent can be billed. New members
+A family is any user account with the `_tml_member` user meta flag, whatever
+its role, so an administrator who is also a parent can be billed. New families
 get a WooCommerce customer login, but it isn't used yet and no welcome email is
-sent. (Members used to be every `customer`-role user; existing ones are flagged
+sent. (Families used to be every `customer`-role user; existing ones are flagged
 automatically the first time the plugin loads after updating.)
 
 ## Requirements & setup
@@ -24,11 +24,11 @@ automatically the first time the plugin loads after updating.)
    (Dues / Banquets / Game Tickets). Use one product per season, e.g.
    "2027 Membership Dues". Tick **Charge per player** (Product data → General)
    on products billed per player, such as dues. Leave it off for products billed
-   per member, such as banquet tickets. Decide this before you create charges:
+   per family, such as banquet tickets. Decide this before you create charges:
    once a product has charges, the setting is locked, because changing it would
    drop those charges out of the Ledger. Use a new product instead.
    **Quantity:** in the Ledger you can edit the quantity (Qty) of charges for
-   products where members may order more than one, such as event tickets. Tick
+   products where families may order more than one, such as event tickets. Tick
    **Sold individually** (Product data → Inventory) on products that must stay
    at 1. "Charge per player" products are always 1. Type the quantity and press
    **Enter** to save it; leaving the box without Enter puts it back. A new
@@ -40,56 +40,56 @@ automatically the first time the plugin loads after updating.)
 
 ## Daily use
 
-- **Membership → Roster** — add members (creates a WooCommerce customer), or
+- **Membership → Families** — add families (creates a WooCommerce customer), or
   use **Add an existing account** for someone who already has a login, such as
-  an administrator. Staff accounts show a role badge. Mark members
-  Active/Inactive. **Remove as member** clears the flag (never deletes the
-  account) and is only offered once a member has no players or orders. Players
-  not linked to anyone are listed above the table. Only Active members are charged by Season Rollover. In the
-  **Players** column, link each player (from the Players plugin) to the member
-  who pays for them. Each player has one paying member.
-- **Membership → Ledger** — pick a product to see each active member's status
-  (Paid / Owes), and record payments inline. Members with no charge yet
-  (*Not entered*) are hidden. Turn on **Show members without charges** to list
+  an administrator. Staff accounts show a role badge. Mark families
+  Active/Inactive. **Remove as family** clears the flag (never deletes the
+  account) and is only offered once a family has no players or orders. Players
+  not linked to anyone are listed above the table. Only Active families are charged by Create Charges. In the
+  **Players** column, link each player (from the Players plugin) to the family
+  who pays for them. Each player has one paying family.
+- **Membership → Ledger** — pick a product to see each active family's status
+  (Paid / Owes), and record payments inline. Families with no charge yet
+  (*Not entered*) are hidden. Turn on **Show families without charges** to list
   them, so you can create a charge from the row:
-  - **Mark Paid** — marks that member's order Completed (paid in full). On a
-    "Not entered" member it creates the charge first, then marks it paid.
+  - **Mark Paid** — marks that family's order Completed (paid in full). On a
+    "Not entered" family it creates the charge first, then marks it paid.
   - **Add payment** — type the amount just received and click Add; it accrues
     toward the total (e.g. $50 then $30 on a $200 charge → "$80 of $200"). When
     the running total reaches the order total the order auto-completes. On a
-    "Not entered" member it creates the charge first, then records the payment.
-  - A member with multiple orders for one product shows a note to manage it in
+    "Not entered" family it creates the charge first, then records the payment.
+  - A family with multiple orders for one product shows a note to manage it in
     WooCommerce (inline actions are hidden to avoid targeting the wrong order).
-- **Membership → Season Rollover** — pick a product and click Generate to raise
-  a "Requested" (unpaid) order for every active member who doesn't already have
-  one. Safe to re-run. If the notice says a member was busy and was not charged,
+- **Membership → Create Charges** — pick a product and click **Create charges** to raise
+  a "Requested" (unpaid) order for every active family that doesn't already have
+  one. Safe to re-run. If the notice says a family was busy and was not charged,
   run it again in a couple of minutes.
 
 ## Per-player products
 
-- For a **Charge per player** product, Season Rollover creates one order for
-  each player linked to an active member. The order is in the member's name, and
-  the player is saved in the order meta `_tml_player_id`. Members with no linked
+- For a **Charge per player** product, Create Charges creates one order for
+  each player linked to an active family. The order is in the family's name, and
+  the player is saved in the order meta `_tml_player_id`. Families with no linked
   players are not charged for that product. Only roster entries tagged **Player**
   (or not tagged with a roster role yet) are billed — coaches, and any roster
   role added later, are skipped.
-- In the Ledger, each member row shows the full amount for all of their players
+- In the Ledger, each family row shows the full amount for all of their players
   (total, paid, balance). Status is *Paid* only when every player is paid. Use
   the **Show linked players** toggle to show or hide the player rows under each
-  member. Each player row shows its own status and balance.
-- Record payments on the **member row**, not the player rows. **Add payment**
+  family. Each player row shows its own status and balance.
+- Record payments on the **family row**, not the player rows. **Add payment**
   pays off one player at a time, in alphabetical order, and cannot be more than
-  the member owes. **Mark paid** marks every player paid. Both first create the
+  the family owes. **Mark paid** marks every player paid. Both first create the
   charge for any linked player who doesn't have one yet.
 - **Charge per player** cannot be changed on a product that already has charges.
   If a product does have charges from the other setting (made before this
-  check existed), the Ledger does not show them, and a member who has one is not
+  check existed), the Ledger does not show them, and a family that has one is not
   charged again for that product. Manage those orders in WooCommerce.
-- To move a player to a different member, unlink them and then link them again.
+- To move a player to a different family, unlink them and then link them again.
   A player with an unpaid charge cannot be unlinked, because the charge and what
   was paid toward it would drop out of the Ledger. Settle or cancel that order
-  first. A paid charge stays with the member who paid it: for that product the
-  player is not listed or charged again under the new member. For the same
+  first. A paid charge stays with the family that paid it: for that product the
+  player is not listed or charged again under the new family. For the same
   reason a player with an unpaid charge cannot be moved to the Trash.
 
 ## Recording payments (details)
@@ -101,25 +101,25 @@ automatically the first time the plugin loads after updating.)
   **WooCommerce → Orders**. Setting a Completed order back to an open status
   clears the amount the Ledger had recorded as paid (an order note says how
   much), so record what was actually received with **Add payment**.
-- If two people act on the same member at the same time, the second one is
+- If two people act on the same family at the same time, the second one is
   refused rather than charging twice or losing a payment. The same applies to a
   Ledger screen that is out of date: it will not create a charge that already
   exists. Reload the Ledger and try again.
 - An order that is Cancelled, Refunded or Failed in WooCommerce is not a charge.
-  The Ledger leaves it out, so the member or player reads *Not entered* and owes
-  nothing on it. Season Rollover does not raise it again on its own; create the
+  The Ledger leaves it out, so the family or player reads *Not entered* and owes
+  nothing on it. Create Charges does not raise it again on its own; create the
   charge from the Ledger row if they should be charged after all.
-- If **Add payment** is refused on a member with no charge yet (the amount is too
+- If **Add payment** is refused on a family with no charge yet (the amount is too
   high, say), the charge that was created for it is removed again.
 - A charge's amount is its order total, so tax or a fee added to the order is
-  part of what the member owes and what a payment is checked against.
+  part of what the family owes and what a payment is checked against.
 
 ## Local development note (SQLite)
 
 If you run this plugin on a local WordPress Studio site backed by SQLite
 (rather than MySQL), WordPress may log a harmless database error of the form
 `SQLSTATE[HY000]: General error: 20 datatype mismatch` when the Ledger or
-Season Rollover screens load.
+Create Charges screens load.
 
 The cause is WooCommerce core's own refund-cache priming, which internally
 runs an order query with `limit => -1`; under HPOS that becomes an unsigned

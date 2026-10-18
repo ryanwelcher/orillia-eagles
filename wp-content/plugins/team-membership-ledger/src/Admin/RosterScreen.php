@@ -94,19 +94,19 @@ final class RosterScreen {
 		delete_transient( 'tml_roster_error' );
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Members', 'team-membership-ledger' ); ?></h1>
+			<h1><?php esc_html_e( 'Families', 'team-membership-ledger' ); ?></h1>
 			<?php if ( $err ) : ?>
 				<div class="notice notice-error"><p><?php echo esc_html( $err ); ?></p></div>
 			<?php endif; ?>
 
-			<h2><?php esc_html_e( 'Add member', 'team-membership-ledger' ); ?></h2>
+			<h2><?php esc_html_e( 'Add family', 'team-membership-ledger' ); ?></h2>
 			<form method="post">
 				<?php self::nonce_field(); ?>
 				<input type="hidden" name="tml_roster_action" value="create" />
 				<input type="text" name="first_name" placeholder="<?php esc_attr_e( 'First name', 'team-membership-ledger' ); ?>" required />
 				<input type="text" name="last_name" placeholder="<?php esc_attr_e( 'Last name', 'team-membership-ledger' ); ?>" required />
 				<input type="email" name="email" placeholder="<?php esc_attr_e( 'Email', 'team-membership-ledger' ); ?>" required />
-				<?php submit_button( __( 'Add member', 'team-membership-ledger' ), 'primary', 'submit', false ); ?>
+				<?php submit_button( __( 'Add family', 'team-membership-ledger' ), 'primary', 'submit', false ); ?>
 			</form>
 			<p class="description"><?php esc_html_e( 'Creates a WooCommerce customer login. No email is sent.', 'team-membership-ledger' ); ?></p>
 
@@ -126,13 +126,13 @@ final class RosterScreen {
 							</option>
 						<?php endforeach; ?>
 					</select>
-					<button class="button"><?php esc_html_e( 'Add as member', 'team-membership-ledger' ); ?></button>
+					<button class="button"><?php esc_html_e( 'Add as family', 'team-membership-ledger' ); ?></button>
 				</form>
 			<?php endif; ?>
 
 			<?php if ( $orphaned ) : ?>
-				<h2><?php esc_html_e( 'Players linked to a missing member', 'team-membership-ledger' ); ?></h2>
-				<p><?php esc_html_e( 'These players are linked to a user who was deleted or is no longer a member, so they are not being charged. Unlink them, then link them to a current member.', 'team-membership-ledger' ); ?></p>
+				<h2><?php esc_html_e( 'Players linked to a missing family', 'team-membership-ledger' ); ?></h2>
+				<p><?php esc_html_e( 'These players are linked to a user who was deleted or is no longer set up as a family, so they are not being charged. Unlink them, then link them to a current family.', 'team-membership-ledger' ); ?></p>
 				<?php foreach ( $orphaned as $p ) : ?>
 					<form method="post" style="margin:0 0 4px">
 						<?php self::nonce_field(); ?>
@@ -147,7 +147,7 @@ final class RosterScreen {
 				<?php endforeach; ?>
 			<?php endif; ?>
 
-			<h2><?php esc_html_e( 'Current members', 'team-membership-ledger' ); ?></h2>
+			<h2><?php esc_html_e( 'Current families', 'team-membership-ledger' ); ?></h2>
 			<?php if ( $unlinked ) : ?>
 				<p>
 					<?php
@@ -223,7 +223,7 @@ final class RosterScreen {
 									<?php self::nonce_field(); ?>
 									<input type="hidden" name="tml_roster_action" value="remove" />
 									<input type="hidden" name="user_id" value="<?php echo esc_attr( $m['id'] ); ?>" />
-									<button class="button-link"><?php esc_html_e( 'Remove as member (keeps the account)', 'team-membership-ledger' ); ?></button>
+									<button class="button-link"><?php esc_html_e( 'Remove as family (keeps the account)', 'team-membership-ledger' ); ?></button>
 								</form>
 							<?php endif; ?>
 						</td>

@@ -153,21 +153,21 @@ final class PlayerRepository {
 			throw new \RuntimeException( __( 'That player could not be found.', 'team-membership-ledger' ) );
 		}
 		if ( ! self::isBillable( $player_id ) ) {
-			throw new \RuntimeException( __( 'Only players can be linked to a member.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'Only players can be linked to a family.', 'team-membership-ledger' ) );
 		}
 		if ( ! get_userdata( $member_id ) ) {
-			throw new \RuntimeException( __( 'That member could not be found.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'That family could not be found.', 'team-membership-ledger' ) );
 		}
 		// The Members list only manages customers, so a link to any other user
 		// would never show there and never be billed.
 		if ( ! ( new RosterRepository() )->isMember( $member_id ) ) {
-			throw new \RuntimeException( __( 'Players can only be linked to a member from the Members list.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'Players can only be linked to a family from the Families list.', 'team-membership-ledger' ) );
 		}
 		// Moving a player is unlink, then link. A link over an existing one is a
 		// stale screen, and would skip the unpaid-charge check in unlink().
 		$current = (int) get_post_meta( $player_id, self::MEMBER_META, true );
 		if ( $current && $current !== $member_id && ( new RosterRepository() )->isMember( $current ) ) {
-			throw new \RuntimeException( __( 'That player is already linked to another member. Unlink them first.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'That player is already linked to another family. Unlink them first.', 'team-membership-ledger' ) );
 		}
 		update_post_meta( $player_id, self::MEMBER_META, $member_id );
 	}
@@ -184,7 +184,7 @@ final class PlayerRepository {
 		// who is no longer a member can always be cleared.
 		$member_id = (int) get_post_meta( $player_id, self::MEMBER_META, true );
 		if ( $member_id && ( new RosterRepository() )->isMember( $member_id ) && ( new OrderRepository() )->hasOpenPlayerCharge( $member_id, $player_id ) ) {
-			throw new \RuntimeException( __( 'That player still has an unpaid charge under this member. Settle or cancel it in WooCommerce before unlinking.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'That player still has an unpaid charge under this family. Settle or cancel it in WooCommerce before unlinking.', 'team-membership-ledger' ) );
 		}
 		delete_post_meta( $player_id, self::MEMBER_META );
 	}

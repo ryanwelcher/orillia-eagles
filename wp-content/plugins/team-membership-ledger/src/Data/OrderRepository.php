@@ -320,7 +320,7 @@ final class OrderRepository {
 	private function payable( int $order_id, float $increment ): array {
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
-			throw new \RuntimeException( __( 'A charge for this member no longer exists; reload the Ledger and try again.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'A charge for this family no longer exists; reload the Ledger and try again.', 'team-membership-ledger' ) );
 		}
 		$total   = (float) $order->get_total();
 		$current = PaymentCalculator::paidSoFar( $order->get_status(), (float) $order->get_meta( self::AMOUNT_PAID_META ), $total );

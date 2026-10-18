@@ -21,7 +21,7 @@ final class ProductFlag {
 			array(
 				'id'          => self::META,
 				'label'       => __( 'Charge per player', 'team-membership-ledger' ),
-				'description' => __( 'Create one charge for each player linked to a member, instead of one per member.', 'team-membership-ledger' ),
+				'description' => __( 'Create one charge for each player linked to a family, instead of one per family.', 'team-membership-ledger' ),
 			)
 		);
 	}

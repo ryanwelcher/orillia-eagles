@@ -48,7 +48,7 @@ final class ActionLock {
 	public static function run( string $name, callable $write ) {
 		$handle = self::acquire( $name );
 		if ( null === $handle ) {
-			throw new \RuntimeException( __( 'Another change to this member is still saving. Try again in a moment.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'Another change to this family is still saving. Try again in a moment.', 'team-membership-ledger' ) );
 		}
 		try {
 			return $write();

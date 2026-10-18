@@ -335,11 +335,11 @@ final class LedgerController {
 	private static function member_rows_checked( int $product_id, int $member_id ): array {
 		$product = wc_get_product( $product_id );
 		if ( ! $product || ! ProductFlag::isPerPlayerProduct( $product ) ) {
-			throw new \RuntimeException( __( 'Member payments are only for "Charge per player" products.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'Family payments are only for "Charge per player" products.', 'team-membership-ledger' ) );
 		}
 		$rows = self::member_rows( $product_id, $member_id );
 		if ( ! $rows ) {
-			throw new \RuntimeException( __( 'This member has no linked players.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'This family has no linked players.', 'team-membership-ledger' ) );
 		}
 		// An older member-level charge is not shown here, so creating player
 		// charges on top of it would bill the member twice.
@@ -432,7 +432,7 @@ final class LedgerController {
 		// invisible in it. Membership, not active membership: an inactive member's
 		// outstanding charges still have to be payable.
 		if ( ! ( new RosterRepository() )->isMember( $member_id ) ) {
-			throw new \RuntimeException( __( 'That member is not in the ledger.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'That family is not in the ledger.', 'team-membership-ledger' ) );
 		}
 		if ( $order_id ) {
 			// Only act on the order behind this ledger row, not any order id sent in.
@@ -450,7 +450,7 @@ final class LedgerController {
 			// linked to now. Once the player is moved, unlinked or deleted, the
 			// order has no row, so a request naming it is out of date or crafted.
 			if ( $player_id && ! PlayerRepository::isLinkedTo( $player_id, $member_id ) ) {
-				throw new \RuntimeException( __( 'That player is no longer linked to this member; manage the order in WooCommerce.', 'team-membership-ledger' ) );
+				throw new \RuntimeException( __( 'That player is no longer linked to this family; manage the order in WooCommerce.', 'team-membership-ledger' ) );
 			}
 			// A payment and Mark paid act on the whole order, so any other item on
 			// it would be paid off too while the row shows only this line. Quantity
@@ -490,7 +490,7 @@ final class LedgerController {
 		}
 		// Only charge a player to the member they are linked to.
 		if ( $player_id && ! PlayerRepository::isLinkedTo( $player_id, $member_id ) ) {
-			throw new \RuntimeException( __( 'That player is not linked to this member.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'That player is not linked to this family.', 'team-membership-ledger' ) );
 		}
 		self::assert_not_charged_elsewhere( $product_id, $member_id, $player_id, (string) get_post_field( 'post_title', $player_id, 'raw' ) );
 		return $orders->createRequestedOrder( $member_id, $product_id, $player_id, $qty );
@@ -500,12 +500,12 @@ final class LedgerController {
 	private static function assert_not_charged_elsewhere( int $product_id, int $member_id, int $player_id, string $player_name ): void {
 		if ( ( new OrderRepository() )->playerChargedUnderAnother( $product_id, $player_id, $member_id ) ) {
 			/* translators: %s: player name */
-			throw new \RuntimeException( sprintf( __( '%s was already charged for this product under another member; manage that order in WooCommerce.', 'team-membership-ledger' ), $player_name ) );
+			throw new \RuntimeException( sprintf( __( '%s was already charged for this product under another family; manage that order in WooCommerce.', 'team-membership-ledger' ), $player_name ) );
 		}
 	}
 
 	private static function other_mode_message(): string {
-		return __( 'This member already has a charge for this product from before its "Charge per player" setting changed; manage it in WooCommerce.', 'team-membership-ledger' );
+		return __( 'This family already has a charge for this product from before its "Charge per player" setting changed; manage it in WooCommerce.', 'team-membership-ledger' );
 	}
 
 	/** Recompute and return the single affected (member, player) row after a write. */

@@ -85,7 +85,7 @@ final class RosterRepository {
 	 */
 	public function remove( int $user_id ): void {
 		if ( ! $this->canRemove( $user_id ) ) {
-			throw new \RuntimeException( __( 'Unlink this member\'s players and remove its orders first.', 'team-membership-ledger' ) );
+			throw new \RuntimeException( __( 'Unlink this family\'s players and remove its orders first.', 'team-membership-ledger' ) );
 		}
 		delete_user_meta( $user_id, self::MEMBER_META );
 		delete_user_meta( $user_id, self::ACTIVE_META );

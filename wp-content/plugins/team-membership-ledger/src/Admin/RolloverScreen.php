@@ -108,8 +108,8 @@ final class RolloverScreen {
 			$notice .= ' ' . sprintf(
 				/* translators: %d: number of members */
 				_n(
-					'%d member was busy with another change and was NOT charged. Run this again in a couple of minutes.',
-					'%d members were busy with another change and were NOT charged. Run this again in a couple of minutes.',
+					'%d family was busy with another change and was NOT charged. Run this again in a couple of minutes.',
+					'%d families were busy with another change and were NOT charged. Run this again in a couple of minutes.',
 					$busy,
 					'team-membership-ledger'
 				),
@@ -138,7 +138,7 @@ final class RolloverScreen {
 			<?php if ( $notice ) : ?>
 				<div class="notice notice-success"><p><?php echo esc_html( $notice ); ?></p></div>
 			<?php endif; ?>
-			<p><?php esc_html_e( 'Creates one "Requested" order for the chosen product against every active member who does not already have one. For "Charge per player" products, it creates one order for each player linked to an active member instead.', 'team-membership-ledger' ); ?></p>
+			<p><?php esc_html_e( 'Creates one "Requested" order for the chosen product against every active family that does not already have one. For "Charge per player" products, it creates one order for each player linked to an active family instead.', 'team-membership-ledger' ); ?></p>
 			<form method="post">
 				<?php wp_nonce_field( 'tml_rollover' ); ?>
 				<input type="hidden" name="tml_rollover_action" value="generate" />
@@ -148,7 +148,7 @@ final class RolloverScreen {
 						<option value="<?php echo esc_attr( $p['id'] ); ?>"><?php echo esc_html( $p['name'] ); ?></option>
 					<?php endforeach; ?>
 				</select>
-				<?php submit_button( __( 'Create charges for active members', 'team-membership-ledger' ), 'primary', 'submit', false ); ?>
+				<?php submit_button( __( 'Create charges for active families', 'team-membership-ledger' ), 'primary', 'submit', false ); ?>
 			</form>
 		</div>
 		<?php

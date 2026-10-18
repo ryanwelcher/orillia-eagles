@@ -21,7 +21,7 @@ export function makeFields( currency, { allowsQty = false, onSetQty } = {} ) {
 	return [
 		{
 			id: 'name',
-			label: __( 'Member', 'team-membership-ledger' ),
+			label: __( 'Family', 'team-membership-ledger' ),
 			enableGlobalSearch: true,
 			// Search runs on this value. A member summary also carries its players'
 			// names, so a player can be found without knowing who pays for them; the

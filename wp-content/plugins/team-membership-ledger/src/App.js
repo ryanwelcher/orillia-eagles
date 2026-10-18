@@ -241,7 +241,7 @@ export default function App() {
 					style={ { marginTop: '24px', marginBottom: '12px' } }
 				>
 					{ productName ||
-						__( 'Member ledger', 'team-membership-ledger' ) }
+						__( 'Family ledger', 'team-membership-ledger' ) }
 				</h2>
 			) }
 			{ productId !== 0 && (
@@ -262,7 +262,7 @@ export default function App() {
 						/>
 					) }
 					<ToggleControl
-						label={ __( 'Show members without charges', 'team-membership-ledger' ) }
+						label={ __( 'Show families without charges', 'team-membership-ledger' ) }
 						checked={ showUnentered }
 						onChange={ setShowUnentered }
 						__nextHasNoMarginBottom
