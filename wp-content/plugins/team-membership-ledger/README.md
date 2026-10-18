@@ -4,11 +4,11 @@ Internal WooCommerce back-office for the Orillia Eagles: track who owes / who
 has paid for per-season dues and events (banquets, game tickets), including
 money collected offline. No public storefront.
 
-A family is any user account with the `_tml_member` user meta flag, whatever
-its role, so an administrator who is also a parent can be billed. New families
-get a WooCommerce customer login, but it isn't used yet and no welcome email is
-sent. (Families used to be every `customer`-role user; existing ones are flagged
-automatically the first time the plugin loads after updating.)
+A family is every user with the WooCommerce `customer` role, plus any
+administrator who has been added as one (an admin who is also a parent). Admins
+keep their role; the `_tml_member` user meta flag marks the ones who pay. New
+families get a WooCommerce customer login, but it isn't used yet and no welcome
+email is sent.
 
 ## Requirements & setup
 
@@ -41,11 +41,12 @@ automatically the first time the plugin loads after updating.)
 ## Daily use
 
 - **Membership → Families** — add families (creates a WooCommerce customer), or
-  use **Add an existing account** for someone who already has a login, such as
-  an administrator. Staff accounts show a role badge. Mark families
-  Active/Inactive. **Remove as family** clears the flag (never deletes the
-  account) and is only offered once a family has no players or orders. Players
-  not linked to anyone are listed above the table. Only Active families are charged by Create Charges. In the
+  use **Add an administrator** for an admin who also pays for players. Admins
+  show a role badge. Mark families Active/Inactive. **Remove as family** is only
+  for admins: it clears the flag (never deletes the account) and is only
+  offered once they have no players or orders. Customers are always families;
+  deactivate them instead. Players not linked to anyone are listed above the
+  table. Only Active families are charged by Create Charges. In the
   **Players** column, link each player (from the Players plugin) to the family
   who pays for them. Each player has one paying family.
 - **Membership → Ledger** — pick a product to see each active family's status

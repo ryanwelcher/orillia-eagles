@@ -32,13 +32,13 @@ final class RosterScreen {
 			} catch ( \RuntimeException $e ) {
 				set_transient( 'tml_roster_error', $e->getMessage(), 30 );
 			}
-		} elseif ( 'add_existing' === $action || 'remove' === $action ) {
+		} elseif ( 'add_admin' === $action || 'remove_admin' === $action ) {
 			try {
 				$user_id = absint( $_POST['user_id'] ?? 0 );
-				if ( 'remove' === $action ) {
-					$repo->remove( $user_id );
+				if ( 'remove_admin' === $action ) {
+					$repo->removeAdmin( $user_id );
 				} else {
-					$repo->addExisting( $user_id );
+					$repo->addAdmin( $user_id );
 				}
 			} catch ( \RuntimeException $e ) {
 				set_transient( 'tml_roster_error', $e->getMessage(), 30 );
@@ -110,19 +110,19 @@ final class RosterScreen {
 			</form>
 			<p class="description"><?php esc_html_e( 'Creates a WooCommerce customer login. No email is sent.', 'team-membership-ledger' ); ?></p>
 
-			<?php $others = $repo->nonMembers(); ?>
+			<?php $others = $repo->adminCandidates(); ?>
 			<?php if ( $others ) : ?>
-				<h2><?php esc_html_e( 'Add an existing account', 'team-membership-ledger' ); ?></h2>
-				<p><?php esc_html_e( 'For someone who already has a login, like an administrator who is also a parent. Their role is not changed.', 'team-membership-ledger' ); ?></p>
+				<h2><?php esc_html_e( 'Add an administrator', 'team-membership-ledger' ); ?></h2>
+				<p><?php esc_html_e( 'For an administrator who is also a parent and pays for players. Their role is not changed.', 'team-membership-ledger' ); ?></p>
 				<form method="post">
 					<?php self::nonce_field(); ?>
-					<input type="hidden" name="tml_roster_action" value="add_existing" />
-					<label class="screen-reader-text" for="tml-add-existing"><?php esc_html_e( 'Account to add', 'team-membership-ledger' ); ?></label>
-					<select name="user_id" id="tml-add-existing" required>
-						<option value=""><?php esc_html_e( '— Select an account —', 'team-membership-ledger' ); ?></option>
+					<input type="hidden" name="tml_roster_action" value="add_admin" />
+					<label class="screen-reader-text" for="tml-add-admin"><?php esc_html_e( 'Administrator to add', 'team-membership-ledger' ); ?></label>
+					<select name="user_id" id="tml-add-admin" required>
+						<option value=""><?php esc_html_e( '— Select an administrator —', 'team-membership-ledger' ); ?></option>
 						<?php foreach ( $others as $u ) : ?>
 							<option value="<?php echo esc_attr( $u['id'] ); ?>">
-								<?php echo esc_html( $u['name'] . ' <' . $u['email'] . '>' . ( $u['role'] ? ' (' . $u['role'] . ')' : '' ) ); ?>
+								<?php echo esc_html( $u['name'] . ' <' . $u['email'] . '>' ); ?>
 							</option>
 						<?php endforeach; ?>
 					</select>
@@ -218,10 +218,10 @@ final class RosterScreen {
 									<?php echo $m['active'] ? esc_html__( 'Active ✓ (click to deactivate)', 'team-membership-ledger' ) : esc_html__( 'Inactive (click to activate)', 'team-membership-ledger' ); ?>
 								</button>
 							</form>
-							<?php if ( empty( $linked[ $m['id'] ] ) && ! $repo->hasOrders( $m['id'] ) ) : ?>
+							<?php if ( $m['optedIn'] && empty( $linked[ $m['id'] ] ) && ! $repo->hasOrders( $m['id'] ) ) : ?>
 								<form method="post" style="margin:4px 0 0">
 									<?php self::nonce_field(); ?>
-									<input type="hidden" name="tml_roster_action" value="remove" />
+									<input type="hidden" name="tml_roster_action" value="remove_admin" />
 									<input type="hidden" name="user_id" value="<?php echo esc_attr( $m['id'] ); ?>" />
 									<button class="button-link"><?php esc_html_e( 'Remove as family (keeps the account)', 'team-membership-ledger' ); ?></button>
 								</form>
