@@ -4,37 +4,17 @@ namespace OrillaEagles\Ledger\Domain;
 final class RolloverPlan {
 
 	/**
-	 * Players to charge, mapped to the family to bill: every player whose
-	 * family is active. Players of deactivated families aren't charged again.
-	 *
-	 * @param array $players           list of ['id','family_id'].
-	 * @param int[] $active_family_ids
-	 * @return array<int,int> player id => family id.
-	 */
-	public static function chargeable( array $players, array $active_family_ids ): array {
-		$active = array_flip( array_map( 'intval', $active_family_ids ) );
-		$out    = array();
-		foreach ( $players as $p ) {
-			$family_id = (int) $p['family_id'];
-			if ( isset( $active[ $family_id ] ) ) {
-				$out[ (int) $p['id'] ] = $family_id;
-			}
-		}
-		return $out;
-	}
-
-	/**
-	 * @param int[] $chargeable_ids Players to charge.
-	 * @param int[] $existing_ids   Players who already have a charge for the product.
+	 * @param int[] $active_member_ids
+	 * @param int[] $existing_customer_ids
 	 * @return array{to_create:int[],to_skip:int[]}
 	 */
-	public static function build( array $chargeable_ids, array $existing_ids ): array {
-		$existing = array_flip( array_map( 'intval', $existing_ids ) );
+	public static function build( array $active_member_ids, array $existing_customer_ids ): array {
+		$existing = array_flip( array_map( 'intval', $existing_customer_ids ) );
 		$seen     = array();
 		$create   = array();
 		$skip     = array();
 
-		foreach ( $chargeable_ids as $raw ) {
+		foreach ( $active_member_ids as $raw ) {
 			$id = (int) $raw;
 			if ( isset( $seen[ $id ] ) ) {
 				continue;

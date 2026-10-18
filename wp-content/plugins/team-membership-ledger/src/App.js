@@ -3,20 +3,18 @@ import { SelectControl, Spinner, Snackbar, Button } from '@wordpress/components'
 import { DataViews, filterSortAndPaginate } from '@wordpress/dataviews';
 import { __ } from '@wordpress/i18n';
 import { fetchLedger } from './api';
-import { makeFields, familyTotals } from './fields';
+import { makeFields } from './fields';
 import { makeActions } from './actions';
 
 const DEFAULT_VIEW = {
 	type: 'table',
 	page: 1,
-	// Large enough that a family's players rarely split across pages.
-	perPage: 100,
+	perPage: 25,
 	search: '',
 	filters: [],
-	groupBy: { field: 'group', direction: 'asc', showLabel: false },
-	sort: { field: 'player', direction: 'asc' },
-	fields: [ 'status', 'total', 'paid', 'balance', 'date' ],
-	titleField: 'player',
+	sort: { field: 'name', direction: 'asc' },
+	fields: [ 'status', 'qty', 'total', 'paid', 'balance', 'date' ],
+	titleField: 'name',
 };
 
 export default function App() {
@@ -37,7 +35,7 @@ export default function App() {
 
 	const handleRowUpdated = ( updated ) => {
 		setRows( ( current ) =>
-			current.map( ( r ) => ( r.id === updated.id ? updated : r ) )
+			current.map( ( r ) => ( r.memberId === updated.memberId ? updated : r ) )
 		);
 	};
 
@@ -75,10 +73,7 @@ export default function App() {
 		};
 	}, [ productId, reloadKey ] );
 
-	const fields = useMemo(
-		() => makeFields( currency, familyTotals( rows ) ),
-		[ currency, rows ]
-	);
+	const fields = useMemo( () => makeFields( currency ), [ currency ] );
 	const { data: shownData, paginationInfo } = useMemo(
 		() => filterSortAndPaginate( rows, view, fields ),
 		[ rows, view, fields ]
@@ -120,7 +115,7 @@ export default function App() {
 					style={ { marginTop: '24px', marginBottom: '12px' } }
 				>
 					{ productName ||
-						__( 'Player ledger', 'team-membership-ledger' ) }
+						__( 'Member ledger', 'team-membership-ledger' ) }
 				</h2>
 			) }
 			{ productId === 0 ? (
@@ -135,7 +130,7 @@ export default function App() {
 					onChangeView={ setView }
 					paginationInfo={ paginationInfo }
 					defaultLayouts={ { table: {} } }
-					getItemId={ ( item ) => String( item.id ) }
+					getItemId={ ( item ) => String( item.memberId ) }
 					isLoading={ isLoading }
 					actions={ actions }
 				/>

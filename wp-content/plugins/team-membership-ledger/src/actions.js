@@ -18,7 +18,7 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 			const updated = await addPayment( {
 				productId,
 				orderId: item.orderId,
-				playerId: item.playerId,
+				memberId: item.memberId,
 				amount: value,
 			} );
 			if ( updated ) {
@@ -47,10 +47,9 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 		<div>
 			<p>
 				{ sprintf(
-					/* translators: 1: player name, 2: family name */
-					__( 'Recording a payment for %1$s (billed to %2$s).', 'team-membership-ledger' ),
-					item.playerName,
-					item.familyName
+					/* translators: %s: member name */
+					__( 'Recording a payment for %s.', 'team-membership-ledger' ),
+					item.name
 				) }
 			</p>
 			<TextControl
@@ -78,10 +77,6 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 	);
 }
 
-// Unassigned players have no family to bill, so there's nothing to pay yet.
-const isPayable = ( item ) =>
-	! [ 'paid', 'unassigned' ].includes( item.status ) && item.orderCount <= 1;
-
 /**
  * Build DataViews actions.
  *
@@ -93,7 +88,7 @@ export function makeActions( { productId, onRowUpdated, onNotice } ) {
 		{
 			id: 'add-payment',
 			label: __( 'Add payment', 'team-membership-ledger' ),
-			isEligible: ( item ) => isPayable( item ),
+			isEligible: ( item ) => item.status !== 'paid' && item.orderCount <= 1,
 			RenderModal: ( { items, closeModal } ) => (
 				<AddPaymentModal
 					item={ items[ 0 ] }
@@ -107,14 +102,14 @@ export function makeActions( { productId, onRowUpdated, onNotice } ) {
 		{
 			id: 'mark-paid',
 			label: __( 'Mark paid', 'team-membership-ledger' ),
-			isEligible: ( item ) => isPayable( item ),
+			isEligible: ( item ) => item.status !== 'paid' && item.orderCount <= 1,
 			callback: async ( items ) => {
 				const item = items[ 0 ];
 				try {
 					const updated = await markPaid( {
 						productId,
 						orderId: item.orderId,
-						playerId: item.playerId,
+						memberId: item.memberId,
 					} );
 					if ( updated ) {
 						onRowUpdated( updated );
