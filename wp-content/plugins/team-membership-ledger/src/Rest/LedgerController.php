@@ -270,7 +270,7 @@ final class LedgerController {
 						// Refused before any money moved: take back the charges made
 						// for it, so the screen and the orders still agree.
 						array_map( array( $orders, 'deleteOrder' ), $created );
-						throw new \RuntimeException( self::overpayment_message( PaymentAllocation::owed( $balances ) ) );
+						throw new \RuntimeException( OrderRepository::overpaymentMessage( PaymentAllocation::owed( $balances ) ) );
 					}
 					// Each order is a separate save with no rollback between them, so
 					// check every one before writing any.
@@ -416,11 +416,6 @@ final class LedgerController {
 		return ActionLock::run( ActionLock::memberKey( $product_id, $member_id ), $write );
 	}
 
-	private static function overpayment_message( float $owed ): string {
-		/* translators: %s: amount owed */
-		return sprintf( __( 'That is more than the %s owed.', 'team-membership-ledger' ), html_entity_decode( wp_strip_all_tags( wc_price( $owed ) ) ) );
-	}
-
 	/** Resolve an existing order id, or create the Requested order on the fly. */
 	private static function resolve_order( int $order_id, int $member_id, int $player_id, int $product_id, int $qty = 1 ): int {
 		// Every charge belongs to a member. Without one there is nothing to check
@@ -428,8 +423,8 @@ final class LedgerController {
 		if ( ! $member_id || ! $product_id ) {
 			throw new \RuntimeException( __( 'No order to act on.', 'team-membership-ledger' ) );
 		}
-		// The ledger lists customers, so a charge against any other user would be
-		// invisible in it. Membership, not active membership: an inactive member's
+		// The ledger lists members (customers and opted-in admins), so a charge
+		// against any other user would be invisible in it. Membership, not active membership: an inactive member's
 		// outstanding charges still have to be payable.
 		if ( ! ( new RosterRepository() )->isMember( $member_id ) ) {
 			throw new \RuntimeException( __( 'That family is not in the ledger.', 'team-membership-ledger' ) );

@@ -55,8 +55,9 @@ email is sent.
   them, so you can create a charge from the row:
   - **Mark Paid** — marks that family's order Completed (paid in full). On a
     "Not entered" family it creates the charge first, then marks it paid.
-  - **Add payment** — type the amount just received and click Add; it accrues
-    toward the total (e.g. $50 then $30 on a $200 charge → "$80 of $200"). When
+  - **Add payment** — type the amount just received and click **Add payment**;
+    it accrues toward the total (e.g. $50 then $30 on a $200 charge → Paid $80,
+    Balance $120). When
     the running total reaches the order total the order auto-completes. On a
     "Not entered" family it creates the charge first, then records the payment.
   - A family with multiple orders for one product shows a note to manage it in

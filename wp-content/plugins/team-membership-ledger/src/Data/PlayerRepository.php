@@ -158,8 +158,8 @@ final class PlayerRepository {
 		if ( ! get_userdata( $member_id ) ) {
 			throw new \RuntimeException( __( 'That family could not be found.', 'team-membership-ledger' ) );
 		}
-		// The Members list only manages customers, so a link to any other user
-		// would never show there and never be billed.
+		// The Families list only shows members (customers and opted-in admins),
+		// so a link to any other user would never show there and never be billed.
 		if ( ! ( new RosterRepository() )->isMember( $member_id ) ) {
 			throw new \RuntimeException( __( 'Players can only be linked to a family from the Families list.', 'team-membership-ledger' ) );
 		}

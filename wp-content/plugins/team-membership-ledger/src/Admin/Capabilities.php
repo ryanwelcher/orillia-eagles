@@ -4,7 +4,7 @@ namespace OrillaEagles\Ledger\Admin;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Dedicated capability that unlocks the Membership screens (Members, Ledger,
+ * Dedicated capability that unlocks the Membership screens (Families, Ledger,
  * Create Charges) WITHOUT granting WooCommerce store-management access.
  *
  * Granted to administrators and editors so coordinators can record dues and

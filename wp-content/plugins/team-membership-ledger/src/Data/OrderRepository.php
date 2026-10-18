@@ -17,10 +17,15 @@ final class OrderRepository {
 	/**
 	 * Statuses that mean the charge was voided in WooCommerce. A voided order is
 	 * not a charge: the Ledger leaves it out, so the row reads "Not entered" and
-	 * nothing is owed on it. Season Rollover still counts it, so that a charge
+	 * nothing is owed on it. Create Charges still counts it, so that a charge
 	 * someone cancelled on purpose is not raised again behind their back.
 	 */
 	public const VOID_STATUSES = array( 'cancelled', 'refunded', 'failed' );
+
+	/** Whether a status (without the wc- prefix) is one of VOID_STATUSES. */
+	public static function isVoid( string $status ): bool {
+		return in_array( $status, self::VOID_STATUSES, true );
+	}
 
 	/** Set while this class changes a status itself, so onStatusChanged() stays out of it. */
 	private static bool $changing_status = false;
@@ -38,7 +43,7 @@ final class OrderRepository {
 				continue;
 			}
 			$status = $order->get_status(); // slug without wc- prefix
-			if ( ! $include_void && in_array( $status, self::VOID_STATUSES, true ) ) {
+			if ( ! $include_void && self::isVoid( $status ) ) {
 				continue;
 			}
 			$date   = $order->get_date_created() ? $order->get_date_created()->date( 'Y-m-d H:i:s' ) : null;
@@ -57,7 +62,7 @@ final class OrderRepository {
 				// Installment tracking assumes one product per order: the order-level
 				// _tml_amount_paid meta is attributed to this line item. Orders that mix
 				// products (or repeat a product across line items) would misattribute the
-				// partial payment. The plugin's own Rollover always creates single-product
+				// partial payment. The plugin's own Create Charges always makes single-product
 				// orders, matching the per-season product-per-order model in the README.
 				// Completed counts as paid in full, and a higher stored payment wins
 				// so lowering a paid order's quantity doesn't lose it — but only on a
@@ -81,7 +86,7 @@ final class OrderRepository {
 	}
 
 	/**
-	 * @return string[] "member:player" keys Season Rollover should leave alone:
+	 * @return string[] "member:player" keys Create Charges should leave alone:
 	 * those with an order for the product, voided ones included.
 	 */
 	public function existingBillableKeys( int $product_id ): array {
@@ -90,16 +95,6 @@ final class OrderRepository {
 			$keys[ Billables::key( $r['customer_id'], $r['player_id'] ) ] = true;
 		}
 		return array_map( 'strval', array_keys( $keys ) );
-	}
-
-	/**
-	 * Whether this (member, player) already has an order for the product.
-	 *
-	 * Scoped to the one customer, so it is cheap enough to re-check inside a
-	 * lock; existingBillableKeys() scans every order for a whole batch.
-	 */
-	public function hasCharge( int $product_id, int $customer_id, int $player_id ): bool {
-		return in_array( $player_id, $this->chargedPlayerIds( $product_id, $customer_id ), true );
 	}
 
 	/**
@@ -130,7 +125,7 @@ final class OrderRepository {
 	/** Whether this player has a charge under this member that is not settled yet. */
 	public function hasOpenPlayerCharge( int $customer_id, int $player_id ): bool {
 		foreach ( $this->customerOrders( $customer_id ) as $order ) {
-			if ( (int) $order->get_meta( self::PLAYER_META ) === $player_id && ! in_array( $order->get_status(), array_merge( array( 'completed' ), self::VOID_STATUSES ), true ) ) {
+			if ( (int) $order->get_meta( self::PLAYER_META ) === $player_id && 'completed' !== $order->get_status() && ! self::isVoid( $order->get_status() ) ) {
 				return true;
 			}
 		}
@@ -144,7 +139,7 @@ final class OrderRepository {
 	public function chargedPlayerIds( int $product_id, int $customer_id, bool $include_void = false ): array {
 		$ids = array();
 		foreach ( $this->customerOrders( $customer_id ) as $order ) {
-			if ( ! $include_void && in_array( $order->get_status(), self::VOID_STATUSES, true ) ) {
+			if ( ! $include_void && self::isVoid( $order->get_status() ) ) {
 				continue;
 			}
 			foreach ( $order->get_items() as $item ) {
@@ -175,7 +170,7 @@ final class OrderRepository {
 			if (
 				(int) $order->get_meta( self::PLAYER_META ) !== $player_id
 				|| (int) $order->get_customer_id() === $customer_id
-				|| in_array( $order->get_status(), self::VOID_STATUSES, true )
+				|| self::isVoid( $order->get_status() )
 			) {
 				continue;
 			}
@@ -235,11 +230,11 @@ final class OrderRepository {
 				throw new \RuntimeException( $order->get_error_message() );
 			}
 			$order->set_created_via( 'team-membership-ledger' );
-			$note = __( 'Season rollover charge.', 'team-membership-ledger' );
+			$note = __( 'Charge created in Membership Ledger.', 'team-membership-ledger' );
 			if ( $player_id ) {
 				$order->update_meta_data( self::PLAYER_META, $player_id );
 				/* translators: %s: player name */
-				$note = sprintf( __( 'Season rollover charge for %s.', 'team-membership-ledger' ), get_post_field( 'post_title', $player_id, 'raw' ) );
+				$note = sprintf( __( 'Charge created in Membership Ledger for %s.', 'team-membership-ledger' ), get_post_field( 'post_title', $player_id, 'raw' ) );
 			}
 			// Save the player before the product goes on. A request killed part way
 			// then leaves an order with no items, which nothing counts, rather than
@@ -278,13 +273,13 @@ final class OrderRepository {
 		if ( ! wc_is_order_status( 'wc-' . $order->get_status() ) ) {
 			throw new \RuntimeException( __( 'That order was removed in WooCommerce; reload the Ledger.', 'team-membership-ledger' ) );
 		}
-		if ( in_array( $order->get_status(), self::VOID_STATUSES, true ) ) {
+		if ( self::isVoid( $order->get_status() ) ) {
 			/* translators: %s: order status label */
 			throw new \RuntimeException( sprintf( __( 'That order is %s in WooCommerce; manage it there.', 'team-membership-ledger' ), wc_get_order_status_name( $order->get_status() ) ) );
 		}
 	}
 
-	private static function overpaymentMessage( float $owed ): string {
+	public static function overpaymentMessage( float $owed ): string {
 		/* translators: %s: amount owed */
 		return sprintf( __( 'That is more than the %s owed.', 'team-membership-ledger' ), html_entity_decode( wp_strip_all_tags( wc_price( $owed ) ) ) );
 	}
@@ -355,7 +350,7 @@ final class OrderRepository {
 		if ( self::$changing_status || 'completed' !== $from || ! $order instanceof \WC_Order ) {
 			return;
 		}
-		if ( in_array( $to, self::VOID_STATUSES, true ) || '' === (string) $order->get_meta( self::AMOUNT_PAID_META ) ) {
+		if ( self::isVoid( $to ) || '' === (string) $order->get_meta( self::AMOUNT_PAID_META ) ) {
 			return;
 		}
 		$order->add_order_note(

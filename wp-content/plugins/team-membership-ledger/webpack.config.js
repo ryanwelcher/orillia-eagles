@@ -28,7 +28,6 @@
  * used. App.js wraps the table in an error boundary in case that ever slips.
  * Keep it that way, or re-check those exports after changing either version.
  */
-const path = require( 'path' );
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
 const DependencyExtractionWebpackPlugin = require( '@wordpress/dependency-extraction-webpack-plugin' );
 
@@ -47,20 +46,6 @@ module.exports = {
 			},
 			...defaultConfig.module.rules,
 		],
-	},
-	resolve: {
-		...defaultConfig.resolve,
-		alias: {
-			...( defaultConfig.resolve && defaultConfig.resolve.alias ),
-			// @wordpress/icons@15.2.0 ships a broken `exports` field (its
-			// build-module/index.mjs is missing from the published tarball),
-			// which breaks ESM resolution when bundling. Force the working CJS
-			// entry instead.
-			'@wordpress/icons$': path.resolve(
-				__dirname,
-				'node_modules/@wordpress/icons/build/index.cjs'
-			),
-		},
 	},
 	plugins: [
 		...defaultConfig.plugins.filter(

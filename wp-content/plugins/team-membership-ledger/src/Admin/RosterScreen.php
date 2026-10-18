@@ -20,41 +20,28 @@ final class RosterScreen {
 		$repo   = new RosterRepository();
 		$action = sanitize_key( wp_unslash( $_POST['tml_roster_action'] ) );
 
-		if ( 'toggle' === $action ) {
-			$repo->setActive( absint( $_POST['user_id'] ?? 0 ), ! empty( $_POST['active'] ) );
-		} elseif ( 'create' === $action ) {
-			try {
+		$user_id   = absint( $_POST['user_id'] ?? 0 );
+		$player_id = absint( $_POST['player_id'] ?? 0 );
+		try {
+			if ( 'toggle' === $action ) {
+				$repo->setActive( $user_id, ! empty( $_POST['active'] ) );
+			} elseif ( 'create' === $action ) {
 				$repo->createMember(
 					sanitize_text_field( wp_unslash( $_POST['first_name'] ?? '' ) ),
 					sanitize_text_field( wp_unslash( $_POST['last_name'] ?? '' ) ),
 					sanitize_email( wp_unslash( $_POST['email'] ?? '' ) )
 				);
-			} catch ( \RuntimeException $e ) {
-				set_transient( 'tml_roster_error', $e->getMessage(), 30 );
+			} elseif ( 'add_admin' === $action ) {
+				$repo->addAdmin( $user_id );
+			} elseif ( 'remove_admin' === $action ) {
+				$repo->removeAdmin( $user_id );
+			} elseif ( 'link_player' === $action ) {
+				( new PlayerRepository() )->link( $player_id, $user_id );
+			} elseif ( 'unlink_player' === $action ) {
+				( new PlayerRepository() )->unlink( $player_id );
 			}
-		} elseif ( 'add_admin' === $action || 'remove_admin' === $action ) {
-			try {
-				$user_id = absint( $_POST['user_id'] ?? 0 );
-				if ( 'remove_admin' === $action ) {
-					$repo->removeAdmin( $user_id );
-				} else {
-					$repo->addAdmin( $user_id );
-				}
-			} catch ( \RuntimeException $e ) {
-				set_transient( 'tml_roster_error', $e->getMessage(), 30 );
-			}
-		} elseif ( 'link_player' === $action ) {
-			try {
-				( new PlayerRepository() )->link( absint( $_POST['player_id'] ?? 0 ), absint( $_POST['user_id'] ?? 0 ) );
-			} catch ( \RuntimeException $e ) {
-				set_transient( 'tml_roster_error', $e->getMessage(), 30 );
-			}
-		} elseif ( 'unlink_player' === $action ) {
-			try {
-				( new PlayerRepository() )->unlink( absint( $_POST['player_id'] ?? 0 ) );
-			} catch ( \RuntimeException $e ) {
-				set_transient( 'tml_roster_error', $e->getMessage(), 30 );
-			}
+		} catch ( \RuntimeException $e ) {
+			set_transient( 'tml_roster_error', $e->getMessage(), 30 );
 		}
 
 		wp_safe_redirect( admin_url( 'admin.php?page=' . Menu::SLUG ) );
@@ -218,6 +205,7 @@ final class RosterScreen {
 									<?php echo $m['active'] ? esc_html__( 'Active ✓ (click to deactivate)', 'team-membership-ledger' ) : esc_html__( 'Inactive (click to activate)', 'team-membership-ledger' ); ?>
 								</button>
 							</form>
+							<?php // canRemoveAdmin(), inlined to reuse $linked instead of re-reading every player per row. ?>
 							<?php if ( $m['optedIn'] && empty( $linked[ $m['id'] ] ) && ! $repo->hasOrders( $m['id'] ) ) : ?>
 								<form method="post" style="margin:4px 0 0">
 									<?php self::nonce_field(); ?>
