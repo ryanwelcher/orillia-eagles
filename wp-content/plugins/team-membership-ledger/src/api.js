@@ -15,10 +15,10 @@ export function fetchLedger( productId ) {
 /**
  * Record an additive payment; returns the updated row.
  *
- * @param {{productId:number, orderId:?number, memberId:?number, amount:number}} args Payload.
+ * @param {{productId:number, orderId:?number, memberId:?number, playerId:?number, amount:number}} args Payload.
  * @return {Promise<Object|null>} Updated serialized row, or null.
  */
-export function addPayment( { productId, orderId, memberId, amount } ) {
+export function addPayment( { productId, orderId, memberId, playerId, amount } ) {
 	return apiFetch( {
 		path: '/tml/v1/ledger/add-payment',
 		method: 'POST',
@@ -26,18 +26,67 @@ export function addPayment( { productId, orderId, memberId, amount } ) {
 			product_id: productId,
 			order_id: orderId || 0,
 			member_id: memberId || 0,
+			player_id: playerId || 0,
 			amount,
 		},
 	} );
 }
 
 /**
- * Mark an order fully paid; returns the updated row.
+ * Set a charge's quantity (creating the charge if needed); returns the updated row.
  *
- * @param {{productId:number, orderId:?number, memberId:?number}} args Payload.
+ * @param {{productId:number, orderId:?number, memberId:?number, playerId:?number, qty:number}} args Payload.
  * @return {Promise<Object|null>} Updated serialized row, or null.
  */
-export function markPaid( { productId, orderId, memberId } ) {
+export function setQuantity( { productId, orderId, memberId, playerId, qty } ) {
+	return apiFetch( {
+		path: '/tml/v1/ledger/set-quantity',
+		method: 'POST',
+		data: {
+			product_id: productId,
+			order_id: orderId || 0,
+			member_id: memberId || 0,
+			player_id: playerId || 0,
+			qty,
+		},
+	} );
+}
+
+/**
+ * Record a payment toward all of a member's player charges; returns their updated rows.
+ *
+ * @param {{productId:number, memberId:number, amount:number}} args Payload.
+ * @return {Promise<Array>} Updated serialized player rows for the member.
+ */
+export function memberAddPayment( { productId, memberId, amount } ) {
+	return apiFetch( {
+		path: '/tml/v1/ledger/member/add-payment',
+		method: 'POST',
+		data: { product_id: productId, member_id: memberId, amount },
+	} );
+}
+
+/**
+ * Mark all of a member's player charges paid; returns their updated rows.
+ *
+ * @param {{productId:number, memberId:number}} args Payload.
+ * @return {Promise<Array>} Updated serialized player rows for the member.
+ */
+export function memberMarkPaid( { productId, memberId } ) {
+	return apiFetch( {
+		path: '/tml/v1/ledger/member/mark-paid',
+		method: 'POST',
+		data: { product_id: productId, member_id: memberId },
+	} );
+}
+
+/**
+ * Mark an order fully paid; returns the updated row.
+ *
+ * @param {{productId:number, orderId:?number, memberId:?number, playerId:?number}} args Payload.
+ * @return {Promise<Object|null>} Updated serialized row, or null.
+ */
+export function markPaid( { productId, orderId, memberId, playerId } ) {
 	return apiFetch( {
 		path: '/tml/v1/ledger/mark-paid',
 		method: 'POST',
@@ -45,6 +94,7 @@ export function markPaid( { productId, orderId, memberId } ) {
 			product_id: productId,
 			order_id: orderId || 0,
 			member_id: memberId || 0,
+			player_id: playerId || 0,
 		},
 	} );
 }

@@ -11,10 +11,38 @@ final class LedgerCalculatorTest extends TestCase {
 
 	protected function setUp(): void {
 		$this->members = array(
-			array( 'id' => 1, 'name' => 'Alice', 'email' => 'a@x.com' ),
-			array( 'id' => 2, 'name' => 'Bob', 'email' => 'b@x.com' ),
-			array( 'id' => 3, 'name' => 'Cara', 'email' => 'c@x.com' ),
+			array( 'member_id' => 1, 'name' => 'Alice', 'email' => 'a@x.com' ),
+			array( 'member_id' => 2, 'name' => 'Bob', 'email' => 'b@x.com' ),
+			array( 'member_id' => 3, 'name' => 'Cara', 'email' => 'c@x.com' ),
 		);
+	}
+
+	public function test_each_player_of_a_member_gets_its_own_row(): void {
+		$billables = array(
+			array( 'member_id' => 1, 'name' => 'Coach', 'email' => 'c@x.com', 'player_id' => 41, 'player_name' => 'Jake' ),
+			array( 'member_id' => 1, 'name' => 'Coach', 'email' => 'c@x.com', 'player_id' => 42, 'player_name' => 'Mia' ),
+			array( 'member_id' => 1, 'name' => 'Coach', 'email' => 'c@x.com', 'player_id' => 43, 'player_name' => 'Noah' ),
+		);
+		$records = array(
+			array( 'customer_id' => 1, 'player_id' => 41, 'order_id' => 701, 'status' => 'completed', 'qty' => 1, 'line_total' => 200.0, 'amount_paid' => 200.0, 'date' => '2026-09-01 09:00:00' ),
+			array( 'customer_id' => 1, 'player_id' => 42, 'order_id' => 702, 'status' => 'requested', 'qty' => 1, 'line_total' => 200.0, 'amount_paid' => 50.0, 'date' => '2026-09-01 09:00:00' ),
+			// A member-level order for the same member must not leak into a player row.
+			array( 'customer_id' => 1, 'player_id' => 0, 'order_id' => 700, 'status' => 'requested', 'qty' => 1, 'line_total' => 99.0, 'amount_paid' => 0.0, 'date' => '2026-08-01 09:00:00' ),
+		);
+		$rows = LedgerCalculator::forProduct( $billables, $records );
+
+		$this->assertCount( 3, $rows );
+		$this->assertSame( array( 41, 42, 43 ), array_map( static fn( $r ) => $r->playerId(), $rows ) );
+
+		$this->assertSame( MemberStatus::PAID, $rows[0]->status() );
+		$this->assertSame( 701, $rows[0]->singleOrderId() );
+
+		$this->assertSame( MemberStatus::OWES, $rows[1]->status() );
+		$this->assertSame( 150.0, $rows[1]->balance() );
+		$this->assertSame( 'Mia', $rows[1]->playerName() );
+
+		$this->assertSame( MemberStatus::NOT_ENTERED, $rows[2]->status() );
+		$this->assertNull( $rows[2]->singleOrderId() );
 	}
 
 	public function test_member_with_no_record_is_not_entered(): void {

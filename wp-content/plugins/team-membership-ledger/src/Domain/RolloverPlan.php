@@ -4,26 +4,26 @@ namespace OrillaEagles\Ledger\Domain;
 final class RolloverPlan {
 
 	/**
-	 * @param int[] $active_member_ids
-	 * @param int[] $existing_customer_ids
-	 * @return array{to_create:int[],to_skip:int[]}
+	 * @param string[] $billable_keys "member:player" keys that should have a charge (see Billables::key()).
+	 * @param string[] $existing_keys keys that already have one.
+	 * @return array{to_create:string[],to_skip:string[]}
 	 */
-	public static function build( array $active_member_ids, array $existing_customer_ids ): array {
-		$existing = array_flip( array_map( 'intval', $existing_customer_ids ) );
+	public static function build( array $billable_keys, array $existing_keys ): array {
+		$existing = array_flip( array_map( 'strval', $existing_keys ) );
 		$seen     = array();
 		$create   = array();
 		$skip     = array();
 
-		foreach ( $active_member_ids as $raw ) {
-			$id = (int) $raw;
-			if ( isset( $seen[ $id ] ) ) {
+		foreach ( $billable_keys as $raw ) {
+			$key = (string) $raw;
+			if ( isset( $seen[ $key ] ) ) {
 				continue;
 			}
-			$seen[ $id ] = true;
-			if ( isset( $existing[ $id ] ) ) {
-				$skip[] = $id;
+			$seen[ $key ] = true;
+			if ( isset( $existing[ $key ] ) ) {
+				$skip[] = $key;
 			} else {
-				$create[] = $id;
+				$create[] = $key;
 			}
 		}
 
