@@ -313,3 +313,15 @@ function orillia_schedule_render_event_row( $block_content, $block, $instance ) 
 	return $block_content;
 }
 add_filter( 'render_block_core/group', 'orillia_schedule_render_event_row', 10, 3 );
+
+/**
+ * Show schedule levels as plain text instead of links to the level archive.
+ */
+function orillia_schedule_render_level_terms( $block_content, $block ) {
+	if ( 'event_level' !== ( $block['attrs']['term'] ?? '' ) ) {
+		return $block_content;
+	}
+
+	return preg_replace( '#<a\b[^>]*>(.*?)</a>#s', '$1', $block_content );
+}
+add_filter( 'render_block_core/post-terms', 'orillia_schedule_render_level_terms', 10, 2 );
