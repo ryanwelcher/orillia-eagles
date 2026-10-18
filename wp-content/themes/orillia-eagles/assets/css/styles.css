@@ -690,7 +690,7 @@ a {
 .programs-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-rows: 1fr 1fr;
   gap: var(--wp--preset--spacing--40);
 }
 
@@ -710,11 +710,8 @@ a {
 }
 
 .program-card--featured {
-  grid-row: span 2;
   background-color: var(--wp--preset--color--contrast);
   color: var(--wp--preset--color--base);
-  padding: var(--wp--preset--spacing--60) var(--wp--preset--spacing--40);
-  justify-content: flex-end;
 }
 
 .program-card--featured .program-desc {
@@ -723,6 +720,38 @@ a {
 
 .program-card--featured .program-detail {
   color: var(--wp--preset--color--accent-2);
+}
+
+/* Alternate dark and light cards: a checkerboard in two columns, every other
+   card when stacked. !important beats the light cards' color preset classes. */
+@media (min-width: 769px) {
+  .programs-grid > .program-card:nth-child(4) {
+    background-color: var(--wp--preset--color--contrast) !important;
+    color: var(--wp--preset--color--base) !important;
+  }
+
+  .programs-grid > .program-card:nth-child(4) .program-desc {
+    color: var(--wp--preset--color--white-glow) !important;
+  }
+
+  .programs-grid > .program-card:nth-child(4) .program-detail {
+    color: var(--wp--preset--color--accent-2) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .programs-grid > .program-card:nth-child(3) {
+    background-color: var(--wp--preset--color--contrast) !important;
+    color: var(--wp--preset--color--base) !important;
+  }
+
+  .programs-grid > .program-card:nth-child(3) .program-desc {
+    color: var(--wp--preset--color--white-glow) !important;
+  }
+
+  .programs-grid > .program-card:nth-child(3) .program-detail {
+    color: var(--wp--preset--color--accent-2) !important;
+  }
 }
 
 .program-number {
@@ -765,11 +794,11 @@ a {
 .programs-grid {
 
     grid-template-columns: 1fr;
+    grid-template-rows: none;
   
 }
 .program-card--featured {
 
-    grid-row: span 1;
     padding: var(--wp--preset--spacing--50) var(--wp--preset--spacing--40);
   
 }
@@ -1973,7 +2002,7 @@ form.contact-form > .wp-block-jetpack-contact-form > .form-submit {
 :root :where(.programs-grid) {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-rows: 1fr 1fr;
   gap: var(--wp--preset--spacing--40);
 }
 
@@ -1982,6 +2011,7 @@ form.contact-form > .wp-block-jetpack-contact-form > .form-submit {
 :root :where(.programs-grid) {
 
     grid-template-columns: 1fr;
+    grid-template-rows: none;
   
 }
 }

@@ -55,21 +55,21 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:group {"metadata":{"name":"Program Card - Off-Ice Training"},"className":"program-card animate-on-scroll","style":{"spacing":{"blockGap":"0"}},"backgroundColor":"base-2","layout":{"type":"flex","orientation":"vertical"}} -->
+<!-- wp:group {"metadata":{"name":"Program Card - SHI International Tournament"},"className":"program-card animate-on-scroll","style":{"spacing":{"blockGap":"0"}},"backgroundColor":"base-2","layout":{"type":"flex","orientation":"vertical"}} -->
 <div class="wp-block-group program-card animate-on-scroll has-base-2-background-color has-background"><!-- wp:paragraph {"className":"program-number has-text-color has-archivo-black-font-family","textColor":"accent-1","fontSize":"xxx-large"} -->
 <p class="program-number has-text-color has-archivo-black-font-family has-accent-1-color has-xxx-large-font-size">03</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:heading {"level":3,"className":"program-title","fontSize":"xl","fontFamily":"archivo-black"} -->
-<h3 class="wp-block-heading program-title has-archivo-black-font-family has-xl-font-size">Off-Ice Training</h3>
+<h3 class="wp-block-heading program-title has-archivo-black-font-family has-xl-font-size">SHI International Tournament</h3>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"program-desc has-text-color","textColor":"contrast-2","fontSize":"base"} -->
-<p class="program-desc has-text-color has-contrast-2-color has-base-font-size">Fitness, coordination, and teamwork activities in a fun, supportive gym environment. We focus on balance, strength, and social skills that carry onto the ice and beyond.</p>
+<p class="program-desc has-text-color has-contrast-2-color has-base-font-size">We cap off our year at the Special Hockey International tournament, the biggest weekend on our calendar. Teams from all over the world come together to play, cheer each other on, and celebrate everything the season built.</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"program-detail has-text-color","textColor":"accent-3","fontSize":"small"} -->
-<p class="program-detail has-text-color has-accent-3-color has-small-font-size">Wednesdays · 6:00 PM</p>
+<p class="program-detail has-text-color has-accent-3-color has-small-font-size">Annually</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
