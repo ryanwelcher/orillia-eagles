@@ -1443,25 +1443,12 @@ form.contact-form > .wp-block-jetpack-contact-form {
   gap: var(--wp--preset--spacing--40);
 }
 
-form.contact-form > .wp-block-jetpack-contact-form > .contact-interest-wrap,
-form.contact-form > .wp-block-jetpack-contact-form > .contact-message-wrap,
-form.contact-form > .wp-block-jetpack-contact-form > .form-submit,
-form.contact-form > .wp-block-jetpack-contact-form > .contact-form__error,
-form.contact-form > .wp-block-jetpack-contact-form > .contact-form__success {
+form.contact-form > .wp-block-jetpack-contact-form > .form-submit {
   grid-column: 1 / -1;
 }
 
-.contact-form .form-group-wrap {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: var(--wp--preset--spacing--20);
-  margin: 0;
-}
-
 .contact-form .form-label,
-.contact-form .form-label label,
-.contact-form .contact-interest-wrap label {
+.contact-form .form-label label {
   margin: 0;
   font-size: var(--wp--preset--font-size--small);
   font-weight: 700;
@@ -1476,8 +1463,7 @@ form.contact-form > .wp-block-jetpack-contact-form > .contact-form__success {
 .contact-form .form-input textarea,
 .contact-form input.form-input,
 .contact-form select.form-input,
-.contact-form textarea.form-input,
-.contact-form .contact-interest-wrap select {
+.contact-form textarea.form-input {
   box-sizing: border-box;
   width: 100%;
   margin: 0;
@@ -1501,8 +1487,7 @@ form.contact-form > .wp-block-jetpack-contact-form > .contact-form__success {
 .contact-form .form-input textarea:focus,
 .contact-form input.form-input:focus,
 .contact-form select.form-input:focus,
-.contact-form textarea.form-input:focus,
-.contact-form .contact-interest-wrap select:focus {
+.contact-form textarea.form-input:focus {
   border-color: var(--wp--preset--color--accent-1);
   background-color: var(--wp--preset--color--base);
 }
@@ -1516,8 +1501,7 @@ form.contact-form > .wp-block-jetpack-contact-form > .contact-form__success {
 }
 
 .contact-form .form-select select,
-.contact-form select.form-select,
-form.contact-form .contact-interest-wrap select {
+.contact-form select.form-select {
   cursor: pointer;
   background-color: var(--wp--preset--color--base-2) !important;
   border: 2px solid transparent !important;
@@ -1591,8 +1575,6 @@ form.contact-form > .wp-block-jetpack-contact-form {
     gap: var(--wp--preset--spacing--40);
   
 }
-form.contact-form > .wp-block-jetpack-contact-form > .contact-interest-wrap,
-form.contact-form > .wp-block-jetpack-contact-form > .contact-message-wrap,
 form.contact-form > .wp-block-jetpack-contact-form > .form-submit {
 
     grid-column: 1;
@@ -2536,74 +2518,6 @@ form.contact-form > .wp-block-jetpack-contact-form > .form-submit {
   color: var(--wp--preset--color--contrast);
   overflow-x: auto;
 }
-
-:root :where(.wp-block-comment-template) {
-  list-style: none;
-  padding: 0;
-}
-
-:root :where(.wp-block-comment-author-name) {
-  font-family: var(--wp--preset--font-family--archivo-black);
-  font-size: var(--wp--preset--font-size--base);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--wp--preset--color--contrast);
-}
-
-:root :where(.wp-block-comment-content) {
-  font-size: var(--wp--preset--font-size--base);
-  line-height: 1.7;
-  color: var(--wp--preset--color--contrast-2);
-}
-
-:root :where(.wp-block-comments-pagination) {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--wp--preset--spacing--30);
-  margin-top: var(--wp--preset--spacing--50);
-  padding-top: var(--wp--preset--spacing--40);
-  border-top: 1px solid var(--wp--preset--color--dark-dim);
-}
-
-:root :where(.wp-block-comments-pagination-numbers) a,
-:root :where(.wp-block-comments-pagination-numbers) span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  padding: var(--wp--preset--spacing--20) var(--wp--preset--spacing--30);
-  font-family: var(--wp--preset--font-family--archivo-black);
-  font-size: var(--wp--preset--font-size--base);
-  text-decoration: none;
-  color: var(--wp--preset--color--contrast);
-  border: 2px solid var(--wp--preset--color--dark-dim);
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-}
-
-:root :where(.wp-block-comments-pagination-numbers) a:hover {
-  background-color: var(--wp--preset--color--accent-1);
-  border-color: var(--wp--preset--color--accent-1);
-  color: var(--wp--preset--color--base);
-}
-
-:root :where(.wp-block-comments-pagination-previous),
-:root :where(.wp-block-comments-pagination-next) {
-  font-size: var(--wp--preset--font-size--small);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--wp--preset--color--accent-1);
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-:root :where(.wp-block-comments-pagination-previous:hover),
-:root :where(.wp-block-comments-pagination-next:hover) {
-  color: var(--wp--preset--color--accent-3);
-}
-
 
 .admin-bar [class*="nav"][style*="position: fixed"],
 .admin-bar [class*="header"][style*="position: fixed"] {

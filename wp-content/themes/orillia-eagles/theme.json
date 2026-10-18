@@ -74,11 +74,6 @@
           "color": "rgba(255,255,255,0.3)"
         },
         {
-          "slug": "gold-faint",
-          "name": "Gold Faint",
-          "color": "rgba(184,151,42,0.08)"
-        },
-        {
           "slug": "white-overlay",
           "name": "White Overlay",
           "color": "rgba(255,255,255,0.8)"
@@ -127,26 +122,6 @@
       ],
       "gradients": [
         {
-          "slug": "fade-overlay-1",
-          "name": "Fade Overlay",
-          "gradient": "linear-gradient(148deg,\n      rgba(255,255,255,1) 0%,\n      rgba(255,255,255,1) 38%,\n      rgba(255,255,255,0.92) 44%,\n      rgba(255,255,255,0.6) 52%,\n      rgba(255,255,255,0.15) 62%,\n      rgba(255,255,255,0) 70%\n    )"
-        },
-        {
-          "slug": "fade-overlay-2",
-          "name": "Fade Overlay 2",
-          "gradient": "linear-gradient(to top,\n      rgba(255,255,255,0.85) 0%,\n      rgba(255,255,255,0.3) 30%,\n      transparent 50%\n    )"
-        },
-        {
-          "slug": "fade-overlay-3",
-          "name": "Fade Overlay 3",
-          "gradient": "linear-gradient(148deg,\n    transparent 43.5%,\n    rgba(184, 151, 42, 0.25) 44%,\n    rgba(184, 151, 42, 0.08) 44.8%,\n    transparent 45.5%\n  )"
-        },
-        {
-          "slug": "fade-overlay-4",
-          "name": "Fade Overlay 4",
-          "gradient": "linear-gradient(to top,\n        rgba(255,255,255,1) 0%,\n        rgba(255,255,255,0.97) 35%,\n        rgba(255,255,255,0.8) 55%,\n        rgba(255,255,255,0.3) 75%,\n        transparent 100%\n      )"
-        },
-        {
           "slug": "scrim-bottom",
           "name": "Scrim Bottom",
           "gradient": "linear-gradient(0deg,\n        rgba(26,26,26,0.95) 0%,\n        rgba(26,26,26,0.75) 35%,\n        rgba(26,26,26,0.25) 70%,\n        rgba(26,26,26,0) 100%\n      )"
@@ -181,37 +156,10 @@
             {
               "fontFamily": "Hanken Grotesk",
               "fontStyle": "normal",
-              "fontWeight": "400",
+              "fontWeight": "100 900",
               "fontDisplay": "swap",
               "src": [
-                "file:./assets/fonts/hanken-grotesk/400.woff2"
-              ]
-            },
-            {
-              "fontFamily": "Hanken Grotesk",
-              "fontStyle": "normal",
-              "fontWeight": "500",
-              "fontDisplay": "swap",
-              "src": [
-                "file:./assets/fonts/hanken-grotesk/500.woff2"
-              ]
-            },
-            {
-              "fontFamily": "Hanken Grotesk",
-              "fontStyle": "normal",
-              "fontWeight": "600",
-              "fontDisplay": "swap",
-              "src": [
-                "file:./assets/fonts/hanken-grotesk/600.woff2"
-              ]
-            },
-            {
-              "fontFamily": "Hanken Grotesk",
-              "fontStyle": "normal",
-              "fontWeight": "700",
-              "fontDisplay": "swap",
-              "src": [
-                "file:./assets/fonts/hanken-grotesk/700.woff2"
+                "file:./assets/fonts/hanken-grotesk/hanken-grotesk-variable.woff2"
               ]
             }
           ]
@@ -311,23 +259,7 @@
     },
     "shadow": {
       "defaultPresets": false,
-      "presets": [
-        {
-          "slug": "shadow-1",
-          "name": "Shadow",
-          "shadow": "0 20px 60px rgba(26, 26, 26, 0.08)"
-        },
-        {
-          "slug": "shadow-2",
-          "name": "Shadow 2",
-          "shadow": "0 10px 40px rgba(26, 26, 26, 0.06)"
-        },
-        {
-          "slug": "shadow-3",
-          "name": "Shadow 3",
-          "shadow": "0 8px 30px rgba(184, 151, 42, 0.1)"
-        }
-      ]
+      "presets": []
     },
     "custom": {
       "lineHeight": {

@@ -322,14 +322,6 @@ body .roster-player:focus-within .roster-player-photo img {
 	color: var(--wp--preset--color--base) !important;
 }
 
-.post-hero-author {
-	align-items: center;
-}
-
-.post-hero-author-label {
-	text-transform: uppercase;
-	letter-spacing: 0.08em;
-}
 /* === single post: content === */
 
 .post-body {
