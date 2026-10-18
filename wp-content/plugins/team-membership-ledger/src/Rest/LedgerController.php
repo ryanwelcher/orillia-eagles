@@ -4,7 +4,7 @@ namespace OrillaEagles\Ledger\Rest;
 use OrillaEagles\Ledger\Admin\Menu;
 use OrillaEagles\Ledger\Data\OrderRepository;
 use OrillaEagles\Ledger\Data\PlayerRepository;
-use OrillaEagles\Ledger\Data\RosterRepository;
+use OrillaEagles\Ledger\Data\FamilyRepository;
 use OrillaEagles\Ledger\Domain\LedgerCalculator;
 use OrillaEagles\Ledger\Domain\LedgerSerializer;
 
@@ -138,7 +138,7 @@ final class LedgerController {
 	private static function rows_for( int $product_id ): array {
 		return LedgerCalculator::forPlayers(
 			( new PlayerRepository() )->allPlayers(),
-			( new RosterRepository() )->allMembers(),
+			( new FamilyRepository() )->allFamilies(),
 			( new OrderRepository() )->productRecords( $product_id )
 		);
 	}

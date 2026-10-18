@@ -16,15 +16,12 @@ final class LedgerSerializer {
 	/** @return array<string,mixed> */
 	public static function row( LedgerRow $row ): array {
 		return array(
-			// Player rows are keyed by player; legacy member rows by member.
-			'id'         => $row->playerId() ?: $row->memberId(),
+			'id'         => $row->playerId(),
 			'playerId'   => $row->playerId(),
 			'playerName' => $row->playerName(),
-			'memberId'   => $row->memberId(),
-			'name'       => $row->name(),
-			'email'      => $row->email(),
+			'familyId'   => $row->familyId(),
+			'familyName' => $row->familyName(),
 			'status'     => $row->status(),
-			'qty'        => $row->qty(),
 			'total'      => $row->total(),
 			'paid'       => $row->paid(),
 			'balance'    => $row->balance(),

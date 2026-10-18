@@ -11,7 +11,7 @@ final class OrderRepository {
 	public const AMOUNT_PAID_META = '_tml_amount_paid';
 	public const PLAYER_META      = '_tml_player_id';
 
-	/** @return array<int,array{customer_id:int,player_id:int,order_id:int,status:string,qty:int,line_total:float,amount_paid:float,date:?string}> */
+	/** @return array<int,array{customer_id:int,player_id:int,order_id:int,status:string,line_total:float,amount_paid:float,date:?string}> */
 	public function productRecords( int $product_id ): array {
 		$statuses = array_keys( wc_get_order_statuses() ); // all statuses
 		$orders   = array();
@@ -61,7 +61,6 @@ final class OrderRepository {
 					'player_id'   => $player_id,
 					'order_id'    => (int) $order->get_id(),
 					'status'      => $status,
-					'qty'         => (int) $item->get_quantity(),
 					'line_total'  => $line_total,
 					'amount_paid' => $paid,
 					'date'        => $date,

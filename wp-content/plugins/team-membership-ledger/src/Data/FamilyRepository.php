@@ -3,12 +3,15 @@ namespace OrillaEagles\Ledger\Data;
 
 defined( 'ABSPATH' ) || exit;
 
-final class RosterRepository {
+/**
+ * Families are WooCommerce customers who pay for one or more players.
+ */
+final class FamilyRepository {
 
 	public const ACTIVE_META = '_tml_active';
 
 	/** @return array<int,array{id:int,name:string,email:string,active:bool}> */
-	public function allMembers(): array {
+	public function allFamilies(): array {
 		$users = get_users(
 			array(
 				'role'    => 'customer',
@@ -20,10 +23,10 @@ final class RosterRepository {
 	}
 
 	/** @return array<int,array{id:int,name:string,email:string,active:bool}> */
-	public function activeMembers(): array {
+	public function activeFamilies(): array {
 		return array_values(
 			array_filter(
-				$this->allMembers(),
+				$this->allFamilies(),
 				static function ( $m ) {
 					return $m['active'];
 				}
@@ -35,7 +38,7 @@ final class RosterRepository {
 		update_user_meta( $user_id, self::ACTIVE_META, $active ? '1' : '0' );
 	}
 
-	public function createMember( string $first_name, string $last_name, string $email ): int {
+	public function createFamily( string $first_name, string $last_name, string $email ): int {
 		// Families get an account but aren't told about it (logins aren't used yet).
 		add_filter( 'woocommerce_email_enabled_customer_new_account', '__return_false' );
 		$user_id = wc_create_new_customer( sanitize_email( $email ), '', '', array(

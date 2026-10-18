@@ -3,11 +3,11 @@ import { familyTotals, makeFields } from './fields';
 describe( 'family grouping', () => {
 	const cad = { symbol: '$', decimals: 2 };
 	const rows = [
-		{ memberId: 10, name: 'Ed Smith', playerName: 'Liam', balance: 350 },
-		{ memberId: 10, name: 'Ed Smith', playerName: 'Emma', balance: 0 },
-		{ memberId: 10, name: 'Ed Smith', playerName: 'Jake', balance: 450 },
-		{ memberId: 20, name: 'Ann Jones', playerName: 'Zoe', balance: 0 },
-		{ memberId: 0, name: '', playerName: 'Aaron', balance: 0 },
+		{ familyId: 10, familyName: 'Ed Smith', playerName: 'Liam', balance: 350 },
+		{ familyId: 10, familyName: 'Ed Smith', playerName: 'Emma', balance: 0 },
+		{ familyId: 10, familyName: 'Ed Smith', playerName: 'Jake', balance: 450 },
+		{ familyId: 20, familyName: 'Ann Jones', playerName: 'Zoe', balance: 0 },
+		{ familyId: 0, familyName: '', playerName: 'Aaron', balance: 0 },
 	];
 	const group = makeFields( cad, familyTotals( rows ) ).find( ( f ) => f.id === 'group' );
 
@@ -29,7 +29,7 @@ describe( 'family grouping', () => {
 		const order = ( direction ) =>
 			[ rows[ 4 ], rows[ 0 ], rows[ 3 ] ]
 				.sort( ( a, b ) => group.sort( label( a ), label( b ), direction ) )
-				.map( ( r ) => r.memberId );
+				.map( ( r ) => r.familyId );
 		expect( order( 'asc' ) ).toEqual( [ 20, 10, 0 ] );
 		expect( order( 'desc' ) ).toEqual( [ 10, 20, 0 ] );
 	} );

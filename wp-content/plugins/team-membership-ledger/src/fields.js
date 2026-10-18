@@ -20,8 +20,8 @@ const UNASSIGNED_PREFIX = `${ UNASSIGNED } · `;
 export function familyTotals( rows ) {
 	const totals = new Map();
 	rows.forEach( ( row ) => {
-		const current = totals.get( row.memberId ) ?? { players: 0, balance: 0 };
-		totals.set( row.memberId, {
+		const current = totals.get( row.familyId ) ?? { players: 0, balance: 0 };
+		totals.set( row.familyId, {
 			players: current.players + 1,
 			balance: Math.round( ( current.balance + row.balance ) * 100 ) / 100,
 		} );
@@ -43,13 +43,13 @@ export function makeFields( currency, totals = new Map() ) {
 
 	// Group header text, e.g. "Ed Smith · 3 players · $600.00 owing".
 	const groupLabel = ( item ) => {
-		const { players = 0, balance = 0 } = totals.get( item.memberId ) ?? {};
+		const { players = 0, balance = 0 } = totals.get( item.familyId ) ?? {};
 		const count = sprintf(
 			/* translators: %d: number of players. */
 			_n( '%d player', '%d players', players, 'team-membership-ledger' ),
 			players
 		);
-		if ( ! item.memberId ) {
+		if ( ! item.familyId ) {
 			return `${ UNASSIGNED_PREFIX }${ count } · ${ __( 'link them to a family to charge', 'team-membership-ledger' ) }`;
 		}
 		const owing = balance > 0
@@ -59,7 +59,7 @@ export function makeFields( currency, totals = new Map() ) {
 				formatMoney( balance, currency )
 			)
 			: __( 'nothing owing', 'team-membership-ledger' );
-		return `${ item.name } · ${ count } · ${ owing }`;
+		return `${ item.familyName } · ${ count } · ${ owing }`;
 	};
 
 	return [
@@ -90,8 +90,8 @@ export function makeFields( currency, totals = new Map() ) {
 			id: 'family',
 			label: __( 'Family', 'team-membership-ledger' ),
 			enableGlobalSearch: true,
-			getValue: ( { item } ) => item.name,
-			render: ( { item } ) => item.name || '—',
+			getValue: ( { item } ) => item.familyName,
+			render: ( { item } ) => item.familyName || '—',
 		},
 		{
 			id: 'status',

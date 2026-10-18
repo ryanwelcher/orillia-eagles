@@ -4,26 +4,6 @@ namespace OrillaEagles\Ledger\Domain;
 final class LedgerCalculator {
 
 	/**
-	 * @param array $members list of ['id','name','email'].
-	 * @param array $records list of ['customer_id','status','qty','line_total','amount_paid','date'] for one product.
-	 * @return LedgerRow[]
-	 */
-	public static function forProduct( array $members, array $records ): array {
-		$by_member = array();
-		foreach ( $records as $r ) {
-			$by_member[ (int) $r['customer_id'] ][] = $r;
-		}
-
-		$rows = array();
-		foreach ( $members as $m ) {
-			$id     = (int) $m['id'];
-			$rows[] = self::rollUp( $id, (string) $m['name'], (string) $m['email'], $by_member[ $id ] ?? array() );
-		}
-
-		return $rows;
-	}
-
-	/**
 	 * One row per player, billed to a family.
 	 *
 	 * A player is listed when their family is active, or when they already have
@@ -33,8 +13,8 @@ final class LedgerCalculator {
 	 * are easy to spot.
 	 *
 	 * @param array $players  list of ['id','name','family_id','is_coach'].
-	 * @param array $families list of ['id','name','email','active'] (all families, active or not).
-	 * @param array $records  list of ['customer_id','player_id','order_id','status','qty','line_total','amount_paid','date'] for one product.
+	 * @param array $families list of ['id','name','active'] (all families, active or not).
+	 * @param array $records  list of ['customer_id','player_id','order_id','status','line_total','amount_paid','date'] for one product.
 	 * @return LedgerRow[] sorted by family name, then player name; unassigned last.
 	 */
 	public static function forPlayers( array $players, array $families, array $records ): array {
@@ -53,14 +33,15 @@ final class LedgerCalculator {
 
 		$rows = array();
 		foreach ( $players as $p ) {
-			$player_id = (int) $p['id'];
-			$own       = $by_player[ $player_id ] ?? array();
+			$player_id   = (int) $p['id'];
+			$player_name = (string) $p['name'];
+			$own         = $by_player[ $player_id ] ?? array();
 
 			$family_id = $own ? (int) $own[0]['customer_id'] : (int) $p['family_id'];
 			$family    = $family_by_id[ $family_id ] ?? null;
 			if ( ! $own && ! $family ) {
 				if ( empty( $p['is_coach'] ) ) {
-					$rows[] = new LedgerRow( 0, '', '', MemberStatus::UNASSIGNED, 0, 0.0, 0.0, null, array(), $player_id, (string) $p['name'] );
+					$rows[] = new LedgerRow( $player_id, $player_name, 0, '', LedgerStatus::UNASSIGNED, 0.0, 0.0, null );
 				}
 				continue;
 			}
@@ -68,21 +49,14 @@ final class LedgerCalculator {
 				continue;
 			}
 
-			$rows[] = self::rollUp(
-				$family_id,
-				$family ? (string) $family['name'] : '',
-				$family ? (string) $family['email'] : '',
-				$own,
-				$player_id,
-				(string) $p['name']
-			);
+			$rows[] = self::rollUp( $player_id, $player_name, $family_id, $family ? (string) $family['name'] : '', $own );
 		}
 
 		usort(
 			$rows,
 			static function ( LedgerRow $a, LedgerRow $b ) {
-				return ( '' === $a->name() ) <=> ( '' === $b->name() )
-					?: strcasecmp( $a->name(), $b->name() )
+				return ( '' === $a->familyName() ) <=> ( '' === $b->familyName() )
+					?: strcasecmp( $a->familyName(), $b->familyName() )
 					?: strcasecmp( $a->playerName(), $b->playerName() );
 			}
 		);
@@ -90,20 +64,18 @@ final class LedgerCalculator {
 		return $rows;
 	}
 
-	/** Roll a set of order records up into a single ledger row. */
-	private static function rollUp( int $id, string $name, string $email, array $own, int $player_id = 0, string $player_name = '' ): LedgerRow {
+	/** Roll a player's order records up into a single ledger row. */
+	private static function rollUp( int $player_id, string $player_name, int $family_id, string $family_name, array $own ): LedgerRow {
 		if ( empty( $own ) ) {
-			return new LedgerRow( $id, $name, $email, MemberStatus::NOT_ENTERED, 0, 0.0, 0.0, null, array(), $player_id, $player_name );
+			return new LedgerRow( $player_id, $player_name, $family_id, $family_name, LedgerStatus::NOT_ENTERED, 0.0, 0.0, null );
 		}
 
-		$qty       = 0;
 		$total     = 0.0;
 		$paid      = 0.0;
 		$all_paid  = true;
 		$date      = null;
 		$order_ids = array();
 		foreach ( $own as $r ) {
-			$qty   += (int) $r['qty'];
 			$total += (float) $r['line_total'];
 			$paid  += (float) $r['amount_paid'];
 			if ( 'completed' !== $r['status'] ) {
@@ -117,7 +89,7 @@ final class LedgerCalculator {
 			}
 		}
 
-		$status = $all_paid ? MemberStatus::PAID : MemberStatus::OWES;
-		return new LedgerRow( $id, $name, $email, $status, $qty, round( $total, 2 ), round( $paid, 2 ), $date, $order_ids, $player_id, $player_name );
+		$status = $all_paid ? LedgerStatus::PAID : LedgerStatus::OWES;
+		return new LedgerRow( $player_id, $player_name, $family_id, $family_name, $status, round( $total, 2 ), round( $paid, 2 ), $date, $order_ids );
 	}
 }

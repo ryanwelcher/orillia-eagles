@@ -3,7 +3,7 @@ namespace OrillaEagles\Ledger\Admin;
 
 use OrillaEagles\Ledger\Data\OrderRepository;
 use OrillaEagles\Ledger\Data\PlayerRepository;
-use OrillaEagles\Ledger\Data\RosterRepository;
+use OrillaEagles\Ledger\Data\FamilyRepository;
 use OrillaEagles\Ledger\Domain\RolloverPlan;
 
 defined( 'ABSPATH' ) || exit;
@@ -25,22 +25,11 @@ final class RolloverScreen {
 			self::redirect();
 		}
 
-		$roster  = new RosterRepository();
-		$orders  = new OrderRepository();
-		$players = new PlayerRepository();
-
-		$active_families = array();
-		foreach ( $roster->activeMembers() as $m ) {
-			$active_families[ (int) $m['id'] ] = true;
-		}
-
-		// Every player whose family is active is chargeable, billed to that family.
-		$family_for = array();
-		foreach ( $players->allPlayers() as $p ) {
-			if ( isset( $active_families[ $p['family_id'] ] ) ) {
-				$family_for[ $p['id'] ] = $p['family_id'];
-			}
-		}
+		$orders     = new OrderRepository();
+		$family_for = RolloverPlan::chargeable(
+			( new PlayerRepository() )->allPlayers(),
+			array_column( ( new FamilyRepository() )->activeFamilies(), 'id' )
+		);
 		$plan = RolloverPlan::build( array_keys( $family_for ), $orders->existingPlayerIds( $product_id ) );
 
 		$created = 0;

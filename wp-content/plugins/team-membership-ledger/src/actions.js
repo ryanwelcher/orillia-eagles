@@ -50,7 +50,7 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 					/* translators: 1: player name, 2: family name */
 					__( 'Recording a payment for %1$s (billed to %2$s).', 'team-membership-ledger' ),
 					item.playerName,
-					item.name
+					item.familyName
 				) }
 			</p>
 			<TextControl

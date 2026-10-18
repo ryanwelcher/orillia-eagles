@@ -2,35 +2,35 @@
 namespace OrillaEagles\Ledger\Admin;
 
 use OrillaEagles\Ledger\Data\PlayerRepository;
-use OrillaEagles\Ledger\Data\RosterRepository;
+use OrillaEagles\Ledger\Data\FamilyRepository;
 
 defined( 'ABSPATH' ) || exit;
 
-final class RosterScreen {
+final class FamiliesScreen {
 
 	public static function handlePost(): void {
-		if ( empty( $_POST['tml_roster_action'] ) ) {
+		if ( empty( $_POST['tml_family_action'] ) ) {
 			return;
 		}
 		if ( ! current_user_can( Menu::CAP ) ) {
 			wp_die( esc_html__( 'Not allowed.', 'team-membership-ledger' ) );
 		}
-		check_admin_referer( 'tml_roster' );
+		check_admin_referer( 'tml_families' );
 
-		$repo   = new RosterRepository();
-		$action = sanitize_key( wp_unslash( $_POST['tml_roster_action'] ) );
+		$repo   = new FamilyRepository();
+		$action = sanitize_key( wp_unslash( $_POST['tml_family_action'] ) );
 
 		if ( 'toggle' === $action ) {
 			$repo->setActive( absint( $_POST['user_id'] ?? 0 ), ! empty( $_POST['active'] ) );
 		} elseif ( 'create' === $action ) {
 			try {
-				$repo->createMember(
+				$repo->createFamily(
 					sanitize_text_field( wp_unslash( $_POST['first_name'] ?? '' ) ),
 					sanitize_text_field( wp_unslash( $_POST['last_name'] ?? '' ) ),
 					sanitize_email( wp_unslash( $_POST['email'] ?? '' ) )
 				);
 			} catch ( \RuntimeException $e ) {
-				set_transient( 'tml_roster_error', $e->getMessage(), 30 );
+				set_transient( 'tml_families_error', $e->getMessage(), 30 );
 			}
 		} elseif ( 'link_players' === $action ) {
 			( new PlayerRepository() )->setFamilyPlayers(
@@ -47,12 +47,12 @@ final class RosterScreen {
 		if ( ! current_user_can( Menu::CAP ) ) {
 			return;
 		}
-		$members = ( new RosterRepository() )->allMembers();
+		$families = ( new FamilyRepository() )->allFamilies();
 		$players = ( new PlayerRepository() )->allPlayers();
 
 		$family_id = absint( $_GET['family'] ?? 0 );
 		if ( $family_id ) {
-			self::renderFamily( $family_id, $members, $players );
+			self::renderFamily( $family_id, $families, $players );
 			return;
 		}
 
@@ -61,8 +61,8 @@ final class RosterScreen {
 			$names_by_family[ $p['family_id'] ][] = $p['name'];
 		}
 
-		$err = get_transient( 'tml_roster_error' );
-		delete_transient( 'tml_roster_error' );
+		$err = get_transient( 'tml_families_error' );
+		delete_transient( 'tml_families_error' );
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Families', 'team-membership-ledger' ); ?></h1>
@@ -73,8 +73,8 @@ final class RosterScreen {
 			<h2><?php esc_html_e( 'Add family', 'team-membership-ledger' ); ?></h2>
 			<p><?php esc_html_e( 'Each family gets a WooCommerce customer account. No email is sent. A self-paying adult is a family of one.', 'team-membership-ledger' ); ?></p>
 			<form method="post">
-				<?php wp_nonce_field( 'tml_roster' ); ?>
-				<input type="hidden" name="tml_roster_action" value="create" />
+				<?php wp_nonce_field( 'tml_families' ); ?>
+				<input type="hidden" name="tml_family_action" value="create" />
 				<input type="text" name="first_name" placeholder="<?php esc_attr_e( 'First name', 'team-membership-ledger' ); ?>" required />
 				<input type="text" name="last_name" placeholder="<?php esc_attr_e( 'Last name', 'team-membership-ledger' ); ?>" required />
 				<input type="email" name="email" placeholder="<?php esc_attr_e( 'Email', 'team-membership-ledger' ); ?>" required />
@@ -90,7 +90,7 @@ final class RosterScreen {
 					<th><?php esc_html_e( 'Active', 'team-membership-ledger' ); ?></th>
 				</tr></thead>
 				<tbody>
-				<?php foreach ( $members as $m ) : ?>
+				<?php foreach ( $families as $m ) : ?>
 					<tr>
 						<td><?php echo esc_html( $m['name'] ); ?></td>
 						<td><?php echo esc_html( $m['email'] ); ?></td>
@@ -100,8 +100,8 @@ final class RosterScreen {
 						</td>
 						<td>
 							<form method="post" style="margin:0">
-								<?php wp_nonce_field( 'tml_roster' ); ?>
-								<input type="hidden" name="tml_roster_action" value="toggle" />
+								<?php wp_nonce_field( 'tml_families' ); ?>
+								<input type="hidden" name="tml_family_action" value="toggle" />
 								<input type="hidden" name="user_id" value="<?php echo esc_attr( $m['id'] ); ?>" />
 								<input type="hidden" name="active" value="<?php echo $m['active'] ? '0' : '1'; ?>" />
 								<button class="button">
@@ -120,11 +120,11 @@ final class RosterScreen {
 	/**
 	 * Checklist of every player; ticked players are paid for by this family.
 	 *
-	 * @param array $members
+	 * @param array $families
 	 * @param array $players
 	 */
-	private static function renderFamily( int $family_id, array $members, array $players ): void {
-		$names = array_column( $members, 'name', 'id' );
+	private static function renderFamily( int $family_id, array $families, array $players ): void {
+		$names = array_column( $families, 'name', 'id' );
 		if ( ! isset( $names[ $family_id ] ) ) {
 			echo '<div class="wrap"><p>' . esc_html__( 'Family not found.', 'team-membership-ledger' ) . '</p></div>';
 			return;
@@ -139,8 +139,8 @@ final class RosterScreen {
 			</h1>
 			<p><a href="<?php echo esc_url( admin_url( 'admin.php?page=' . Menu::SLUG ) ); ?>">&larr; <?php esc_html_e( 'All families', 'team-membership-ledger' ); ?></a></p>
 			<form method="post">
-				<?php wp_nonce_field( 'tml_roster' ); ?>
-				<input type="hidden" name="tml_roster_action" value="link_players" />
+				<?php wp_nonce_field( 'tml_families' ); ?>
+				<input type="hidden" name="tml_family_action" value="link_players" />
 				<input type="hidden" name="user_id" value="<?php echo esc_attr( $family_id ); ?>" />
 				<fieldset>
 				<?php foreach ( $players as $p ) : ?>
