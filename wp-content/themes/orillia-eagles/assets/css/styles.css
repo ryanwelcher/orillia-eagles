@@ -3101,8 +3101,60 @@ body {
 
 .schedule-past-controls {
 	display: flex;
-	justify-content: flex-end;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	/* Room for the 2px focus outline + 3px offset, which .schedule-table's overflow would clip. */
+	padding: 5px;
 	margin-bottom: var(--wp--preset--spacing--30);
+}
+
+.schedule-level-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.schedule-level-filter {
+	appearance: none;
+	min-height: 44px;
+	padding: 0.75rem 1.1rem;
+	border: 1px solid var(--wp--preset--color--contrast);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--wp--preset--color--contrast);
+	font-family: inherit;
+	font-size: 0.78rem;
+	font-weight: 800;
+	letter-spacing: 0.06em;
+	line-height: 1.2;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.schedule-level-filter:hover,
+.schedule-level-filter:focus-visible {
+	border-color: var(--wp--preset--color--accent-1);
+	outline: 2px solid var(--wp--preset--color--accent-1);
+	outline-offset: 3px;
+}
+
+.schedule-level-filter[aria-pressed="true"] {
+	border-color: var(--wp--preset--color--accent-1);
+	background: var(--wp--preset--color--accent-1);
+	color: var(--wp--preset--color--contrast);
+}
+
+.schedule-filter-empty {
+	padding: 1.25rem;
+	text-align: center;
+}
+
+.schedule-past-toggle[hidden],
+.schedule-filter-empty[hidden] {
+	display: none;
 }
 
 .schedule-past-toggle {
@@ -3278,8 +3330,29 @@ body {
 		padding: 1.1rem 1.25rem;
 	}
 
+	/* Filters span the full width; the past-events toggle sits full-width below. */
 	.schedule-past-controls {
-		justify-content: center;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.5rem;
+		/* The table doesn't clip here, so the focus-outline room isn't needed. */
+		padding: 0;
+	}
+
+	.schedule-level-filters {
+		flex-wrap: nowrap;
+		gap: 0.4rem;
+	}
+
+	.schedule-level-filter {
+		flex: 1 1 auto;
+		padding-inline: 0.6rem;
+		font-size: 0.72rem;
+		letter-spacing: 0.04em;
+	}
+
+	.schedule-past-toggle {
+		width: 100%;
 	}
 
 	/* Date leads the card. */
