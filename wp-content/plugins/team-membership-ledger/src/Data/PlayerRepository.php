@@ -86,7 +86,8 @@ final class PlayerRepository {
 	private function shape( $post ): array {
 		return array(
 			'id'        => (int) $post->ID,
-			'name'      => get_the_title( $post ),
+			// get_the_title() returns HTML (&#8217; etc.); callers escape on output.
+			'name'      => html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ),
 			'family_id' => (int) get_post_meta( $post->ID, self::FAMILY_META, true ),
 			'is_coach'  => has_term( 'coach', 'roster_role', $post ),
 		);

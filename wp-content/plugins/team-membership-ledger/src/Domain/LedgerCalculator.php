@@ -28,12 +28,14 @@ final class LedgerCalculator {
 	 *
 	 * A player is listed when their family is active, or when they already have
 	 * a charge for this product. A charged player is shown under the family the
-	 * order was billed to, even if their link has changed since.
+	 * order was billed to, even if their link has changed since. Uncharged
+	 * players with no family (coaches aside) are listed as unassigned so gaps
+	 * are easy to spot.
 	 *
-	 * @param array $players  list of ['id','name','family_id'].
+	 * @param array $players  list of ['id','name','family_id','is_coach'].
 	 * @param array $families list of ['id','name','email','active'] (all families, active or not).
 	 * @param array $records  list of ['customer_id','player_id','order_id','status','qty','line_total','amount_paid','date'] for one product.
-	 * @return LedgerRow[] sorted by family name, then player name.
+	 * @return LedgerRow[] sorted by family name, then player name; unassigned last.
 	 */
 	public static function forPlayers( array $players, array $families, array $records ): array {
 		$family_by_id = array();
@@ -56,7 +58,13 @@ final class LedgerCalculator {
 
 			$family_id = $own ? (int) $own[0]['customer_id'] : (int) $p['family_id'];
 			$family    = $family_by_id[ $family_id ] ?? null;
-			if ( ! $own && ( ! $family || empty( $family['active'] ) ) ) {
+			if ( ! $own && ! $family ) {
+				if ( empty( $p['is_coach'] ) ) {
+					$rows[] = new LedgerRow( 0, '', '', MemberStatus::UNASSIGNED, 0, 0.0, 0.0, null, array(), $player_id, (string) $p['name'] );
+				}
+				continue;
+			}
+			if ( ! $own && empty( $family['active'] ) ) {
 				continue;
 			}
 
@@ -73,7 +81,9 @@ final class LedgerCalculator {
 		usort(
 			$rows,
 			static function ( LedgerRow $a, LedgerRow $b ) {
-				return strcasecmp( $a->name(), $b->name() ) ?: strcasecmp( $a->playerName(), $b->playerName() );
+				return ( '' === $a->name() ) <=> ( '' === $b->name() )
+					?: strcasecmp( $a->name(), $b->name() )
+					?: strcasecmp( $a->playerName(), $b->playerName() );
 			}
 		);
 

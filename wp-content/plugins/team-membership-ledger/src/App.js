@@ -3,18 +3,19 @@ import { SelectControl, Spinner, Snackbar, Button } from '@wordpress/components'
 import { DataViews, filterSortAndPaginate } from '@wordpress/dataviews';
 import { __ } from '@wordpress/i18n';
 import { fetchLedger } from './api';
-import { makeFields } from './fields';
+import { makeFields, familyTotals } from './fields';
 import { makeActions } from './actions';
 
 const DEFAULT_VIEW = {
 	type: 'table',
 	page: 1,
-	perPage: 25,
+	// Large enough that a family's players rarely split across pages.
+	perPage: 100,
 	search: '',
 	filters: [],
-	// Rows arrive sorted by family then player; sorting by family keeps that order.
-	sort: { field: 'family', direction: 'asc' },
-	fields: [ 'family', 'status', 'total', 'paid', 'balance', 'date' ],
+	groupBy: { field: 'group', direction: 'asc', showLabel: false },
+	sort: { field: 'player', direction: 'asc' },
+	fields: [ 'status', 'total', 'paid', 'balance', 'date' ],
 	titleField: 'player',
 };
 
@@ -74,7 +75,10 @@ export default function App() {
 		};
 	}, [ productId, reloadKey ] );
 
-	const fields = useMemo( () => makeFields( currency ), [ currency ] );
+	const fields = useMemo(
+		() => makeFields( currency, familyTotals( rows ) ),
+		[ currency, rows ]
+	);
 	const { data: shownData, paginationInfo } = useMemo(
 		() => filterSortAndPaginate( rows, view, fields ),
 		[ rows, view, fields ]

@@ -167,10 +167,9 @@ final class LedgerCalculatorTest extends TestCase {
 		$this->assertSame( 'Ed Smith', $rows[0]->name() );
 	}
 
-	public function test_for_players_hides_uncharged_players_of_inactive_or_missing_families(): void {
+	public function test_for_players_hides_uncharged_players_of_inactive_families(): void {
 		$players = array(
 			array( 'id' => 201, 'name' => 'Inactive Kid', 'family_id' => 30 ),
-			array( 'id' => 202, 'name' => 'Unlinked Kid', 'family_id' => 0 ),
 			array( 'id' => 203, 'name' => 'Charged Kid', 'family_id' => 30 ),
 		);
 		$records = array(
@@ -192,5 +191,23 @@ final class LedgerCalculatorTest extends TestCase {
 		$rows = LedgerCalculator::forPlayers( $players, $this->families(), $records );
 
 		$this->assertSame( MemberStatus::NOT_ENTERED, $rows[0]->status() );
+	}
+
+	public function test_for_players_lists_unlinked_players_as_unassigned_last(): void {
+		$players = array(
+			array( 'id' => 301, 'name' => 'Aaron Unlinked', 'family_id' => 0, 'is_coach' => false ),
+			array( 'id' => 302, 'name' => 'Gone Family Kid', 'family_id' => 99, 'is_coach' => false ),
+			array( 'id' => 303, 'name' => 'Coach Carter', 'family_id' => 0, 'is_coach' => true ),
+			array( 'id' => 304, 'name' => 'Zed Smith', 'family_id' => 10, 'is_coach' => false ),
+		);
+
+		$rows = LedgerCalculator::forPlayers( $players, $this->families(), array() );
+
+		$this->assertSame( array( 304, 301, 302 ), array_map( fn( $r ) => $r->playerId(), $rows ) );
+		$this->assertSame( MemberStatus::NOT_ENTERED, $rows[0]->status() );
+		$this->assertSame( MemberStatus::UNASSIGNED, $rows[1]->status() );
+		$this->assertSame( 0, $rows[1]->memberId() );
+		$this->assertSame( '', $rows[1]->name() );
+		$this->assertSame( MemberStatus::UNASSIGNED, $rows[2]->status() );
 	}
 }

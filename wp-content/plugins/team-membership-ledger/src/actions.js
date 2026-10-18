@@ -78,6 +78,10 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 	);
 }
 
+// Unassigned players have no family to bill, so there's nothing to pay yet.
+const isPayable = ( item ) =>
+	! [ 'paid', 'unassigned' ].includes( item.status ) && item.orderCount <= 1;
+
 /**
  * Build DataViews actions.
  *
@@ -89,7 +93,7 @@ export function makeActions( { productId, onRowUpdated, onNotice } ) {
 		{
 			id: 'add-payment',
 			label: __( 'Add payment', 'team-membership-ledger' ),
-			isEligible: ( item ) => item.status !== 'paid' && item.orderCount <= 1,
+			isEligible: ( item ) => isPayable( item ),
 			RenderModal: ( { items, closeModal } ) => (
 				<AddPaymentModal
 					item={ items[ 0 ] }
@@ -103,7 +107,7 @@ export function makeActions( { productId, onRowUpdated, onNotice } ) {
 		{
 			id: 'mark-paid',
 			label: __( 'Mark paid', 'team-membership-ledger' ),
-			isEligible: ( item ) => item.status !== 'paid' && item.orderCount <= 1,
+			isEligible: ( item ) => isPayable( item ),
 			callback: async ( items ) => {
 				const item = items[ 0 ];
 				try {
