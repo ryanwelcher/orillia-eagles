@@ -33,7 +33,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"program-detail has-text-color","textColor":"accent-2","fontSize":"small"} -->
-<p class="program-detail has-text-color has-accent-2-color has-small-font-size">Saturdays · 10:00 AM</p>
+<p class="program-detail has-text-color has-accent-2-color has-small-font-size">Saturdays</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
