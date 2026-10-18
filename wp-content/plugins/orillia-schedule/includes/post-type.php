@@ -26,10 +26,9 @@ function orillia_schedule_register_post_type() {
 
 	$args = array(
 		'labels'             => $labels,
-		// Events are surfaced only through the schedule table pattern (a query
-		// loop), never via their own archive or pretty single URLs, so the post
-		// type stays out of front-end routing (no archive, no rewrite, hidden
-		// from search) while remaining fully editable in the admin.
+		// Events are listed through the schedule table pattern (a query loop),
+		// not their own archive, and are hidden from search. Events with
+		// "Link to event page" on get a pretty single URL, /event/{slug}/.
 		// publicly_queryable must be true so the type counts as "viewable"
 		// (is_post_type_viewable) — the core Query Loop block only renders
 		// viewable post types, so without this the schedule table shows no rows.
@@ -37,7 +36,10 @@ function orillia_schedule_register_post_type() {
 		'publicly_queryable' => true,
 		'exclude_from_search' => true,
 		'has_archive'        => false,
-		'rewrite'            => false,
+		'rewrite'            => array(
+			'slug'       => 'event',
+			'with_front' => false,
+		),
 		'show_ui'            => true,
 		'show_in_menu'       => true,
 		'show_in_rest'       => true,

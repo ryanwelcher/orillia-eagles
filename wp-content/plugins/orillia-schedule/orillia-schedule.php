@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Orillia Eagles Schedule
  * Description: Team schedule with date ranges, optional times, statuses, single-event links, and Event Type and Level taxonomies.
- * Version: 1.3.2
+ * Version: 1.4.0
  * Author: Studio Code
  * Text Domain: orillia-schedule
  */
@@ -27,6 +27,19 @@ function orillia_schedule_activate() {
 	flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'orillia_schedule_activate' );
+
+/**
+ * Activation flushes rewrite rules, but sites updated in place never
+ * reactivate. Flush once when the rules this plugin registers change.
+ */
+function orillia_schedule_maybe_flush_rewrites() {
+	$version = '1'; // Bump when the post type's or taxonomies' rewrite args change.
+	if ( get_option( 'orillia_schedule_rewrite_version' ) !== $version ) {
+		flush_rewrite_rules( false );
+		update_option( 'orillia_schedule_rewrite_version', $version );
+	}
+}
+add_action( 'init', 'orillia_schedule_maybe_flush_rewrites', 99 );
 
 function orillia_schedule_deactivate() {
 	flush_rewrite_rules();
