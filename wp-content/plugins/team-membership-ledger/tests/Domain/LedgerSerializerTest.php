@@ -47,4 +47,19 @@ final class LedgerSerializerTest extends TestCase {
 		$this->assertSame( 1, $out[0]['memberId'] );
 		$this->assertSame( 2, $out[1]['memberId'] );
 	}
+
+	public function test_player_row_is_keyed_by_player(): void {
+		$row = new LedgerRow( 10, 'Ed Smith', 'ed@e.com', MemberStatus::OWES, 1, 300.0, 0.0, null, array( 5 ), 101, 'Liam Smith' );
+		$out = LedgerSerializer::row( $row );
+		$this->assertSame( 101, $out['id'] );
+		$this->assertSame( 101, $out['playerId'] );
+		$this->assertSame( 'Liam Smith', $out['playerName'] );
+		$this->assertSame( 10, $out['memberId'] );
+		$this->assertSame( 'Ed Smith', $out['name'] );
+	}
+
+	public function test_member_row_falls_back_to_member_id(): void {
+		$row = new LedgerRow( 7, 'Jane', 'j@e.com', MemberStatus::PAID, 1, 10.0, 10.0, null, array( 4 ) );
+		$this->assertSame( 7, LedgerSerializer::row( $row )['id'] );
+	}
 }

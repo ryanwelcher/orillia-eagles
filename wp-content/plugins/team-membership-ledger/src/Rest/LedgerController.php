@@ -3,6 +3,7 @@ namespace OrillaEagles\Ledger\Rest;
 
 use OrillaEagles\Ledger\Admin\Menu;
 use OrillaEagles\Ledger\Data\OrderRepository;
+use OrillaEagles\Ledger\Data\PlayerRepository;
 use OrillaEagles\Ledger\Data\RosterRepository;
 use OrillaEagles\Ledger\Domain\LedgerCalculator;
 use OrillaEagles\Ledger\Domain\LedgerSerializer;
@@ -41,7 +42,7 @@ final class LedgerController {
 				'args'                => array(
 					'product_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
 					'order_id'   => array( 'type' => 'integer', 'required' => false, 'sanitize_callback' => 'absint', 'default' => 0 ),
-					'member_id'  => array( 'type' => 'integer', 'required' => false, 'sanitize_callback' => 'absint', 'default' => 0 ),
+					'player_id'  => array( 'type' => 'integer', 'required' => false, 'sanitize_callback' => 'absint', 'default' => 0 ),
 					'amount'     => array( 'type' => 'number', 'required' => true ),
 				),
 			)
@@ -57,7 +58,7 @@ final class LedgerController {
 				'args'                => array(
 					'product_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
 					'order_id'   => array( 'type' => 'integer', 'required' => false, 'sanitize_callback' => 'absint', 'default' => 0 ),
-					'member_id'  => array( 'type' => 'integer', 'required' => false, 'sanitize_callback' => 'absint', 'default' => 0 ),
+					'player_id'  => array( 'type' => 'integer', 'required' => false, 'sanitize_callback' => 'absint', 'default' => 0 ),
 				),
 			)
 		);
@@ -70,14 +71,8 @@ final class LedgerController {
 	public static function get_ledger( \WP_REST_Request $request ): \WP_REST_Response {
 		$product_id = absint( $request['product_id'] );
 		$orders     = new OrderRepository();
-		$roster     = new RosterRepository();
 
-		$rows = array();
-		if ( $product_id ) {
-			$members = $roster->activeMembers();
-			$records = $orders->productRecords( $product_id );
-			$rows    = LedgerSerializer::rows( LedgerCalculator::forProduct( $members, $records ) );
-		}
+		$rows = $product_id ? LedgerSerializer::rows( self::rows_for( $product_id ) ) : array();
 
 		return new \WP_REST_Response(
 			array(
@@ -92,7 +87,7 @@ final class LedgerController {
 	public static function add_payment( \WP_REST_Request $request ) {
 		$product_id = absint( $request['product_id'] );
 		$order_id   = absint( $request['order_id'] );
-		$member_id  = absint( $request['member_id'] );
+		$player_id  = absint( $request['player_id'] );
 		$amount     = round( (float) $request['amount'], 2 );
 
 		if ( $amount <= 0 ) {
@@ -100,56 +95,63 @@ final class LedgerController {
 		}
 
 		try {
-			$order_id = self::resolve_order( $order_id, $member_id, $product_id );
+			$order_id = self::resolve_order( $order_id, $player_id, $product_id );
 			( new OrderRepository() )->addPayment( $order_id, $amount );
 		} catch ( \RuntimeException $e ) {
 			return new \WP_Error( 'tml_action_failed', $e->getMessage(), array( 'status' => 400 ) );
 		}
 
-		return self::row_response( $product_id, $member_id ?: null, $order_id );
+		return self::row_response( $product_id, $player_id, $order_id );
 	}
 
 	public static function mark_paid( \WP_REST_Request $request ) {
 		$product_id = absint( $request['product_id'] );
 		$order_id   = absint( $request['order_id'] );
-		$member_id  = absint( $request['member_id'] );
+		$player_id  = absint( $request['player_id'] );
 
 		try {
-			$order_id = self::resolve_order( $order_id, $member_id, $product_id );
+			$order_id = self::resolve_order( $order_id, $player_id, $product_id );
 			( new OrderRepository() )->markPaid( $order_id );
 		} catch ( \RuntimeException $e ) {
 			return new \WP_Error( 'tml_action_failed', $e->getMessage(), array( 'status' => 400 ) );
 		}
 
-		return self::row_response( $product_id, $member_id ?: null, $order_id );
+		return self::row_response( $product_id, $player_id, $order_id );
 	}
 
-	/** Resolve an existing order id, or create the Requested order on the fly. */
-	private static function resolve_order( int $order_id, int $member_id, int $product_id ): int {
+	/** Resolve an existing order id, or create the Requested order on the fly for the player's family. */
+	private static function resolve_order( int $order_id, int $player_id, int $product_id ): int {
 		if ( $order_id ) {
 			return $order_id;
 		}
-		if ( ! $member_id || ! $product_id ) {
+		if ( ! $player_id || ! $product_id ) {
 			throw new \RuntimeException( __( 'No order to act on.', 'team-membership-ledger' ) );
 		}
-		return ( new OrderRepository() )->createRequestedOrder( $member_id, $product_id );
+		$family_id = ( new PlayerRepository() )->familyIdFor( $player_id );
+		if ( ! $family_id ) {
+			throw new \RuntimeException( __( 'This player has no family to bill.', 'team-membership-ledger' ) );
+		}
+		return ( new OrderRepository() )->createRequestedOrder( $family_id, $product_id, $player_id );
 	}
 
-	/** Recompute and return the single affected member's row after a write. */
-	private static function row_response( int $product_id, ?int $member_id, int $order_id ): \WP_REST_Response {
-		if ( ! $member_id && $order_id ) {
+	/** @return \OrillaEagles\Ledger\Domain\LedgerRow[] */
+	private static function rows_for( int $product_id ): array {
+		return LedgerCalculator::forPlayers(
+			( new PlayerRepository() )->allPlayers(),
+			( new RosterRepository() )->allMembers(),
+			( new OrderRepository() )->productRecords( $product_id )
+		);
+	}
+
+	/** Recompute and return the single affected player's row after a write. */
+	private static function row_response( int $product_id, int $player_id, int $order_id ): \WP_REST_Response {
+		if ( ! $player_id && $order_id ) {
 			$order     = wc_get_order( $order_id );
-			$member_id = $order ? (int) $order->get_customer_id() : 0;
+			$player_id = $order ? (int) $order->get_meta( OrderRepository::PLAYER_META ) : 0;
 		}
 
-		$orders  = new OrderRepository();
-		$roster  = new RosterRepository();
-		$members = $roster->activeMembers();
-		$records = $orders->productRecords( $product_id );
-		$rows    = LedgerCalculator::forProduct( $members, $records );
-
-		foreach ( $rows as $row ) {
-			if ( $row->memberId() === $member_id ) {
+		foreach ( self::rows_for( $product_id ) as $row ) {
+			if ( $row->playerId() === $player_id ) {
 				return new \WP_REST_Response( LedgerSerializer::row( $row ), 200 );
 			}
 		}

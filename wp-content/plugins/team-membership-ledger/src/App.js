@@ -12,9 +12,10 @@ const DEFAULT_VIEW = {
 	perPage: 25,
 	search: '',
 	filters: [],
-	sort: { field: 'name', direction: 'asc' },
-	fields: [ 'status', 'qty', 'total', 'paid', 'balance', 'date' ],
-	titleField: 'name',
+	// Rows arrive sorted by family then player; sorting by family keeps that order.
+	sort: { field: 'family', direction: 'asc' },
+	fields: [ 'family', 'status', 'total', 'paid', 'balance', 'date' ],
+	titleField: 'player',
 };
 
 export default function App() {
@@ -35,7 +36,7 @@ export default function App() {
 
 	const handleRowUpdated = ( updated ) => {
 		setRows( ( current ) =>
-			current.map( ( r ) => ( r.memberId === updated.memberId ? updated : r ) )
+			current.map( ( r ) => ( r.id === updated.id ? updated : r ) )
 		);
 	};
 
@@ -115,7 +116,7 @@ export default function App() {
 					style={ { marginTop: '24px', marginBottom: '12px' } }
 				>
 					{ productName ||
-						__( 'Member ledger', 'team-membership-ledger' ) }
+						__( 'Player ledger', 'team-membership-ledger' ) }
 				</h2>
 			) }
 			{ productId === 0 ? (
@@ -130,7 +131,7 @@ export default function App() {
 					onChangeView={ setView }
 					paginationInfo={ paginationInfo }
 					defaultLayouts={ { table: {} } }
-					getItemId={ ( item ) => String( item.memberId ) }
+					getItemId={ ( item ) => String( item.id ) }
 					isLoading={ isLoading }
 					actions={ actions }
 				/>

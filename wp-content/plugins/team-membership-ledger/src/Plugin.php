@@ -27,6 +27,8 @@ final class Plugin {
 		if ( is_admin() ) {
 			\OrillaEagles\Ledger\Admin\Capabilities::ensure();
 		}
+		// After orillia-players registers the `player` post type on init.
+		add_action( 'init', array( \OrillaEagles\Ledger\Data\PlayerRepository::class, 'registerMeta' ), 20 );
 		add_action( 'admin_menu', array( \OrillaEagles\Ledger\Admin\Menu::class, 'register' ) );
 		add_action( 'admin_enqueue_scripts', array( \OrillaEagles\Ledger\Admin\LedgerScreen::class, 'enqueue' ) );
 		add_action( 'rest_api_init', array( \OrillaEagles\Ledger\Rest\LedgerController::class, 'register' ) );

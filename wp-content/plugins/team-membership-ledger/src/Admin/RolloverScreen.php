@@ -2,6 +2,7 @@
 namespace OrillaEagles\Ledger\Admin;
 
 use OrillaEagles\Ledger\Data\OrderRepository;
+use OrillaEagles\Ledger\Data\PlayerRepository;
 use OrillaEagles\Ledger\Data\RosterRepository;
 use OrillaEagles\Ledger\Domain\RolloverPlan;
 
@@ -24,21 +25,28 @@ final class RolloverScreen {
 			self::redirect();
 		}
 
-		$roster = new RosterRepository();
-		$orders = new OrderRepository();
+		$roster  = new RosterRepository();
+		$orders  = new OrderRepository();
+		$players = new PlayerRepository();
 
-		$active_ids = array_map(
-			static function ( $m ) {
-				return (int) $m['id'];
-			},
-			$roster->activeMembers()
-		);
-		$plan = RolloverPlan::build( $active_ids, $orders->existingCustomerIds( $product_id ) );
+		$active_families = array();
+		foreach ( $roster->activeMembers() as $m ) {
+			$active_families[ (int) $m['id'] ] = true;
+		}
+
+		// Every player whose family is active is chargeable, billed to that family.
+		$family_for = array();
+		foreach ( $players->allPlayers() as $p ) {
+			if ( isset( $active_families[ $p['family_id'] ] ) ) {
+				$family_for[ $p['id'] ] = $p['family_id'];
+			}
+		}
+		$plan = RolloverPlan::build( array_keys( $family_for ), $orders->existingPlayerIds( $product_id ) );
 
 		$created = 0;
-		foreach ( $plan['to_create'] as $customer_id ) {
+		foreach ( $plan['to_create'] as $player_id ) {
 			try {
-				$orders->createRequestedOrder( $customer_id, $product_id );
+				$orders->createRequestedOrder( $family_for[ $player_id ], $product_id, $player_id );
 				$created++;
 			} catch ( \RuntimeException $e ) {
 				// Skip a single failure; continue the batch.
@@ -50,7 +58,7 @@ final class RolloverScreen {
 			'tml_rollover_notice',
 			sprintf(
 				/* translators: 1: created count, 2: skipped count. */
-				__( '%1$d order(s) created, %2$d skipped (already had one).', 'team-membership-ledger' ),
+				__( '%1$d charge(s) created, %2$d skipped (already charged).', 'team-membership-ledger' ),
 				$created,
 				count( $plan['to_skip'] )
 			),
@@ -77,7 +85,7 @@ final class RolloverScreen {
 			<?php if ( $notice ) : ?>
 				<div class="notice notice-success"><p><?php echo esc_html( $notice ); ?></p></div>
 			<?php endif; ?>
-			<p><?php esc_html_e( 'Creates one "Requested" order for the chosen product against every active member who does not already have one.', 'team-membership-ledger' ); ?></p>
+			<p><?php esc_html_e( 'Creates one "Requested" order for the chosen product for every player whose family is active, billed to that family. Players who already have one are skipped.', 'team-membership-ledger' ); ?></p>
 			<form method="post">
 				<?php wp_nonce_field( 'tml_rollover' ); ?>
 				<input type="hidden" name="tml_rollover_action" value="generate" />
@@ -87,7 +95,7 @@ final class RolloverScreen {
 						<option value="<?php echo esc_attr( $p['id'] ); ?>"><?php echo esc_html( $p['name'] ); ?></option>
 					<?php endforeach; ?>
 				</select>
-				<?php submit_button( __( 'Create charges for active members', 'team-membership-ledger' ), 'primary', 'submit', false ); ?>
+				<?php submit_button( __( 'Create charges for players', 'team-membership-ledger' ), 'primary', 'submit', false ); ?>
 			</form>
 		</div>
 		<?php

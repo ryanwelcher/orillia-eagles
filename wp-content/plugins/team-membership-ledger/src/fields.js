@@ -18,8 +18,15 @@ export function makeFields( currency ) {
 
 	return [
 		{
-			id: 'name',
-			label: __( 'Member', 'team-membership-ledger' ),
+			id: 'player',
+			label: __( 'Player', 'team-membership-ledger' ),
+			enableGlobalSearch: true,
+			getValue: ( { item } ) => item.playerName,
+			render: ( { item } ) => item.playerName,
+		},
+		{
+			id: 'family',
+			label: __( 'Family', 'team-membership-ledger' ),
 			enableGlobalSearch: true,
 			getValue: ( { item } ) => item.name,
 			render: ( { item } ) => item.name,
@@ -35,11 +42,6 @@ export function makeFields( currency ) {
 					? `${ label } — ${ __( 'multiple orders, manage in WooCommerce', 'team-membership-ledger' ) }`
 					: label;
 			},
-		},
-		{
-			id: 'qty',
-			label: __( 'Qty', 'team-membership-ledger' ),
-			getValue: ( { item } ) => item.qty,
 		},
 		{
 			id: 'total',

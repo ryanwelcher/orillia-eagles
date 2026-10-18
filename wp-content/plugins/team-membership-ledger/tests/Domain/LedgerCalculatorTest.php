@@ -117,4 +117,80 @@ final class LedgerCalculatorTest extends TestCase {
 		$this->assertNull( $rows[0]->singleOrderId() );
 		$this->assertSame( array( 601, 602 ), $rows[0]->orderIds() );
 	}
+
+	private function families(): array {
+		return array(
+			array( 'id' => 10, 'name' => 'Ed Smith', 'email' => 'ed@x.com', 'active' => true ),
+			array( 'id' => 20, 'name' => 'Ann Jones', 'email' => 'ann@x.com', 'active' => true ),
+			array( 'id' => 30, 'name' => 'Old Family', 'email' => 'old@x.com', 'active' => false ),
+		);
+	}
+
+	public function test_for_players_bills_each_kid_to_their_family(): void {
+		$players = array(
+			array( 'id' => 101, 'name' => 'Liam Smith', 'family_id' => 10 ),
+			array( 'id' => 102, 'name' => 'Emma Smith', 'family_id' => 10 ),
+			array( 'id' => 103, 'name' => 'Jake Smith', 'family_id' => 10 ),
+		);
+		$records = array(
+			array( 'customer_id' => 10, 'player_id' => 101, 'order_id' => 1, 'status' => 'requested', 'qty' => 1, 'line_total' => 300.0, 'amount_paid' => 100.0, 'date' => '2026-09-01 09:00:00' ),
+			array( 'customer_id' => 10, 'player_id' => 102, 'order_id' => 2, 'status' => 'completed', 'qty' => 1, 'line_total' => 300.0, 'amount_paid' => 300.0, 'date' => '2026-09-01 09:00:00' ),
+		);
+
+		$rows = LedgerCalculator::forPlayers( $players, $this->families(), $records );
+
+		$this->assertCount( 3, $rows );
+		// Sorted by family then player name.
+		$this->assertSame( array( 'Emma Smith', 'Jake Smith', 'Liam Smith' ), array_map( fn( $r ) => $r->playerName(), $rows ) );
+		foreach ( $rows as $row ) {
+			$this->assertSame( 10, $row->memberId() );
+			$this->assertSame( 'Ed Smith', $row->name() );
+		}
+		$this->assertSame( MemberStatus::PAID, $rows[0]->status() );
+		$this->assertSame( MemberStatus::NOT_ENTERED, $rows[1]->status() );
+		$this->assertSame( MemberStatus::OWES, $rows[2]->status() );
+		$this->assertSame( 200.0, $rows[2]->balance() );
+		$this->assertSame( 1, $rows[2]->singleOrderId() );
+	}
+
+	public function test_for_players_keeps_charge_with_the_family_it_was_billed_to(): void {
+		// Liam moved to Ann after Ed was charged.
+		$players = array( array( 'id' => 101, 'name' => 'Liam Smith', 'family_id' => 20 ) );
+		$records = array(
+			array( 'customer_id' => 10, 'player_id' => 101, 'order_id' => 1, 'status' => 'requested', 'qty' => 1, 'line_total' => 300.0, 'amount_paid' => 0.0, 'date' => null ),
+		);
+
+		$rows = LedgerCalculator::forPlayers( $players, $this->families(), $records );
+
+		$this->assertCount( 1, $rows );
+		$this->assertSame( 10, $rows[0]->memberId() );
+		$this->assertSame( 'Ed Smith', $rows[0]->name() );
+	}
+
+	public function test_for_players_hides_uncharged_players_of_inactive_or_missing_families(): void {
+		$players = array(
+			array( 'id' => 201, 'name' => 'Inactive Kid', 'family_id' => 30 ),
+			array( 'id' => 202, 'name' => 'Unlinked Kid', 'family_id' => 0 ),
+			array( 'id' => 203, 'name' => 'Charged Kid', 'family_id' => 30 ),
+		);
+		$records = array(
+			array( 'customer_id' => 30, 'player_id' => 203, 'order_id' => 9, 'status' => 'requested', 'qty' => 1, 'line_total' => 50.0, 'amount_paid' => 0.0, 'date' => null ),
+		);
+
+		$rows = LedgerCalculator::forPlayers( $players, $this->families(), $records );
+
+		$this->assertCount( 1, $rows );
+		$this->assertSame( 203, $rows[0]->playerId() );
+	}
+
+	public function test_for_players_ignores_records_without_a_player(): void {
+		$players = array( array( 'id' => 101, 'name' => 'Liam Smith', 'family_id' => 10 ) );
+		$records = array(
+			array( 'customer_id' => 10, 'player_id' => 0, 'order_id' => 1, 'status' => 'requested', 'qty' => 1, 'line_total' => 300.0, 'amount_paid' => 0.0, 'date' => null ),
+		);
+
+		$rows = LedgerCalculator::forPlayers( $players, $this->families(), $records );
+
+		$this->assertSame( MemberStatus::NOT_ENTERED, $rows[0]->status() );
+	}
 }

@@ -18,7 +18,7 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 			const updated = await addPayment( {
 				productId,
 				orderId: item.orderId,
-				memberId: item.memberId,
+				playerId: item.playerId,
 				amount: value,
 			} );
 			if ( updated ) {
@@ -47,8 +47,9 @@ function AddPaymentModal( { item, productId, onRowUpdated, onNotice, closeModal 
 		<div>
 			<p>
 				{ sprintf(
-					/* translators: %s: member name */
-					__( 'Recording a payment for %s.', 'team-membership-ledger' ),
+					/* translators: 1: player name, 2: family name */
+					__( 'Recording a payment for %1$s (billed to %2$s).', 'team-membership-ledger' ),
+					item.playerName,
 					item.name
 				) }
 			</p>
@@ -109,7 +110,7 @@ export function makeActions( { productId, onRowUpdated, onNotice } ) {
 					const updated = await markPaid( {
 						productId,
 						orderId: item.orderId,
-						memberId: item.memberId,
+						playerId: item.playerId,
 					} );
 					if ( updated ) {
 						onRowUpdated( updated );

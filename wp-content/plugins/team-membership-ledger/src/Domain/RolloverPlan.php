@@ -4,17 +4,17 @@ namespace OrillaEagles\Ledger\Domain;
 final class RolloverPlan {
 
 	/**
-	 * @param int[] $active_member_ids
-	 * @param int[] $existing_customer_ids
+	 * @param int[] $chargeable_ids Players to charge.
+	 * @param int[] $existing_ids   Players who already have a charge for the product.
 	 * @return array{to_create:int[],to_skip:int[]}
 	 */
-	public static function build( array $active_member_ids, array $existing_customer_ids ): array {
-		$existing = array_flip( array_map( 'intval', $existing_customer_ids ) );
+	public static function build( array $chargeable_ids, array $existing_ids ): array {
+		$existing = array_flip( array_map( 'intval', $existing_ids ) );
 		$seen     = array();
 		$create   = array();
 		$skip     = array();
 
-		foreach ( $active_member_ids as $raw ) {
+		foreach ( $chargeable_ids as $raw ) {
 			$id = (int) $raw;
 			if ( isset( $seen[ $id ] ) ) {
 				continue;

@@ -36,10 +36,13 @@ final class RosterRepository {
 	}
 
 	public function createMember( string $first_name, string $last_name, string $email ): int {
+		// Families get an account but aren't told about it (logins aren't used yet).
+		add_filter( 'woocommerce_email_enabled_customer_new_account', '__return_false' );
 		$user_id = wc_create_new_customer( sanitize_email( $email ), '', '', array(
 			'first_name' => $first_name,
 			'last_name'  => $last_name,
 		) );
+		remove_filter( 'woocommerce_email_enabled_customer_new_account', '__return_false' );
 		if ( is_wp_error( $user_id ) ) {
 			throw new \RuntimeException( $user_id->get_error_message() );
 		}
