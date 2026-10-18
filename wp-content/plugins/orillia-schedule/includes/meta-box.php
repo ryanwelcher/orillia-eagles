@@ -286,6 +286,8 @@ function orillia_schedule_render_event_row( $block_content, $block, $instance ) 
 		return $block_content;
 	}
 
+	wp_enqueue_script( 'orillia-schedule-past-events' );
+
 	if ( false === strpos( $block_content, 'taxonomy-event_level' ) ) {
 		$placeholder  = '<span class="schedule-cell schedule-cell--level schedule-cell--level-empty" aria-hidden="true"></span>';
 		$block_content = preg_replace_callback(

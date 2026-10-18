@@ -48,11 +48,15 @@ register_deactivation_hook( __FILE__, 'orillia_schedule_deactivate' );
 
 /**
  * Hide completed events behind an accessible toggle when JavaScript is available.
+ *
+ * Registered on init and enqueued by orillia_schedule_render_event_row() only
+ * when a schedule row renders, so other pages don't load it. Block themes
+ * render the template before wp_enqueue_scripts, hence init.
  */
-function orillia_schedule_enqueue_frontend_assets() {
+function orillia_schedule_register_frontend_assets() {
 	$script_path = __DIR__ . '/assets/js/schedule-past-events.js';
 
-	wp_enqueue_script(
+	wp_register_script(
 		'orillia-schedule-past-events',
 		plugins_url( 'assets/js/schedule-past-events.js', __FILE__ ),
 		array(),
@@ -60,7 +64,7 @@ function orillia_schedule_enqueue_frontend_assets() {
 		true
 	);
 }
-add_action( 'wp_enqueue_scripts', 'orillia_schedule_enqueue_frontend_assets' );
+add_action( 'init', 'orillia_schedule_register_frontend_assets' );
 
 /**
  * Advanced Query Loop exposes orderBy=meta_value on its Query block, but
