@@ -2,7 +2,13 @@
 
 Internal WooCommerce back-office for the Orillia Eagles: track who owes / who
 has paid for per-season dues and events (banquets, game tickets), including
-money collected offline. No public storefront, no member logins.
+money collected offline. No public storefront.
+
+A member is any user account with the `_tml_member` user meta flag, whatever
+its role, so an administrator who is also a parent can be billed. New members
+get a WooCommerce customer login, but it isn't used yet and no welcome email is
+sent. (Members used to be every `customer`-role user; existing ones are flagged
+automatically the first time the plugin loads after updating.)
 
 ## Requirements & setup
 
@@ -34,8 +40,12 @@ money collected offline. No public storefront, no member logins.
 
 ## Daily use
 
-- **Membership → Roster** — add members (WooCommerce customers) and mark them
-  Active/Inactive. Only Active members are charged by Season Rollover. In the
+- **Membership → Roster** — add members (creates a WooCommerce customer), or
+  use **Add an existing account** for someone who already has a login, such as
+  an administrator. Staff accounts show a role badge. Mark members
+  Active/Inactive. **Remove as member** clears the flag (never deletes the
+  account) and is only offered once a member has no players or orders. Players
+  not linked to anyone are listed above the table. Only Active members are charged by Season Rollover. In the
   **Players** column, link each player (from the Players plugin) to the member
   who pays for them. Each player has one paying member.
 - **Membership → Ledger** — pick a product to see each active member's status
