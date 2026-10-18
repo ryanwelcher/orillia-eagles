@@ -32,6 +32,17 @@ final class FamiliesScreen {
 			} catch ( \RuntimeException $e ) {
 				set_transient( 'tml_families_error', $e->getMessage(), 30 );
 			}
+		} elseif ( 'add_existing' === $action || 'remove' === $action ) {
+			try {
+				$user_id = absint( $_POST['user_id'] ?? 0 );
+				if ( 'remove' === $action ) {
+					$repo->remove( $user_id );
+				} else {
+					$repo->addExisting( $user_id );
+				}
+			} catch ( \RuntimeException $e ) {
+				set_transient( 'tml_families_error', $e->getMessage(), 30 );
+			}
 		} elseif ( 'link_players' === $action ) {
 			( new PlayerRepository() )->setFamilyPlayers(
 				absint( $_POST['user_id'] ?? 0 ),
@@ -47,8 +58,9 @@ final class FamiliesScreen {
 		if ( ! current_user_can( Menu::CAP ) ) {
 			return;
 		}
-		$families = ( new FamilyRepository() )->allFamilies();
-		$players = ( new PlayerRepository() )->allPlayers();
+		$repo     = new FamilyRepository();
+		$families = $repo->allFamilies();
+		$players  = ( new PlayerRepository() )->allPlayers();
 
 		$family_id = absint( $_GET['family'] ?? 0 );
 		if ( $family_id ) {
@@ -71,7 +83,7 @@ final class FamiliesScreen {
 			<?php endif; ?>
 
 			<h2><?php esc_html_e( 'Add family', 'team-membership-ledger' ); ?></h2>
-			<p><?php esc_html_e( 'Each family gets a WooCommerce customer account. No email is sent. A self-paying adult is a family of one.', 'team-membership-ledger' ); ?></p>
+			<p><?php esc_html_e( 'Creates a WooCommerce customer account. No email is sent. A self-paying adult is a family of one.', 'team-membership-ledger' ); ?></p>
 			<form method="post">
 				<?php wp_nonce_field( 'tml_families' ); ?>
 				<input type="hidden" name="tml_family_action" value="create" />
@@ -80,6 +92,25 @@ final class FamiliesScreen {
 				<input type="email" name="email" placeholder="<?php esc_attr_e( 'Email', 'team-membership-ledger' ); ?>" required />
 				<?php submit_button( __( 'Add family', 'team-membership-ledger' ), 'primary', 'submit', false ); ?>
 			</form>
+
+			<?php $others = $repo->nonFamilyUsers(); ?>
+			<?php if ( $others ) : ?>
+				<h2><?php esc_html_e( 'Add an existing account', 'team-membership-ledger' ); ?></h2>
+				<p><?php esc_html_e( 'For someone who already has a login, like an administrator who is also a parent. Their role is not changed.', 'team-membership-ledger' ); ?></p>
+				<form method="post">
+					<?php wp_nonce_field( 'tml_families' ); ?>
+					<input type="hidden" name="tml_family_action" value="add_existing" />
+					<select name="user_id" required>
+						<option value=""><?php esc_html_e( '— Select an account —', 'team-membership-ledger' ); ?></option>
+						<?php foreach ( $others as $u ) : ?>
+							<option value="<?php echo esc_attr( $u['id'] ); ?>">
+								<?php echo esc_html( $u['name'] . ' <' . $u['email'] . '>' . ( $u['role'] ? ' (' . $u['role'] . ')' : '' ) ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+					<?php submit_button( __( 'Add as family', 'team-membership-ledger' ), 'secondary', 'submit', false ); ?>
+				</form>
+			<?php endif; ?>
 
 			<h2><?php esc_html_e( 'Current families', 'team-membership-ledger' ); ?></h2>
 			<table class="widefat striped">
@@ -92,7 +123,12 @@ final class FamiliesScreen {
 				<tbody>
 				<?php foreach ( $families as $m ) : ?>
 					<tr>
-						<td><?php echo esc_html( $m['name'] ); ?></td>
+						<td>
+							<?php echo esc_html( $m['name'] ); ?>
+							<?php if ( $m['role'] ) : ?>
+								<span style="margin-left:4px;padding:1px 6px;border-radius:3px;background:#f0f0f1;font-size:11px"><?php echo esc_html( $m['role'] ); ?></span>
+							<?php endif; ?>
+						</td>
 						<td><?php echo esc_html( $m['email'] ); ?></td>
 						<td>
 							<?php echo esc_html( implode( ', ', $names_by_family[ $m['id'] ] ?? array() ) ?: '—' ); ?>
@@ -108,6 +144,14 @@ final class FamiliesScreen {
 									<?php echo $m['active'] ? esc_html__( 'Active ✓ (click to deactivate)', 'team-membership-ledger' ) : esc_html__( 'Inactive (click to activate)', 'team-membership-ledger' ); ?>
 								</button>
 							</form>
+							<?php if ( $repo->canRemove( $m['id'] ) ) : ?>
+								<form method="post" style="margin:4px 0 0">
+									<?php wp_nonce_field( 'tml_families' ); ?>
+									<input type="hidden" name="tml_family_action" value="remove" />
+									<input type="hidden" name="user_id" value="<?php echo esc_attr( $m['id'] ); ?>" />
+									<button class="button-link"><?php esc_html_e( 'Remove as family (keeps the account)', 'team-membership-ledger' ); ?></button>
+								</form>
+							<?php endif; ?>
 						</td>
 					</tr>
 				<?php endforeach; ?>

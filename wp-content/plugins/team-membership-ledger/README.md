@@ -4,10 +4,12 @@ Internal WooCommerce back-office for the Orillia Eagles: track who owes / who
 has paid for per-season dues and events (banquets, game tickets), including
 money collected offline. No public storefront.
 
-Each **family** is a WooCommerce customer that pays for one or more
-**players** (the `player` posts from the Orillia Players plugin). A self-paying
-adult is a family of one. Families get a login, but it isn't used yet and no
-welcome email is sent.
+Each **family** is a user account that pays for one or more **players** (the
+`player` posts from the Orillia Players plugin). A self-paying adult is a
+family of one. Being a family is a flag on the user (`_tml_family` user meta),
+not a role, so an administrator who is also a parent can be a family without
+changing their role. New families get a WooCommerce customer login, but it
+isn't used yet and no welcome email is sent.
 
 ## Requirements & setup
 
@@ -28,8 +30,11 @@ welcome email is sent.
 
 ## Daily use
 
-- **Membership → Families** — add families (WooCommerce customers) and mark
-  them Active/Inactive. Click **Edit players** to tick the players a family
+- **Membership → Families** — add new families (creates a WooCommerce
+  customer), or use **Add an existing account** for someone who already has a
+  login, such as an administrator. Staff accounts show a role badge. Mark
+  families Active/Inactive. **Remove as family** clears the flag (never deletes
+  the account) and is only offered once a family has no players or orders. Click **Edit players** to tick the players a family
   pays for. Each player has exactly one family; ticking a player who belongs to
   another family moves them.
 - **Membership → Create Charges** — pick a product to raise one "Requested"
