@@ -208,7 +208,10 @@ function orillia_schedule_column_content( $column, $post_id ) {
 		echo esc_html( orillia_schedule_format_date_range( $post_id ) );
 	}
 	if ( 'event_time' === $column ) {
-		echo esc_html( orillia_schedule_format_time( get_post_meta( $post_id, 'event_time', true ) ) );
+		$time = get_post_meta( $post_id, 'event_time', true );
+		echo esc_html( orillia_schedule_format_time( $time ) );
+		// Read by assets/js/schedule-quick-edit.js to fill the Quick Edit field.
+		echo '<div class="hidden orillia-schedule-time-raw">' . esc_html( $time ) . '</div>';
 	}
 	if ( 'event_location' === $column ) {
 		echo esc_html( get_post_meta( $post_id, 'event_location', true ) );

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Orillia Eagles Schedule
  * Description: Team schedule with date ranges, optional times, statuses, single-event links, and Event Type and Level taxonomies.
- * Version: 1.5.0
+ * Version: 1.6.0
  * Author: Studio Code
  * Text Domain: orillia-schedule
  */
@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/includes/post-type.php';
 require_once __DIR__ . '/includes/taxonomy.php';
 require_once __DIR__ . '/includes/meta-box.php';
+require_once __DIR__ . '/includes/quick-edit.php';
 
 /**
  * On activation: register CPT/taxonomies so rewrite rules pick them up,
