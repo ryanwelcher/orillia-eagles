@@ -44,11 +44,12 @@ function orillia_schedule_register_meta() {
 		'game_event',
 		'event_time',
 		array(
-			'show_in_rest'  => true,
-			'single'        => true,
-			'type'          => 'string',
-			'default'       => '',
-			'auth_callback' => $auth,
+			'show_in_rest'      => true,
+			'single'            => true,
+			'type'              => 'string',
+			'default'           => '',
+			'auth_callback'     => $auth,
+			'sanitize_callback' => 'orillia_schedule_normalize_time',
 		)
 	);
 
@@ -175,12 +176,39 @@ function orillia_schedule_event_is_past( $post_id ) {
 	return $effective_end < $today;
 }
 
+/**
+ * Times are entered on a 24-hour clock. Store valid ones as HH:MM ("8:00"
+ * becomes "08:00"); leave anything else as typed so older free-text times
+ * still show.
+ */
+function orillia_schedule_normalize_time( $value ) {
+	$value = trim( (string) $value );
+	if ( preg_match( '/^([01]?\d|2[0-3]):([0-5]\d)$/', $value, $m ) ) {
+		return sprintf( '%02d:%s', $m[1], $m[2] );
+	}
+	return sanitize_text_field( $value );
+}
+
+/**
+ * Show a stored 24-hour time as 12-hour with AM/PM ("18:30" is "6:30 PM").
+ * Anything that isn't a 24-hour time is returned as stored.
+ */
+function orillia_schedule_format_time( $value ) {
+	$value = orillia_schedule_normalize_time( $value );
+	// Only format what normalize accepted: createFromFormat() would roll an
+	// out-of-range "24:00" over to midnight.
+	if ( ! preg_match( '/^([01]\d|2[0-3]):[0-5]\d$/', $value ) ) {
+		return $value;
+	}
+	return DateTimeImmutable::createFromFormat( '!H:i', $value )->format( 'g:i A' );
+}
+
 function orillia_schedule_column_content( $column, $post_id ) {
 	if ( 'event_date' === $column ) {
 		echo esc_html( orillia_schedule_format_date_range( $post_id ) );
 	}
 	if ( 'event_time' === $column ) {
-		echo esc_html( get_post_meta( $post_id, 'event_time', true ) );
+		echo esc_html( orillia_schedule_format_time( get_post_meta( $post_id, 'event_time', true ) ) );
 	}
 	if ( 'event_location' === $column ) {
 		echo esc_html( get_post_meta( $post_id, 'event_location', true ) );
@@ -217,6 +245,32 @@ function orillia_schedule_render_date( $block_content, $block, $instance ) {
 	);
 }
 add_filter( 'render_block_core/paragraph', 'orillia_schedule_render_date', 10, 3 );
+
+/**
+ * Show bound schedule times on a 12-hour clock; they are stored as 24-hour.
+ */
+function orillia_schedule_render_time( $block_content, $block, $instance ) {
+	$class_name = $block['attrs']['className'] ?? '';
+	$post_id    = isset( $instance->context['postId'] ) ? (int) $instance->context['postId'] : 0;
+
+	if ( ! $post_id || false === strpos( $class_name, 'schedule-cell--time' ) ) {
+		return $block_content;
+	}
+
+	$formatted = esc_html( orillia_schedule_format_time( get_post_meta( $post_id, 'event_time', true ) ) );
+	if ( '' === $formatted ) {
+		return $block_content;
+	}
+	return preg_replace_callback(
+		'/(<p\b[^>]*>).*?(<\/p>)/s',
+		function ( $matches ) use ( $formatted ) {
+			return $matches[1] . $formatted . $matches[2];
+		},
+		$block_content,
+		1
+	);
+}
+add_filter( 'render_block_core/paragraph', 'orillia_schedule_render_time', 10, 3 );
 
 /**
  * Link schedule locations to a Google Maps search for the venue or address.

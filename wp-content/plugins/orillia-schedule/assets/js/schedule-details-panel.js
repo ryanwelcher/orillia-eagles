@@ -4,7 +4,28 @@
 	const { TextControl, SelectControl, ToggleControl } = wp.components;
 	const { useSelect, useDispatch } = wp.data;
 	const { createElement: el, Fragment } = wp.element;
-	const { __ } = wp.i18n;
+	const { __, sprintf } = wp.i18n;
+
+	// Times are entered on a 24-hour clock (stored as HH:MM) and shown on the
+	// site as 12-hour with AM/PM. Matches orillia_schedule_normalize_time().
+	function parseTime( value ) {
+		const match = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec( ( value || '' ).trim() );
+		return match ? { hours: Number( match[ 1 ] ), minutes: match[ 2 ] } : null;
+	}
+
+	function timeHelp( value ) {
+		if ( ! ( value || '' ).trim() ) {
+			return __( '24-hour clock, e.g. 18:30. Leave blank when a start time is not available.', 'orillia-schedule' );
+		}
+		const time = parseTime( value );
+		if ( ! time ) {
+			return __( 'Use the 24-hour HH:MM format, e.g. 08:00 or 18:30.', 'orillia-schedule' );
+		}
+		const hours12 = time.hours % 12 || 12;
+		const period = time.hours < 12 ? 'AM' : 'PM';
+		/* translators: %s: the time as it appears on the site, e.g. 6:30 PM */
+		return sprintf( __( 'Shows on the site as %s.', 'orillia-schedule' ), `${ hours12 }:${ time.minutes } ${ period }` );
+	}
 
 	function EventDetailsPanel() {
 		const postType = useSelect(
@@ -46,9 +67,11 @@
 					onChange: ( value ) => setMeta( 'event_end_date', value ),
 				} ),
 				el( TextControl, {
-					label: __( 'Time (optional)', 'orillia-schedule' ),
-					placeholder: __( 'e.g. 6:30 PM', 'orillia-schedule' ),
-					help: __( 'Leave blank when a start time is not available.', 'orillia-schedule' ),
+					label: __( 'Time (24-hour, optional)', 'orillia-schedule' ),
+					placeholder: '18:30',
+					inputMode: 'numeric',
+					maxLength: 5,
+					help: timeHelp( meta.event_time ),
 					value: meta.event_time || '',
 					onChange: ( value ) => setMeta( 'event_time', value ),
 				} ),
