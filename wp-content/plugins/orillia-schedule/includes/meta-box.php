@@ -1,6 +1,7 @@
 <?php
 /**
- * Schedule event custom fields: start/end dates, time, location, opponent, status, and title-link preference.
+ * Schedule event custom fields: start/end dates, time, location, status, and title-link preference.
+ * The opponent is the event_opponent taxonomy (includes/taxonomy.php).
  *
  * The UI lives in the block editor as a PluginDocumentSettingPanel
  * (assets/js/schedule-details-panel.js). This file registers the
@@ -67,18 +68,6 @@ function orillia_schedule_register_meta() {
 
 	register_post_meta(
 		'game_event',
-		'event_opponent',
-		array(
-			'show_in_rest'  => true,
-			'single'        => true,
-			'type'          => 'string',
-			'default'       => '',
-			'auth_callback' => $auth,
-		)
-	);
-
-	register_post_meta(
-		'game_event',
 		'event_status',
 		array(
 			'show_in_rest'      => true,
@@ -121,7 +110,7 @@ function orillia_schedule_enqueue_panel_script() {
 	wp_enqueue_script(
 		'orillia-schedule-details-panel',
 		plugins_url( 'assets/js/schedule-details-panel.js', __DIR__ ),
-		array( 'wp-plugins', 'wp-editor', 'wp-components', 'wp-element', 'wp-data', 'wp-i18n' ),
+		array( 'wp-plugins', 'wp-editor', 'wp-components', 'wp-element', 'wp-data', 'wp-core-data', 'wp-i18n' ),
 		file_exists( $script_path ) ? filemtime( $script_path ) : '1.0.0',
 		true
 	);
@@ -134,6 +123,7 @@ add_action( 'enqueue_block_editor_assets', 'orillia_schedule_enqueue_panel_scrip
 function orillia_schedule_columns( $columns ) {
 	$columns['event_date']     = __( 'Date', 'orillia-schedule' );
 	$columns['event_time']     = __( 'Time', 'orillia-schedule' );
+	$columns['event_opponent'] = __( 'Opponent', 'orillia-schedule' );
 	$columns['event_location'] = __( 'Location', 'orillia-schedule' );
 	$columns['event_status']   = __( 'Status', 'orillia-schedule' );
 	return $columns;
@@ -213,6 +203,9 @@ function orillia_schedule_column_content( $column, $post_id ) {
 		// Read by assets/js/schedule-quick-edit.js to fill the Quick Edit field.
 		echo '<div class="hidden orillia-schedule-time-raw">' . esc_html( $time ) . '</div>';
 	}
+	if ( 'event_opponent' === $column ) {
+		echo esc_html( orillia_schedule_get_opponent( $post_id ) );
+	}
 	if ( 'event_location' === $column ) {
 		echo esc_html( get_post_meta( $post_id, 'event_location', true ) );
 	}
@@ -274,6 +267,30 @@ function orillia_schedule_render_time( $block_content, $block, $instance ) {
 	);
 }
 add_filter( 'render_block_core/paragraph', 'orillia_schedule_render_time', 10, 3 );
+
+/**
+ * Fill the opponent line under the event title from the event_opponent term.
+ * Left empty when there is none, which the theme hides with :empty.
+ */
+function orillia_schedule_render_opponent( $block_content, $block, $instance ) {
+	$class_name = $block['attrs']['className'] ?? '';
+	$post_id    = isset( $instance->context['postId'] ) ? (int) $instance->context['postId'] : 0;
+
+	if ( ! $post_id || false === strpos( $class_name, 'schedule-event-opponent' ) ) {
+		return $block_content;
+	}
+
+	$opponent = esc_html( orillia_schedule_get_opponent( $post_id ) );
+	return preg_replace_callback(
+		'/(<p\b[^>]*>).*?(<\/p>)/s',
+		function ( $matches ) use ( $opponent ) {
+			return $matches[1] . $opponent . $matches[2];
+		},
+		$block_content,
+		1
+	);
+}
+add_filter( 'render_block_core/paragraph', 'orillia_schedule_render_opponent', 10, 3 );
 
 /**
  * Link schedule locations to a Google Maps search for the venue or address.

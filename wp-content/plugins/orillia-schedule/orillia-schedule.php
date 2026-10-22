@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Orillia Eagles Schedule
  * Description: Team schedule with date ranges, optional times, statuses, single-event links, and Event Type and Level taxonomies.
- * Version: 1.6.0
+ * Version: 1.7.0
  * Author: Studio Code
  * Text Domain: orillia-schedule
  */

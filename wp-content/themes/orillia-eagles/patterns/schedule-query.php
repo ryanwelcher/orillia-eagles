@@ -43,7 +43,7 @@
 <!-- wp:group {"className":"schedule-cell schedule-cell--event","style":{"spacing":{"blockGap":"0"}},"layout":{"type":"default"}} -->
 <div class="wp-block-group schedule-cell schedule-cell--event"><!-- wp:post-title {"level":0,"className":"schedule-event-title","fontSize":"small"} /-->
 
-<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"event_opponent"}}}},"className":"schedule-event-opponent has-small-font-size"} -->
+<!-- wp:paragraph {"className":"schedule-event-opponent has-small-font-size"} -->
 <p class="schedule-event-opponent has-small-font-size"></p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->

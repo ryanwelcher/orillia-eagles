@@ -1,7 +1,7 @@
 ( function ( wp ) {
 	const { registerPlugin } = wp.plugins;
 	const { PluginDocumentSettingPanel } = wp.editor;
-	const { TextControl, SelectControl, ToggleControl } = wp.components;
+	const { TextControl, SelectControl, ToggleControl, FormTokenField } = wp.components;
 	const { useSelect, useDispatch } = wp.data;
 	const { createElement: el, Fragment } = wp.element;
 	const { __, sprintf } = wp.i18n;
@@ -25,6 +25,56 @@
 		const period = time.hours < 12 ? 'AM' : 'PM';
 		/* translators: %s: the time as it appears on the site, e.g. 6:30 PM */
 		return sprintf( __( 'Shows on the site as %s.', 'orillia-schedule' ), `${ hours12 }:${ time.minutes } ${ period }` );
+	}
+
+	// The default Opponents panel lets an event have several; the picker in
+	// Event Details below keeps it to one.
+	wp.data.dispatch( 'core/editor' ).removeEditorPanel( 'taxonomy-panel-event_opponent' );
+
+	/**
+	 * Pick one opponent from the event_opponent list, or type a new name to
+	 * add it to the list.
+	 */
+	function OpponentField() {
+		const opponents = useSelect(
+			( select ) =>
+				select( 'core' ).getEntityRecords( 'taxonomy', 'event_opponent', { per_page: -1, orderby: 'name', order: 'asc' } ) || [],
+			[]
+		);
+		const selectedIds = useSelect(
+			( select ) => select( 'core/editor' ).getEditedPostAttribute( 'event_opponent' ) || [],
+			[]
+		);
+		const { editPost } = useDispatch( 'core/editor' );
+		const { saveEntityRecord } = useDispatch( 'core' );
+
+		const selected = opponents.filter( ( term ) => selectedIds.includes( term.id ) ).map( ( term ) => term.name );
+
+		const onChange = async ( tokens ) => {
+			const last = tokens[ tokens.length - 1 ];
+			const name = ( typeof last === 'string' ? last : last?.value || '' ).trim();
+			if ( ! name ) {
+				editPost( { event_opponent: [] } );
+				return;
+			}
+			const existing = opponents.find( ( term ) => term.name.toLowerCase() === name.toLowerCase() );
+			const term = existing || ( await saveEntityRecord( 'taxonomy', 'event_opponent', { name } ) );
+			if ( term ) {
+				editPost( { event_opponent: [ term.id ] } );
+			}
+		};
+
+		return el( FormTokenField, {
+			label: __( 'Opponent (games only)', 'orillia-schedule' ),
+			value: selected,
+			suggestions: opponents.map( ( term ) => term.name ),
+			maxLength: 1,
+			onChange,
+			__experimentalExpandOnFocus: true,
+			__experimentalShowHowTo: false,
+			__nextHasNoMarginBottom: true,
+			__next40pxDefaultSize: true,
+		} );
 	}
 
 	function EventDetailsPanel() {
@@ -80,11 +130,12 @@
 					value: meta.event_location || '',
 					onChange: ( value ) => setMeta( 'event_location', value ),
 				} ),
-				el( TextControl, {
-					label: __( 'Opponent (games only)', 'orillia-schedule' ),
-					value: meta.event_opponent || '',
-					onChange: ( value ) => setMeta( 'event_opponent', value ),
-				} ),
+				el( OpponentField ),
+				el(
+					'p',
+					{ className: 'components-form-token-field__help' },
+					__( 'Pick an opponent, or type a new name to add it. Manage the list under Schedule → Opponents.', 'orillia-schedule' )
+				),
 				el( SelectControl, {
 					label: __( 'Event status', 'orillia-schedule' ),
 					value: meta.event_status || 'scheduled',
