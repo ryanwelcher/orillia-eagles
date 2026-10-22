@@ -13,7 +13,7 @@
 <!-- /wp:button -->
 
 <!-- wp:button {"className":"roster-tab roster-tab--intermediate"} -->
-<div class="wp-block-button roster-tab roster-tab--intermediate"><a class="wp-block-button__link wp-element-button" href="#roster">Intermediate/Senior</a></div>
+<div class="wp-block-button roster-tab roster-tab--intermediate"><a class="wp-block-button__link wp-element-button" href="#roster">Intermediate</a></div>
 <!-- /wp:button -->
  
 <!-- wp:button {"className":"roster-tab roster-tab--coaches"} -->

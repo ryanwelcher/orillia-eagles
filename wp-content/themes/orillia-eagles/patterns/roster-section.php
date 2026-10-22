@@ -3,7 +3,7 @@
  * Title: Roster Section with Team Filters
  * Slug: orillia-eagles/roster-section
  * Categories: orillia-eagles, featured
- * Description: Full roster section heading that embeds the roster-query pattern (Player/Coach grid with Junior, Intermediate/Senior, and Coaches filters).
+ * Description: Full roster section heading that embeds the roster-query pattern (Player/Coach grid with Junior, Intermediate (which also lists Senior players), and Coaches filters).
  */
 ?>
 <!-- wp:group {"tagName":"section","metadata":{"name":"Roster Section"},"align":"full","className":"roster","style":{"spacing":{"blockGap":"0"}},"backgroundColor":"contrast","textColor":"base","layout":{"type":"default"},"anchor":"roster"} -->

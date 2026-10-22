@@ -1,9 +1,9 @@
 ( function () {
-	// Level filters. Intermediate and Senior share a filter, as on the roster.
+	// Level filters. The Intermediate filter also covers Senior, as on the roster.
 	const levelFilters = [
 		{ key: 'all', label: 'All', levels: [] },
 		{ key: 'junior', label: 'Junior', levels: [ 'junior' ] },
-		{ key: 'intermediate', label: 'Intermediate/Senior', levels: [ 'intermediate', 'senior' ] },
+		{ key: 'intermediate', label: 'Intermediate', levels: [ 'intermediate', 'senior' ] },
 	];
 	const knownLevels = [ 'junior', 'intermediate', 'senior' ];
 

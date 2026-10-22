@@ -67,7 +67,7 @@ document.querySelectorAll('.roster-tabs').forEach(tabGroup => {
       tab.setAttribute('tabindex', isSelected ? '0' : '-1');
     });
 
-    // Some tabs cover more than one team (e.g. Intermediate and Senior share a tab).
+    // Some tabs cover more than one team: the Intermediate tab also lists Senior players.
     const teamsForFilter = { intermediate: ['intermediate', 'senior'] };
     const teams = teamsForFilter[selectedFilter] || [selectedFilter];
 
