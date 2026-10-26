@@ -27,8 +27,9 @@
 
 		const number = meta && meta.player_number && meta.player_number !== 999 ? meta.player_number : '';
 		const position = meta && meta.player_position ? meta.player_position : '';
-		const coachRole = roles.find( ( role ) => role.slug === 'coach' );
-		const isCoach = coachRole && roleIds.includes( coachRole.id );
+		const isCoach = roles.some(
+			( role ) => [ 'coach', 'assistant-coach' ].includes( role.slug ) && roleIds.includes( role.id )
+		);
 
 		return el(
 			PluginDocumentSettingPanel,

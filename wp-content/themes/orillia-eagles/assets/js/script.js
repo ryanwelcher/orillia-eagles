@@ -72,7 +72,7 @@ document.querySelectorAll('.roster-tabs').forEach(tabGroup => {
     const teams = teamsForFilter[selectedFilter] || [selectedFilter];
 
     playerItems.forEach(item => {
-      const isCoach = item.classList.contains('roster_role-coach');
+      const isCoach = item.classList.contains('roster_role-coach') || item.classList.contains('roster_role-assistant-coach');
       const matchesFilter = selectedFilter === 'coaches'
         ? isCoach
         : !isCoach && teams.some(team => item.classList.contains(`team-${team}`));
