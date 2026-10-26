@@ -27,9 +27,14 @@
 
 		const number = meta && meta.player_number && meta.player_number !== 999 ? meta.player_number : '';
 		const position = meta && meta.player_position ? meta.player_position : '';
-		const isCoach = roles.some(
-			( role ) => [ 'coach', 'assistant-coach' ].includes( role.slug ) && roleIds.includes( role.id )
-		);
+		const inRoleGroup = ( slug ) => {
+			const group = roles.find( ( role ) => role.slug === slug );
+			return !! group && roles.some(
+				( role ) => ( role.id === group.id || role.parent === group.id ) && roleIds.includes( role.id )
+			);
+		};
+		const isCoach = inRoleGroup( 'coaching-staff' );
+		const isExecutive = inRoleGroup( 'executive' );
 
 		return el(
 			PluginDocumentSettingPanel,
@@ -42,7 +47,12 @@
 				? el( Notice, {
 					status: 'info',
 					isDismissible: false,
-				}, __( 'Coach cards use the selected Team automatically and do not display a jersey number.', 'orillia-players' ) )
+				}, __( 'Coaching Staff cards show their other Roster Roles (e.g. Coach, Assistant Coach) as their title and do not display a jersey number.', 'orillia-players' ) )
+				: isExecutive
+				? el( Notice, {
+					status: 'info',
+					isDismissible: false,
+				}, __( 'Executive cards show their other Roster Roles (e.g. President, Treasurer) as their title and do not display a jersey number.', 'orillia-players' ) )
 				: el( wp.element.Fragment, null,
 					el( TextControl, {
 						label: __( 'Number', 'orillia-players' ),

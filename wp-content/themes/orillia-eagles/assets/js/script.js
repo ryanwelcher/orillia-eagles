@@ -72,10 +72,12 @@ document.querySelectorAll('.roster-tabs').forEach(tabGroup => {
     const teams = teamsForFilter[selectedFilter] || [selectedFilter];
 
     playerItems.forEach(item => {
-      const isCoach = item.classList.contains('roster_role-coach') || item.classList.contains('roster_role-assistant-coach');
-      const matchesFilter = selectedFilter === 'coaches'
-        ? isCoach
-        : !isCoach && teams.some(team => item.classList.contains(`team-${team}`));
+      const isCoach = item.classList.contains('roster_role-coaching-staff');
+      const isExecutive = item.classList.contains('roster_role-executive');
+      let matchesFilter;
+      if (selectedFilter === 'coaches') matchesFilter = isCoach;
+      else if (selectedFilter === 'executive') matchesFilter = isExecutive;
+      else matchesFilter = !isCoach && !isExecutive && teams.some(team => item.classList.contains(`team-${team}`));
       item.hidden = !matchesFilter;
     });
   };

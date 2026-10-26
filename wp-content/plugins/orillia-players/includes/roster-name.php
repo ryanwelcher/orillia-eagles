@@ -5,8 +5,8 @@
  * The roster grid shows each name through a Post Title block with the
  * `roster-name` class. While that block renders, its title is shortened to
  * the first name plus the last initial (e.g. "Ryan Mckinnon" -> "Ryan M."),
- * or to "Coach" plus the first name for anyone with a coach or assistant coach
- * roster role.
+ * or to "Coach" plus the first name for anyone on the coaching staff.
+ * Executives keep their full name.
  * The stored post title is unchanged, so the full name still shows in the
  * admin and everywhere else on the site.
  *
@@ -49,6 +49,10 @@ function orillia_players_roster_title_filter( $title, $post_id = 0 ) {
 		$parts = preg_split( '/\s+/u', trim( $title ), -1, PREG_SPLIT_NO_EMPTY );
 		/* translators: %s: coach's first name. */
 		return sprintf( __( 'Coach %s', 'orillia-players' ), $parts[0] ?? $title );
+	}
+
+	if ( $post_id && orillia_players_is_executive( $post_id ) ) {
+		return $title;
 	}
 
 	return orillia_players_short_name( $title );

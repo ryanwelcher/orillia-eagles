@@ -19,7 +19,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Uses a lightweight query: it only asks for one row and reads `found_posts`,
  * so no full post objects are hydrated.
  *
- * @param string|string[] $role_slug One or more `roster_role` term slugs (e.g. 'player', 'coach').
+ * Child roles are included, so a parent such as 'coaching-staff' counts
+ * everyone under it.
+ *
+ * @param string $role_slug The `roster_role` term slug (e.g. 'player', 'coaching-staff').
  * @return int Number of matching published players.
  */
 function orillia_players_count_by_role( $role_slug ) {
@@ -70,7 +73,7 @@ function orillia_players_register_block_bindings() {
 		array(
 			'label'              => __( 'Coach Count', 'orillia-players' ),
 			'get_value_callback' => function () {
-				return (string) orillia_players_count_by_role( orillia_players_coach_roles() );
+				return (string) orillia_players_count_by_role( 'coaching-staff' );
 			},
 		)
 	);
@@ -103,7 +106,7 @@ function orillia_players_enqueue_block_bindings_editor() {
 		array(
 			'counts' => array(
 				'player' => orillia_players_count_by_role( 'player' ),
-				'coach'  => orillia_players_count_by_role( orillia_players_coach_roles() ),
+				'coach'  => orillia_players_count_by_role( 'coaching-staff' ),
 			),
 		)
 	);

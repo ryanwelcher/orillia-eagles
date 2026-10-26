@@ -3,7 +3,7 @@
  * Title: Team Roster: Players & Coaches
  * Slug: orillia-eagles/roster-query
  * Categories: orillia-eagles, query
- * Description: Team roster grid showing Player and Coach roles from the shared roster post type, with Junior, Intermediate, and Senior filters.
+ * Description: Team roster grid showing Player, Coach, and Executive roles from the shared roster post type, with Junior, Intermediate, Coaches, and Executive filters.
  */
 ?>
 <!-- wp:group {"metadata":{"name":"Roster Team Tabs"},"className":"roster-tabs","style":{"spacing":{"blockGap":"0"}},"layout":{"type":"flex","flexWrap":"wrap","justifyContent":"center"}} -->
@@ -18,6 +18,10 @@
  
 <!-- wp:button {"className":"roster-tab roster-tab--coaches"} -->
 <div class="wp-block-button roster-tab roster-tab--coaches"><a class="wp-block-button__link wp-element-button" href="#roster">Coaches</a></div>
+<!-- /wp:button -->
+
+<!-- wp:button {"className":"roster-tab roster-tab--executive"} -->
+<div class="wp-block-button roster-tab roster-tab--executive"><a class="wp-block-button__link wp-element-button" href="#roster">Executive</a></div>
 <!-- /wp:button --></div>
 <!-- /wp:buttons --></div>
 <!-- /wp:group -->

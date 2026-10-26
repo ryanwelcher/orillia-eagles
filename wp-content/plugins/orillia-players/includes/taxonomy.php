@@ -75,37 +75,33 @@ function orillia_players_seed_default_teams() {
  * Seed the default roster roles.
  */
 function orillia_players_seed_default_roles() {
-	$roles = array( 'Player', 'Coach', 'Assistant Coach' );
+	$roles = array(
+		'Player'         => array(),
+		'Coaching Staff' => array( 'Coach', 'Assistant Coach' ),
+		'Executive'      => array(),
+	);
 
-	foreach ( $roles as $role ) {
-		if ( ! term_exists( $role, 'roster_role' ) ) {
-			wp_insert_term( $role, 'roster_role' );
+	foreach ( $roles as $role => $children ) {
+		$parent = term_exists( $role, 'roster_role' );
+		if ( ! $parent ) {
+			$parent = wp_insert_term( $role, 'roster_role' );
+		}
+		if ( is_wp_error( $parent ) ) {
+			continue;
+		}
+
+		foreach ( $children as $child ) {
+			if ( ! term_exists( $child, 'roster_role' ) ) {
+				wp_insert_term( $child, 'roster_role', array( 'parent' => (int) $parent['term_id'] ) );
+			}
 		}
 	}
 }
 
 /**
- * Roster role slugs that count as coaches (head and assistant).
- *
- * @return string[]
- */
-function orillia_players_coach_roles() {
-	return array( 'coach', 'assistant-coach' );
-}
-
-/**
- * Check whether a roster entry is a coach or an assistant coach.
- *
- * @param int $post_id Post ID.
- * @return bool
- */
-function orillia_players_is_coach( $post_id ) {
-	return has_term( orillia_players_coach_roles(), 'roster_role', $post_id );
-}
-
-/**
- * Keep coaches in the number-sorted roster query without exposing a jersey number.
- * Assistant coaches sort after the head coaches.
+ * Keep coaching staff and executives in the number-sorted roster query without
+ * exposing a jersey number. Head coaches sort first, then the rest of the
+ * coaching staff, then executives.
  */
 function orillia_players_sync_coach_sort_value( $object_id, $terms, $tt_ids, $taxonomy ) {
 	if ( 'roster_role' !== $taxonomy || 'player' !== get_post_type( $object_id ) ) {
@@ -114,8 +110,10 @@ function orillia_players_sync_coach_sort_value( $object_id, $terms, $tt_ids, $ta
 
 	if ( has_term( 'coach', 'roster_role', $object_id ) ) {
 		update_post_meta( $object_id, 'player_number', 999 );
-	} elseif ( has_term( 'assistant-coach', 'roster_role', $object_id ) ) {
+	} elseif ( orillia_players_is_coach( $object_id ) ) {
 		update_post_meta( $object_id, 'player_number', 1000 );
+	} elseif ( orillia_players_is_executive( $object_id ) ) {
+		update_post_meta( $object_id, 'player_number', 2000 );
 	}
 }
 add_action( 'set_object_terms', 'orillia_players_sync_coach_sort_value', 10, 4 );
