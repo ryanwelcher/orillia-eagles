@@ -306,6 +306,17 @@ body .roster-player:focus-within .roster-player-photo img {
 	color: var(--wp--preset--color--base) !important;
 }
 
+/* Mobile menu overlay: dark background (set on the Navigation block in
+   parts/header.html), so links stay light whether or not the bar is pinned. */
+.hero-nav-links .wp-block-navigation__responsive-container.is-menu-open a {
+	color: var(--wp--preset--color--base) !important;
+}
+
+.hero-nav-links .wp-block-navigation__responsive-container.is-menu-open a:hover,
+.hero-nav-links .wp-block-navigation__responsive-container.is-menu-open a:focus-visible {
+	color: var(--wp--preset--color--accent-1) !important;
+}
+
 /* === single post: content === */
 
 .post-body {

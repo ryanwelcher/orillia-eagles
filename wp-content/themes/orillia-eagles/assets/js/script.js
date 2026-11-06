@@ -17,6 +17,28 @@ if (animatedElements.length > 0) {
   animatedElements.forEach(el => observer.observe(el));
 }
 
+// :::SECTION:Mobile Menu Close On Link Click:::
+// The core Navigation overlay stays open after a same-page anchor link is
+// tapped, covering the section the visitor just jumped to. Close it by
+// clicking the block's own close button so the Interactivity API state,
+// scroll lock, and focus handling all stay in sync.
+const closeMobileMenu = link => {
+  const overlay = link.closest('.wp-block-navigation__responsive-container.is-menu-open');
+  if (!overlay) return false;
+
+  const closeButton = overlay.querySelector('.wp-block-navigation__responsive-container-close');
+  if (!closeButton) return false;
+
+  closeButton.click();
+  return true;
+};
+
+document.querySelectorAll('.wp-block-navigation__responsive-container a').forEach(link => {
+  // Same-page anchors are handled by the smooth-scroll handler below.
+  if (link.getAttribute('href')?.startsWith('#')) return;
+  link.addEventListener('click', () => closeMobileMenu(link));
+});
+
 // :::SECTION:Smooth Scrolling:::
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function (e) {
@@ -26,13 +48,23 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     const targetEl = document.querySelector(targetId);
     if (targetEl) {
       e.preventDefault();
-      const offset = 20;
-      const targetPosition = targetEl.getBoundingClientRect().top + window.scrollY - offset;
 
-      window.scrollTo({
-        top: targetPosition,
-        behavior: 'smooth'
-      });
+      const scrollToTarget = () => {
+        const offset = 20;
+        const targetPosition = targetEl.getBoundingClientRect().top + window.scrollY - offset;
+
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'smooth'
+        });
+      };
+
+      // If the mobile menu was open, wait a frame for its scroll lock to lift.
+      if (closeMobileMenu(this)) {
+        window.requestAnimationFrame(() => window.requestAnimationFrame(scrollToTarget));
+      } else {
+        scrollToTarget();
+      }
     }
   });
 });
