@@ -459,6 +459,13 @@
       }
     }
   },
+  "customTemplates": [
+    {
+      "name": "single-player-spotlight",
+      "title": "Player Spotlight",
+      "postTypes": [ "post" ]
+    }
+  ],
   "templateParts": [
     {
       "name": "header",

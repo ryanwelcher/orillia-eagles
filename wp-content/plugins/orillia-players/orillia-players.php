@@ -17,6 +17,7 @@ require_once __DIR__ . '/includes/meta-box.php';
 require_once __DIR__ . '/includes/block-bindings.php';
 require_once __DIR__ . '/includes/roster-name.php';
 require_once __DIR__ . '/includes/role-groups.php';
+require_once __DIR__ . '/includes/spotlight.php';
 
 /**
  * On activation: register CPT/taxonomy so rewrite rules pick them up,

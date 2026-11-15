@@ -1,0 +1,99 @@
+<!-- wp:template-part {"slug":"header","area":"header"} /-->
+
+<!-- wp:group {"tagName":"main","style":{"spacing":{"blockGap":"0"}},"layout":{"type":"default"}} -->
+<main class="wp-block-group"><!-- wp:group {"tagName":"section","metadata":{"name":"Spotlight Hero"},"align":"full","className":"spotlight-hero","layout":{"type":"default"}} -->
+<section class="wp-block-group alignfull spotlight-hero"><!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"spotlight_number"}}},"name":"Number Watermark"},"className":"spotlight-watermark"} -->
+<p class="spotlight-watermark"></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"metadata":{"name":"Spotlight Hero Inner"},"className":"spotlight-hero-inner","layout":{"type":"default"}} -->
+<div class="wp-block-group spotlight-hero-inner"><!-- wp:group {"metadata":{"name":"Trading Card"},"className":"spotlight-card","layout":{"type":"default"}} -->
+<div class="wp-block-group spotlight-card"><!-- wp:group {"metadata":{"name":"Card Photo"},"className":"spotlight-card-photo","layout":{"type":"default"}} -->
+<div class="wp-block-group spotlight-card-photo"><!-- wp:post-featured-image {"aspectRatio":"4/5"} /-->
+
+<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"spotlight_number"}}},"name":"Card Number"},"className":"spotlight-card-number"} -->
+<p class="spotlight-card-number"></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"metadata":{"name":"Card Nameplate"},"className":"spotlight-card-plate","layout":{"type":"default"}} -->
+<div class="wp-block-group spotlight-card-plate"><!-- wp:post-title {"level":0,"className":"spotlight-nameplate"} /-->
+
+<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"spotlight_position"}}},"name":"Card Position"},"className":"spotlight-card-position"} -->
+<p class="spotlight-card-position"></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"metadata":{"name":"Spotlight Heading"},"className":"spotlight-hero-text","layout":{"type":"default"}} -->
+<div class="wp-block-group spotlight-hero-text"><!-- wp:post-terms {"term":"category","className":"post-hero-category","textColor":"base","fontSize":"small"} /-->
+
+<!-- wp:post-title {"level":1,"className":"spotlight-title","fontFamily":"archivo-black"} /-->
+
+<!-- wp:post-date {"metadata":{"bindings":{"datetime":{"source":"core/post-data","args":{"field":"date"}}}},"className":"post-hero-date has-text-color","textColor":"white-muted","fontSize":"small"} /-->
+
+<!-- wp:group {"metadata":{"name":"Spotlight Facts"},"className":"spotlight-facts","layout":{"type":"default"}} -->
+<div class="wp-block-group spotlight-facts"><!-- wp:group {"className":"spotlight-fact","layout":{"type":"default"}} -->
+<div class="wp-block-group spotlight-fact"><!-- wp:paragraph {"className":"spotlight-fact-label"} -->
+<p class="spotlight-fact-label">Number</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"spotlight_number"}}}},"className":"spotlight-fact-value spotlight-fact-number"} -->
+<p class="spotlight-fact-value spotlight-fact-number"></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"spotlight-fact","layout":{"type":"default"}} -->
+<div class="wp-block-group spotlight-fact"><!-- wp:paragraph {"className":"spotlight-fact-label"} -->
+<p class="spotlight-fact-label">Team</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"spotlight_team"}}}},"className":"spotlight-fact-value"} -->
+<p class="spotlight-fact-value"></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"spotlight-fact","layout":{"type":"default"}} -->
+<div class="wp-block-group spotlight-fact"><!-- wp:paragraph {"className":"spotlight-fact-label"} -->
+<p class="spotlight-fact-label">Position</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"spotlight_position"}}}},"className":"spotlight-fact-value"} -->
+<p class="spotlight-fact-value"></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"spotlight-fact","layout":{"type":"default"}} -->
+<div class="wp-block-group spotlight-fact"><!-- wp:paragraph {"className":"spotlight-fact-label"} -->
+<p class="spotlight-fact-label">Seasons</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"spotlight_seasons"}}}},"className":"spotlight-fact-value"} -->
+<p class="spotlight-fact-value"></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></section>
+<!-- /wp:group -->
+
+<!-- wp:group {"metadata":{"name":"Spotlight Body"},"align":"full","className":"spotlight-main","layout":{"type":"default"}} -->
+<div class="wp-block-group alignfull spotlight-main"><!-- wp:post-content {"className":"spotlight-body","layout":{"type":"constrained","contentSize":"880px"}} /--></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"tagName":"section","metadata":{"name":"Spotlight Closing"},"align":"full","className":"spotlight-closing","layout":{"type":"default"}} -->
+<section class="wp-block-group alignfull spotlight-closing"><!-- wp:group {"className":"spotlight-closing-inner","layout":{"type":"default"}} -->
+<div class="wp-block-group spotlight-closing-inner"><!-- wp:paragraph {"className":"spotlight-closing-text"} -->
+<p class="spotlight-closing-text">Meet the rest of the team</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons {"className":"spotlight-closing-buttons"} -->
+<div class="wp-block-buttons spotlight-closing-buttons"><!-- wp:button {"className":"spotlight-closing-button"} -->
+<div class="wp-block-button spotlight-closing-button"><a class="wp-block-button__link wp-element-button" href="/#roster">See the roster</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons --></div>
+<!-- /wp:group --></section>
+<!-- /wp:group --></main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","area":"footer"} /-->
