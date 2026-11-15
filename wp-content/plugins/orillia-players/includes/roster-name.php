@@ -3,9 +3,11 @@
  * Shorten player names on the roster grid.
  *
  * The roster grid shows each name through a Post Title block with the
- * `roster-name` class. While that block renders, its title is shortened to
- * the first name plus the last initial (e.g. "Ryan Mckinnon" -> "Ryan M."),
- * or to "Coach" plus the first name for anyone on the coaching staff.
+ * `roster-name` class. While that block renders, a player's title follows
+ * their "Last name on roster" setting (`player_last_name_display` meta):
+ * the last initial by default (e.g. "Jane Doe" -> "Jane D."), the full
+ * name, or the first name only. Anyone on the coaching staff shows as
+ * "Coach" plus the first name.
  * Executives keep their full name.
  * The stored post title is unchanged, so the full name still shows in the
  * admin and everywhere else on the site.
@@ -18,18 +20,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Convert a full name to the first name plus the last initial.
+ * Shorten a full name according to a last name display mode.
  *
  * Names with only one word are returned unchanged.
  *
  * @param string $name Full name.
+ * @param string $mode 'initial' (default) for the last initial, 'none' for the
+ *                     first name only, or 'full' for the full name.
  * @return string Shortened name.
  */
-function orillia_players_short_name( $name ) {
+function orillia_players_short_name( $name, $mode = 'initial' ) {
 	$parts = preg_split( '/\s+/u', trim( $name ), -1, PREG_SPLIT_NO_EMPTY );
 
-	if ( count( $parts ) < 2 ) {
+	if ( 'full' === $mode || count( $parts ) < 2 ) {
 		return $name;
+	}
+
+	if ( 'none' === $mode ) {
+		return $parts[0];
 	}
 
 	$last_initial = mb_strtoupper( mb_substr( end( $parts ), 0, 1 ) );
@@ -55,7 +63,9 @@ function orillia_players_roster_title_filter( $title, $post_id = 0 ) {
 		return $title;
 	}
 
-	return orillia_players_short_name( $title );
+	$mode = $post_id ? get_post_meta( $post_id, 'player_last_name_display', true ) : '';
+
+	return orillia_players_short_name( $title, $mode ? $mode : 'initial' );
 }
 
 /**

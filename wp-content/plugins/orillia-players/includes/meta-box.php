@@ -1,6 +1,6 @@
 <?php
 /**
- * Player custom fields: jersey number and position.
+ * Player custom fields: jersey number, position, and last name display.
  *
  * The UI for these fields lives entirely in the block editor as a
  * PluginDocumentSettingPanel (see assets/js/player-details-panel.js).
@@ -40,6 +40,28 @@ function orillia_players_register_meta() {
 			'type'          => 'string',
 			'default'       => '',
 			'auth_callback' => function () {
+				return current_user_can( 'edit_posts' );
+			},
+		)
+	);
+
+	register_post_meta(
+		'player',
+		'player_last_name_display',
+		array(
+			'show_in_rest'      => array(
+				'schema' => array(
+					'type' => 'string',
+					'enum' => array( 'full', 'initial', 'none' ),
+				),
+			),
+			'single'            => true,
+			'type'              => 'string',
+			'default'           => 'initial',
+			'sanitize_callback' => function ( $value ) {
+				return in_array( $value, array( 'full', 'initial', 'none' ), true ) ? $value : 'initial';
+			},
+			'auth_callback'     => function () {
 				return current_user_can( 'edit_posts' );
 			},
 		)

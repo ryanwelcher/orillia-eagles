@@ -14,6 +14,12 @@
 		{ label: __( 'Goalie', 'orillia-players' ), value: 'Goalie' },
 	];
 
+	const LAST_NAME_DISPLAY = [
+		{ label: __( 'Last initial (Jane D.)', 'orillia-players' ), value: 'initial' },
+		{ label: __( 'Full last name (Jane Doe)', 'orillia-players' ), value: 'full' },
+		{ label: __( 'No last name (Jane)', 'orillia-players' ), value: 'none' },
+	];
+
 	function PlayerDetailsPanel() {
 		const { meta, roleIds, roles } = useSelect(
 			( select ) => ( {
@@ -27,6 +33,7 @@
 
 		const number = meta && meta.player_number && meta.player_number !== 999 ? meta.player_number : '';
 		const position = meta && meta.player_position ? meta.player_position : '';
+		const lastNameDisplay = meta && meta.player_last_name_display ? meta.player_last_name_display : 'initial';
 		const inRoleGroup = ( slug ) => {
 			const group = roles.find( ( role ) => role.slug === slug );
 			return !! group && roles.some(
@@ -72,6 +79,15 @@
 						options: POSITIONS,
 						onChange: ( value ) => {
 							editPost( { meta: { player_position: value } } );
+						},
+					} ),
+					el( SelectControl, {
+						label: __( 'Last name on roster', 'orillia-players' ),
+						help: __( 'How this player\'s last name shows on the roster grid.', 'orillia-players' ),
+						value: lastNameDisplay,
+						options: LAST_NAME_DISPLAY,
+						onChange: ( value ) => {
+							editPost( { meta: { player_last_name_display: value } } );
 						},
 					} )
 				)
