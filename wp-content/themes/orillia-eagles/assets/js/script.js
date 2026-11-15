@@ -33,19 +33,42 @@ const closeMobileMenu = link => {
   return true;
 };
 
+// The "#section" part of a link that points at a section of the current
+// page, whether written "#roster" or as a full URL ("https://…/#roster", as
+// the menus use so they also work from other pages). Null for anything else.
+const samePageHash = link => {
+  const href = link.getAttribute('href');
+  if (!href || !href.includes('#')) return null;
+
+  let url;
+  try {
+    url = new URL(href, window.location.href);
+  } catch {
+    return null;
+  }
+
+  const samePage = url.origin === window.location.origin && url.pathname === window.location.pathname;
+  return samePage && url.hash.length > 1 ? url.hash : null;
+};
+
 document.querySelectorAll('.wp-block-navigation__responsive-container a').forEach(link => {
   // Same-page anchors are handled by the smooth-scroll handler below.
-  if (link.getAttribute('href')?.startsWith('#')) return;
+  if (samePageHash(link)) return;
   link.addEventListener('click', () => closeMobileMenu(link));
 });
 
 // :::SECTION:Smooth Scrolling:::
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+document.querySelectorAll('a[href*="#"]').forEach(anchor => {
   anchor.addEventListener('click', function (e) {
-    const targetId = this.getAttribute('href');
-    if (targetId === '#') return;
+    const targetId = samePageHash(this);
+    if (!targetId) return;
 
-    const targetEl = document.querySelector(targetId);
+    let targetEl = null;
+    try {
+      targetEl = document.querySelector(targetId);
+    } catch {
+      return;
+    }
     if (targetEl) {
       e.preventDefault();
 

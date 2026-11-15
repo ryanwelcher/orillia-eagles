@@ -133,3 +133,32 @@ function orillia_eagles_add_js_class() {
 }
 add_action( 'wp_enqueue_scripts', 'orillia_eagles_add_js_class', 1 );
 
+
+/**
+ * Point anchor-only menu links (e.g. "#roster") at the homepage.
+ *
+ * The header, mobile overlay and footer menus link to sections of the
+ * homepage by anchor. On any other page a bare "#roster" goes nowhere, so
+ * prefix those links with the homepage URL as they render ("#roster" ->
+ * "https://example.com/#roster"). Done on the rendered HTML because the
+ * header menu is stored in the database (a Navigation post), and its links
+ * are rendered without passing through the block data filters.
+ *
+ * @param string $content Rendered block content.
+ * @return string Content with anchor-only links made absolute.
+ */
+function orillia_eagles_absolute_anchor_links( $content ) {
+	$processor = new WP_HTML_Tag_Processor( $content );
+
+	while ( $processor->next_tag( 'a' ) ) {
+		$href = $processor->get_attribute( 'href' );
+
+		if ( is_string( $href ) && strlen( $href ) > 1 && '#' === $href[0] ) {
+			$processor->set_attribute( 'href', home_url( '/' ) . $href );
+		}
+	}
+
+	return $processor->get_updated_html();
+}
+add_filter( 'render_block_core/navigation-link', 'orillia_eagles_absolute_anchor_links' );
+add_filter( 'render_block_core/navigation-submenu', 'orillia_eagles_absolute_anchor_links' );
